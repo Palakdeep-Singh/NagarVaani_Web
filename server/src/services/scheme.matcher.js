@@ -1,9 +1,9 @@
 /**
- * scheme.matcher.js — Production Matching Engine v3
+ * scheme.matcher.js — Production v4 (uses all new profile fields)
  * Place: server/src/services/scheme.matcher.js
- * Implements ALL 16 myScheme.gov.in eligibility dimensions
  */
 
+// ── Occupation taxonomy (250+ keywords → 18 groups) ──────────────────────────
 export const OCCUPATION_GROUPS = {
   farmer: ['farmer', 'kisan', 'kisaan', 'agriculture', 'agriculturist', 'krishi',
     'cultivator', 'farming', 'grower', 'crop', 'paddy', 'wheat', 'rice', 'horticulture',
@@ -17,20 +17,18 @@ export const OCCUPATION_GROUPS = {
     'apiculture', 'goatkeeper', 'shepherd', 'pashu palan'],
   labour: ['labour', 'labor', 'labourer', 'laborer', 'daily wage', 'daily wager',
     'mazdoor', 'coolie', 'construction worker', 'building worker', 'unskilled',
-    'migrant worker', 'bonded labour', 'brick kiln', 'quarry worker', 'road worker',
-    'nrega', 'mgnrega', 'loader', 'unloader', 'dock worker', 'mine worker',
-    'plantation worker', 'tea garden', 'casual worker', 'contract worker',
-    'wage worker', 'manual worker', 'physical labour'],
+    'migrant worker', 'brick kiln', 'quarry worker', 'road worker', 'nrega',
+    'mgnrega', 'loader', 'unloader', 'mine worker', 'plantation worker',
+    'tea garden', 'casual worker', 'contract worker', 'wage worker', 'manual worker'],
   artisan: ['artisan', 'craftsman', 'craftsperson', 'craft', 'carpenter', 'woodwork',
     'blacksmith', 'welder', 'plumber', 'electrician', 'mason', 'painter', 'tailor',
     'weaver', 'potter', 'kumhar', 'lohar', 'luhar', 'sunar', 'goldsmith', 'silversmith',
     'cobbler', 'mochi', 'leather', 'shoemaker', 'barber', 'nai', 'napit', 'washerman',
     'dhobi', 'basket maker', 'bamboo', 'toy maker', 'sculptor', 'stone carver',
     'embroidery', 'zari', 'zardozi', 'handloom', 'powerloom', 'karigar', 'shilpkar',
-    'bidi worker', 'bidi', 'agarbatti maker', 'incense', 'candle maker', 'soap maker',
-    'pottery', 'terracotta', 'metal craft', 'wood carving', 'brass work', 'copper',
-    'tinsmith', 'darzi', 'hajjam', 'khatik', 'nat', 'craftwork', 'handicraft',
-    'vishwakarma'],
+    'bidi worker', 'agarbatti maker', 'incense', 'candle maker', 'soap maker',
+    'pottery', 'terracotta', 'metal craft', 'wood carving', 'brass', 'copper',
+    'tinsmith', 'darzi', 'hajjam', 'khatik', 'craftwork', 'handicraft', 'vishwakarma'],
   business: ['business', 'businessman', 'businesswoman', 'shopkeeper', 'trader',
     'merchant', 'vendor', 'street vendor', 'hawker', 'self employed', 'self-employed',
     'proprietor', 'wholesale', 'retail', 'kirana', 'provision store', 'cloth merchant',
@@ -46,9 +44,9 @@ export const OCCUPATION_GROUPS = {
   student: ['student', 'vidyarthi', 'studying', 'school', 'college', 'university',
     'graduate', 'undergraduate', 'postgraduate', 'phd', 'research scholar',
     'intern', 'apprentice', 'vocational training', 'iti student', 'polytechnic',
-    'diploma student', 'class 9', 'class 10', 'class 11', 'class 12', '10th', '12th',
-    'primary school', 'secondary school', 'higher secondary', 'engineering student',
-    'medical student', 'law student', 'arts student'],
+    'diploma student', 'class 9', 'class 10', 'class 11', 'class 12',
+    '10th', '12th', 'primary school', 'secondary school', 'higher secondary',
+    'engineering student', 'medical student', 'law student'],
   unemployed: ['unemployed', 'job seeker', 'jobless', 'no job', 'seeking employment',
     'fresher', 'looking for job', 'no occupation', 'none', 'nil', 'not working',
     'without employment', 'dropout', 'between jobs'],
@@ -99,9 +97,8 @@ export const normaliseOccupation = (input) => {
   for (const [group, kws] of Object.entries(OCCUPATION_GROUPS)) {
     if (kws.some(kw => lower.includes(kw))) matched.push(group);
   }
-  if (matched.includes('homemaker') && !matched.includes('unemployed')) {
-    matched.push('unemployed');
-  }
+  // homemakers also match unemployed for welfare schemes
+  if (matched.includes('homemaker') && !matched.includes('unemployed')) matched.push('unemployed');
   return matched.length ? matched : ['other'];
 };
 
@@ -136,6 +133,7 @@ export const scoreToGrade = (score) => {
   return 'none';
 };
 
+// ── CORE MATCHER ──────────────────────────────────────────────────────────────
 export const matchSchemeToUser = (user, scheme) => {
   const rules = scheme.rules || {};
   const reasons = [];
@@ -144,6 +142,7 @@ export const matchSchemeToUser = (user, scheme) => {
   let hardFail = false;
   let failReason = null;
 
+  // Parsed user values
   const age = getAge(user.date_of_birth);
   const income = safeNum(user.annual_income);
   const land = safeNum(user.land_acres);
@@ -153,27 +152,38 @@ export const matchSchemeToUser = (user, scheme) => {
   const state = (user.state || '').trim();
   const hasAadhaar = !!user.aadhaar_number;
   const hasVoter = !!user.voter_id;
-  const isBPL = String(user.bpl_card || '').toLowerCase().includes('yes') ||
-    (income !== null && income < 100000);
-  const isDisabled = occGroups.includes('differently_abled') ||
-    String(user.disability || '').toLowerCase().includes('yes');
+  const marital = (user.marital_status || '').toLowerCase().trim();
+
+  // ── NEW: Use all profile fields for matching ──────────────────────────────
+  // BPL: explicit card OR income < 1 lakh
+  const isBPL = String(user.bpl_card || '').toLowerCase() === 'yes'
+    || (income !== null && income < 100000);
+
+  // Disability: explicit field OR occupation group
+  const isDisabled = String(user.disability || '').toLowerCase() === 'yes'
+    || occGroups.includes('differently_abled');
+
+  // Minority: from religion field
   const isMinorityUser = isMinority(user.religion || '');
+
+  // Rural/Urban: from area_type field (defaults to rural)
+  const isRural = (user.area_type || 'rural').toLowerCase() !== 'urban';
+
   const isStudent = occGroups.includes('student');
   const isUnemployed = occGroups.includes('unemployed') || occGroups.includes('homemaker');
-  const isRural = (user.area_type || 'rural').toLowerCase() !== 'urban';
-  const marital = (user.marital_status || '').toLowerCase().trim();
   const isExSvc = occGroups.includes('ex_serviceman');
 
   const fail = (r) => { hardFail = true; failReason = r; };
   const ret = (m, s) => {
-    const g = m ? scoreToGrade(Math.min(100, Math.max(0, Math.round(s)))) : 'none';
+    const fs = Math.min(100, Math.max(0, Math.round(s)));
     return {
-      matched: m, score: m ? Math.min(100, Math.max(0, Math.round(s))) : 0,
-      grade: g, reasons, mismatches: gaps, hard_fail_reason: failReason
+      matched: m, score: m ? fs : 0,
+      grade: m ? scoreToGrade(fs) : 'none',
+      reasons, mismatches: gaps, hard_fail_reason: failReason,
     };
   };
 
-  // 1. Gender
+  // 1. GENDER
   if (rules.gender?.length) {
     const a = rules.gender.map(g => g.toLowerCase());
     if (a.some(x => ['all', 'any'].includes(x))) { score += 2; }
@@ -183,26 +193,26 @@ export const matchSchemeToUser = (user, scheme) => {
   }
   if (hardFail) return ret(false, 0);
 
-  // 2. Age
+  // 2. AGE
   if (rules.min_age || rules.max_age) {
     if (age === null) { score -= 8; gaps.push('Add date of birth to profile'); }
-    else if (rules.min_age && age < rules.min_age) { fail(`Min age ${rules.min_age} (you: ${age})`); }
-    else if (rules.max_age && age > rules.max_age) { fail(`Max age ${rules.max_age} (you: ${age})`); }
+    else if (rules.min_age && age < rules.min_age) { fail(`Min age ${rules.min_age} required (you: ${age})`); }
+    else if (rules.max_age && age > rules.max_age) { fail(`Max age ${rules.max_age} allowed (you: ${age})`); }
     else { score += 7; reasons.push(`Age ${age} within ${rules.min_age || 0}–${rules.max_age || 'any'} yrs`); }
   }
   if (hardFail) return ret(false, 0);
 
-  // 3. Category/Caste
+  // 3. CASTE/CATEGORY
   if (rules.category?.length) {
     const a = rules.category.map(c => c.toUpperCase());
     if (a.includes('ALL')) { score += 2; }
     else if (!category) { score -= 12; gaps.push('Add caste category (SC/ST/OBC/General/EWS)'); }
-    else if (a.includes(category)) { score += 15; reasons.push(`Category ${category} qualifies`); }
-    else { fail(`Reserved for ${rules.category.join('/')} — you: ${category}`); }
+    else if (a.includes(category)) { score += 15; reasons.push(`Caste category (${category}) qualifies`); }
+    else { fail(`Reserved for ${rules.category.join('/')} — you: ${category || 'not set'}`); }
   }
   if (hardFail) return ret(false, 0);
 
-  // 4. Income ceiling
+  // 4. INCOME CEILING
   if (rules.max_income) {
     if (income === null) { score -= 10; gaps.push('Add annual income to profile'); }
     else if (income > rules.max_income) { fail(`Income ₹${income.toLocaleString('en-IN')} exceeds ₹${Number(rules.max_income).toLocaleString('en-IN')} ceiling`); }
@@ -211,15 +221,15 @@ export const matchSchemeToUser = (user, scheme) => {
   if (rules.min_income && income !== null && income < rules.min_income) { fail(`Min income ₹${Number(rules.min_income).toLocaleString('en-IN')} required`); }
   if (hardFail) return ret(false, 0);
 
-  // 5. BPL
+  // 5. BPL — now uses bpl_card field
   if (rules.bpl_only === true) {
     if (isBPL) { score += 12; reasons.push('BPL status qualifies'); }
-    else if (income !== null && income >= 100000) { fail('BPL households only (income < ₹1,00,000 or BPL card)'); }
-    else { score -= 5; gaps.push('Confirm BPL card status in profile'); }
+    else if (income !== null && income >= 100000 && user.bpl_card === 'no') { fail('BPL households only (income < ₹1,00,000 or BPL card holder)'); }
+    else { score -= 5; gaps.push('Confirm BPL card status or annual income in profile'); }
   }
   if (hardFail) return ret(false, 0);
 
-  // 6. Occupation
+  // 6. OCCUPATION
   if (rules.occupation?.length) {
     const ro = rules.occupation.map(o => o.toLowerCase());
     const open = ro.some(o => ['all', 'any', 'everyone'].includes(o));
@@ -232,7 +242,7 @@ export const matchSchemeToUser = (user, scheme) => {
   }
   if (hardFail) return ret(false, 0);
 
-  // 7. Employment status
+  // 7. EMPLOYMENT STATUS
   if (rules.employment_status?.length) {
     const a = rules.employment_status.map(e => e.toLowerCase());
     const us = isStudent ? 'student' : isUnemployed ? 'unemployed' : 'employed';
@@ -241,7 +251,7 @@ export const matchSchemeToUser = (user, scheme) => {
   }
   if (hardFail) return ret(false, 0);
 
-  // 8. Land
+  // 8. LAND
   if (rules.max_land != null) {
     if (land === null) { gaps.push('Add land holding (acres) to profile'); }
     else if (land > rules.max_land) { fail(`Land ${land} acres > limit ${rules.max_land} acres`); }
@@ -250,7 +260,7 @@ export const matchSchemeToUser = (user, scheme) => {
   if (rules.min_land && land !== null && land < rules.min_land) { fail(`Min ${rules.min_land} acres required`); }
   if (hardFail) return ret(false, 0);
 
-  // 9. State
+  // 9. STATE
   if (rules.state?.length && !rules.state.includes('ALL')) {
     if (!state) { score -= 5; gaps.push('Add state to profile'); }
     else if (rules.state.some(s => s.toLowerCase() === state.toLowerCase())) { score += 10; reasons.push(`State (${state}) covered`); }
@@ -258,7 +268,7 @@ export const matchSchemeToUser = (user, scheme) => {
   }
   if (hardFail) return ret(false, 0);
 
-  // 10. Rural/Urban
+  // 10. RURAL/URBAN — now uses area_type field
   if (rules.area_type) {
     const a = rules.area_type.toLowerCase();
     if (a === 'rural' && !isRural) { fail('Rural residents only'); }
@@ -267,28 +277,28 @@ export const matchSchemeToUser = (user, scheme) => {
   }
   if (hardFail) return ret(false, 0);
 
-  // 11. Disability
+  // 11. DISABILITY — now uses disability field
   if (rules.disability_only === true) {
-    if (isDisabled) { score += 18; reasons.push('Divyang status qualifies'); }
+    if (isDisabled) { score += 18; reasons.push('Divyang / disability status qualifies'); }
     else { fail('For Persons with Disabilities (Divyangjan) only'); }
   }
   if (hardFail) return ret(false, 0);
 
-  // 12. Minority
+  // 12. MINORITY — now uses religion field
   if (rules.minority_only === true) {
-    if (isMinorityUser) { score += 15; reasons.push('Minority community qualifies'); }
-    else { fail('For minority communities only'); }
+    if (isMinorityUser) { score += 15; reasons.push(`Religion (${user.religion}) qualifies for minority scheme`); }
+    else { fail('For minority communities (Muslim/Christian/Sikh/Buddhist/Jain/Parsi) only'); }
   }
   if (hardFail) return ret(false, 0);
 
-  // 13. Student only
+  // 13. STUDENT ONLY
   if (rules.student_only === true) {
     if (isStudent) { score += 12; reasons.push('Student status qualifies'); }
     else { fail('For enrolled students only'); }
   }
   if (hardFail) return ret(false, 0);
 
-  // 14. Marital status
+  // 14. MARITAL STATUS — now uses marital_status field
   if (rules.marital_status?.length) {
     const a = rules.marital_status.map(m => m.toLowerCase());
     if (!marital) { score -= 3; gaps.push('Add marital status to profile'); }
@@ -297,32 +307,28 @@ export const matchSchemeToUser = (user, scheme) => {
   }
   if (hardFail) return ret(false, 0);
 
-  // 15. Ex-serviceman
+  // 15. EX-SERVICEMAN
   if (rules.ex_serviceman_only === true) {
     if (isExSvc) { score += 15; reasons.push('Ex-serviceman qualifies'); }
     else { fail('For ex-servicemen / defence personnel only'); }
   }
   if (hardFail) return ret(false, 0);
 
-  // 16. Documents
+  // 16. DOCUMENTS
   if (rules.requires_docs?.length) {
     const have = { aadhaar: hasAadhaar, voter_id: hasVoter };
     const miss = rules.requires_docs.filter(d => !have[d]);
-    if (!miss.length) { score += 6; reasons.push('All required documents available'); }
+    if (!miss.length) { score += 6; reasons.push('All required documents in profile'); }
     else { score -= miss.length * 4; gaps.push(`Upload to Document Locker: ${miss.join(', ')}`); }
   }
 
   // Weight boost
   if (rules.weight_boost) score += Number(rules.weight_boost);
 
-  const finalScore = Math.min(100, Math.max(0, Math.round(score)));
-  const matched = finalScore >= 35;
+  const fs = Math.min(100, Math.max(0, Math.round(score)));
+  const matched = fs >= 35;
   if (matched && reasons.length === 0) reasons.push('General eligibility criteria met');
-
-  return {
-    matched, score: finalScore, grade: scoreToGrade(finalScore),
-    reasons, mismatches: gaps, hard_fail_reason: null
-  };
+  return { matched, score: fs, grade: scoreToGrade(fs), reasons, mismatches: gaps, hard_fail_reason: null };
 };
 
 export const matchAllSchemes = (user, schemes, includeAll = false) => {
