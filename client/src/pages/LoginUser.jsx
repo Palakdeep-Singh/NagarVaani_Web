@@ -43,9 +43,10 @@ export default function LoginUser() {
           <div className="login-logo-ic">🇮🇳</div>
           <div className="login-brand">NagarikConnect <span>Smart Governance Platform</span></div>
         </div>
-        <div className="wa-login-note">💬 WhatsApp pe aaye? Aapka profile already ready hai!</div>
+        <div className="wa-login-note">💬 Came from WhatsApp? Your profile is already ready!</div>
         <div className="login-title">Citizen Login</div>
-        <div className="login-sub">Apne scheme, milestones aur complaints track karein</div>
+        <div className="login-sub">
+          Track your schemes, milestones and complaints!</div>
 
         {step === "phone" && (
           <>

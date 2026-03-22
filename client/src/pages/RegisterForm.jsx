@@ -125,7 +125,7 @@ export default function RegisterForm({ phone, onSuccess }) {
         </div>
 
         <button className="login-btn sf" onClick={submit} disabled={loading} style={{ marginTop: 8 }}>
-          {loading ? "Registering..." : "✅ Complete Registration →"}
+          {loading ? "Registering..." : "Complete Registration →"}
         </button>
       </div>
       <div className="login-footer">Government of India · Secure Portal · All data encrypted</div>
