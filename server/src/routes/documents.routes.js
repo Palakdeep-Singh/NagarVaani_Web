@@ -1,13 +1,12 @@
 /**
- * documents.routes.js — with AES-256-GCM file encryption
+ * documents.routes.js
  * Place: server/src/routes/documents.routes.js
  *
- * Flow:
- *   Client → multipart file → Express encrypts with AES-256-GCM
- *          → stores encrypted blob in Supabase Storage (.enc extension)
- *          → on download: fetches encrypted blob, decrypts, streams to client
- *
- * Even if someone accesses Supabase Storage directly they get unreadable bytes.
+ * CORRECTED FLOW:
+ * - Citizen uploads → auto-status "available" → instantly usable in scheme apps
+ * - No admin approval needed to use documents
+ * - Admin can only flag/unflag suspicious documents
+ * - Document Locker = personal secure file cabinet, not approval queue
  */
 import express from 'express';
 import multer from 'multer';
@@ -17,7 +16,6 @@ import { encryptBuffer, decryptBuffer } from '../utils/file.crypto.js';
 
 const router = express.Router();
 const BUCKET = 'nagarvaani-docs';
-const URL_TTL = 7 * 24 * 60 * 60; // 7 days
 
 const ALLOWED_MIME = [
   'image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif',
@@ -39,7 +37,7 @@ const upload = multer({
 const ensureBucket = async () => {
   const { data } = await supabase.storage.listBuckets();
   if (data?.some(b => b.name === BUCKET)) return;
-  await supabase.storage.createBucket(BUCKET, { public: false, fileSizeLimit: 25165824 }); // 24MB (encrypted slightly larger)
+  await supabase.storage.createBucket(BUCKET, { public: false, fileSizeLimit: 25165824 });
   console.log(`✅ Bucket "${BUCKET}" ready`);
 };
 ensureBucket().catch(e => console.warn('Bucket init:', e.message));
@@ -69,24 +67,16 @@ router.post('/upload',
       const schemeId = req.body.scheme_id || null;
       const milestoneId = req.body.milestone_id || null;
       const ext = req.file.originalname.split('.').pop()?.toLowerCase() || 'bin';
-
-      // Store as .enc — no one can tell what it is
       const filePath = `${req.user.userId}/${docType}_${Date.now()}.enc`;
 
       console.log(`[UPLOAD] Encrypting: ${req.file.originalname} (${req.file.size} bytes)`);
 
-      // ── Encrypt the file buffer ──────────────────────────────────────────
+      // Encrypt before upload
       const encryptedBuffer = encryptBuffer(req.file.buffer);
-      console.log(`[UPLOAD] Encrypted size: ${encryptedBuffer.length} bytes`);
 
-      // ── Upload encrypted blob to Supabase Storage ────────────────────────
       const { error: upErr } = await supabase.storage.from(BUCKET).upload(
         filePath, encryptedBuffer,
-        {
-          contentType: 'application/octet-stream', // always binary — reveals nothing
-          cacheControl: '3600',
-          upsert: false,
-        }
+        { contentType: 'application/octet-stream', cacheControl: '3600', upsert: false }
       );
 
       if (upErr) {
@@ -102,17 +92,17 @@ router.post('/upload',
         }
       }
 
-      console.log(`[UPLOAD] ✅ Encrypted file stored: ${filePath}`);
+      console.log(`[UPLOAD] ✅ Encrypted & stored: ${filePath}`);
 
-      // ── Save metadata to DB ───────────────────────────────────────────────
+      // Save to DB — status is immediately 'available', no approval needed
       const { data: doc, error: dbErr } = await supabase.from('documents').insert({
         user_id: req.user.userId,
         doc_type: docType,
         doc_name: docName,
-        status: 'pending',
+        status: 'available',    // ← instantly usable, no approval gate
         file_path: filePath,
-        file_url: null,          // no pre-signed URL — we decrypt on demand
-        file_size: req.file.size, // store original size for display
+        file_url: null,
+        file_size: req.file.size,
         mime_type: req.file.mimetype,
         scheme_id: schemeId,
         milestone_id: milestoneId,
@@ -121,17 +111,12 @@ router.post('/upload',
       if (dbErr) {
         console.error('[UPLOAD] DB error:', dbErr.message);
         return res.json({
-          id: null, path: filePath,
-          doc_type: docType, doc_name: docName, status: 'pending',
-          db_error: dbErr.message,
+          id: null, path: filePath, doc_type: docType,
+          doc_name: docName, status: 'available', db_error: dbErr.message,
         });
       }
 
-      console.log('[UPLOAD] ✅ DB saved, id:', doc.id);
-      await notify(req.user.userId, 'info', 'Document Uploaded',
-        `${docName} uploaded securely. Pending admin verification.`, 'p-docs');
-
-      // Return doc with a view URL (our decrypt endpoint)
+      console.log('[UPLOAD] ✅ Saved to DB, id:', doc.id);
       return res.json({ ...doc, file_url: `/api/documents/view/${doc.id}` });
 
     } catch (err) {
@@ -141,12 +126,15 @@ router.post('/upload',
   }
 );
 
-// ── GET /api/documents/view/:id — decrypt and stream ─────────────────────────
-// Only the owner can view. Decrypts on the fly, streams original file.
-router.get("/view/:id",
-  // Accept token from query param (for img/iframe src)
-  (req, _res, next) => { if (req.query.token && !req.headers.authorization) { req.headers.authorization = `Bearer ${req.query.token}`; } next(); },
-  protect, async (req, res) => {
+// ── GET /api/documents/view/:id — decrypt and stream to owner ─────────────────
+router.get('/view/:id',
+  (req, _res, next) => {
+    if (req.query.token && !req.headers.authorization)
+      req.headers.authorization = `Bearer ${req.query.token}`;
+    next();
+  },
+  protect,
+  async (req, res) => {
     try {
       const { data: doc, error } = await supabase.from('documents')
         .select('user_id,file_path,mime_type,doc_name')
@@ -156,44 +144,37 @@ router.get("/view/:id",
       if (doc.user_id !== req.user.userId) return res.status(403).json({ error: 'Not authorized' });
       if (!doc.file_path) return res.status(404).json({ error: 'No file stored' });
 
-      // Download encrypted blob from storage
       const { data: blob, error: dlErr } = await supabase.storage
         .from(BUCKET).download(doc.file_path);
-      if (dlErr) return res.status(500).json({ error: 'Storage download failed: ' + dlErr.message });
+      if (dlErr) return res.status(500).json({ error: 'Download failed: ' + dlErr.message });
 
-      // Convert blob to buffer
-      const encryptedBuffer = Buffer.from(await blob.arrayBuffer());
+      const decryptedBuffer = decryptBuffer(Buffer.from(await blob.arrayBuffer()));
 
-      // Decrypt
-      const decryptedBuffer = decryptBuffer(encryptedBuffer);
-
-      // Stream original file to client
       res.set({
         'Content-Type': doc.mime_type || 'application/octet-stream',
-        'Content-Disposition': `inline; filename="${doc.doc_name || 'document'}"`,
+        'Content-Disposition': `inline; filename="${doc.doc_name}"`,
         'Content-Length': decryptedBuffer.length,
-        'Cache-Control': 'private, no-store', // never cache decrypted content
+        'Cache-Control': 'private, no-store',
       });
       return res.send(decryptedBuffer);
 
     } catch (err) {
-      if (err.code === 'ERR_CRYPTO_GCM_AUTH_TAG_MISMATCH') {
-        return res.status(500).json({ error: 'File integrity check failed — file may be corrupted or tampered' });
-      }
+      if (err.code === 'ERR_CRYPTO_GCM_AUTH_TAG_MISMATCH')
+        return res.status(500).json({ error: 'File integrity check failed' });
       return res.status(500).json({ error: err.message });
     }
-  });
+  }
+);
 
 // ── GET /api/documents/my ─────────────────────────────────────────────────────
 router.get('/my', protect, async (req, res) => {
   try {
     const { data, error } = await supabase.from('documents')
-      .select('id,user_id,doc_type,doc_name,file_path,file_size,mime_type,status,verified_by,verified_at,reject_reason,scheme_id,milestone_id,created_at,updated_at')
+      .select('id,user_id,doc_type,doc_name,file_path,file_size,mime_type,status,scheme_id,milestone_id,created_at,updated_at')
       .eq('user_id', req.user.userId)
       .order('created_at', { ascending: false });
     if (error) throw new Error(error.message);
 
-    // Add view URL — decrypt on demand, no pre-signed URL needed
     const docs = (data || []).map(doc => ({
       ...doc,
       file_url: doc.file_path ? `/api/documents/view/${doc.id}` : null,
@@ -209,99 +190,53 @@ router.delete('/:id', protect, async (req, res) => {
       .select('user_id,file_path').eq('id', req.params.id).single();
     if (!doc) return res.status(404).json({ error: 'Not found' });
     if (doc.user_id !== req.user.userId) return res.status(403).json({ error: 'Not authorized' });
-    if (doc.file_path) {
-      await supabase.storage.from(BUCKET).remove([doc.file_path]);
-    }
+    if (doc.file_path) await supabase.storage.from(BUCKET).remove([doc.file_path]);
     await supabase.from('documents').delete().eq('id', req.params.id);
     return res.json({ success: true });
   } catch (err) { return res.status(500).json({ error: err.message }); }
 });
 
-// ── GET /api/documents/admin/pending ─────────────────────────────────────────
-router.get('/admin/pending', protect, async (req, res) => {
+// ── GET /api/documents/for-scheme — get citizen's available docs for scheme ───
+// Used when applying to a scheme — returns list of available docs
+router.get('/for-scheme', protect, async (req, res) => {
   try {
     const { data, error } = await supabase.from('documents')
-      .select('id,doc_type,doc_name,file_path,file_size,mime_type,status,created_at,user_id,users(full_name,phone,district)')
-      .eq('status', 'pending').order('created_at', { ascending: true });
+      .select('id,doc_type,doc_name,file_size,mime_type,status,created_at')
+      .eq('user_id', req.user.userId)
+      .eq('status', 'available')
+      .order('created_at', { ascending: false });
     if (error) throw new Error(error.message);
-
-    // Admin uses the same decrypt endpoint
-    const docs = (data || []).map(d => ({
-      ...d,
-      file_url: d.file_path ? `/api/documents/view/${d.id}` : null,
-    }));
-    return res.json(docs);
+    return res.json(data || []);
   } catch (err) { return res.status(500).json({ error: err.message }); }
 });
 
-// ── PATCH /api/documents/admin/:id ───────────────────────────────────────────
-router.patch('/admin/:id', protect, async (req, res) => {
+// ── ADMIN: GET flagged/all docs for a district ────────────────────────────────
+router.get('/admin/all', protect, async (req, res) => {
   try {
-    const { action, reject_reason } = req.body;
-    if (!['verified', 'rejected'].includes(action))
-      return res.status(400).json({ error: 'action must be verified or rejected' });
+    const { data, error } = await supabase.from('documents')
+      .select('id,doc_type,doc_name,file_size,mime_type,status,created_at,user_id,users(full_name,phone,district)')
+      .order('created_at', { ascending: false }).limit(200);
+    if (error) throw new Error(error.message);
+    return res.json((data || []).map(d => ({
+      ...d, file_url: `/api/documents/view/${d.id}`,
+    })));
+  } catch (err) { return res.status(500).json({ error: err.message }); }
+});
 
+// ── ADMIN: Flag a suspicious document ────────────────────────────────────────
+router.patch('/admin/:id/flag', protect, async (req, res) => {
+  try {
+    const { reason } = req.body;
     const { data: doc, error } = await supabase.from('documents').update({
-      status: action,
-      verified_by: 'District Admin',
-      verified_at: new Date().toISOString(),
-      reject_reason: reject_reason || null,
+      status: 'flagged',
       updated_at: new Date().toISOString(),
     }).eq('id', req.params.id).select().single();
     if (error) throw new Error(error.message);
 
-    await notify(
-      doc.user_id,
-      action === 'verified' ? 'success' : 'error',
-      action === 'verified' ? '✅ Document Verified!' : '❌ Document Rejected',
-      action === 'verified'
-        ? `Your ${doc.doc_name} has been verified by District Admin.`
-        : `Your ${doc.doc_name} was rejected. Reason: ${reject_reason || 'Invalid document'}. Please re-upload.`,
-      'p-docs'
-    );
-
-    if (doc.milestone_id && action === 'verified') {
-      try {
-        await supabase.from('user_milestone_progress').update({
-          status: 'completed', completed_at: new Date().toISOString(),
-        }).eq('milestone_id', doc.milestone_id).eq('user_id', doc.user_id);
-      } catch (_e) { }
-    }
-
-    return res.json({ ...doc, file_url: `/api/documents/view/${doc.id}` });
-  } catch (err) { return res.status(500).json({ error: err.message }); }
-});
-
-// ── POST /api/documents/admin/bulk ───────────────────────────────────────────
-router.post('/admin/bulk', protect, async (req, res) => {
-  try {
-    const { ids, action, reject_reason } = req.body;
-    if (!ids?.length) return res.status(400).json({ error: 'No IDs provided' });
-
-    const { data: docs, error } = await supabase.from('documents').update({
-      status: action,
-      verified_by: 'District Admin',
-      verified_at: new Date().toISOString(),
-      reject_reason: reject_reason || null,
-    }).in('id', ids).select('id,user_id,doc_name');
-    if (error) throw new Error(error.message);
-
-    if (docs?.length) {
-      try {
-        await supabase.from('notifications').insert(
-          docs.map(d => ({
-            user_id: d.user_id,
-            type: action === 'verified' ? 'success' : 'error',
-            title: action === 'verified' ? '✅ Document Verified' : '❌ Document Rejected',
-            message: action === 'verified'
-              ? `${d.doc_name} verified by District Admin.`
-              : `${d.doc_name} rejected. ${reject_reason || 'Please re-upload.'}`,
-            link: 'p-docs',
-          }))
-        );
-      } catch (_e) { }
-    }
-    return res.json({ updated: ids.length });
+    await notify(doc.user_id, 'warning', '⚠️ Document Flagged',
+      `Your ${doc.doc_name} was flagged by District Admin. Reason: ${reason || 'Please re-upload a clearer copy.'}`,
+      'p-docs');
+    return res.json(doc);
   } catch (err) { return res.status(500).json({ error: err.message }); }
 });
 
