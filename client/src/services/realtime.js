@@ -1,6 +1,9 @@
 /**
  * realtime.js
  * Place: client/src/services/realtime.js
+ *
+ * FIX: uploadDocument was reading localStorage.getItem('token')
+ *      but AuthContext saves as 'nc_token'. Fixed.
  */
 import { createClient } from '@supabase/supabase-js';
 
@@ -9,6 +12,8 @@ const supabase = createClient(
   import.meta.env.VITE_SUPABASE_KEY
 );
 export default supabase;
+
+// ── Citizen subscriptions ─────────────────────────────────────────────────────
 
 export const subscribeToMilestones = (userId, onChange) => {
   const ch = supabase.channel(`ms_${userId}`)
@@ -45,21 +50,41 @@ export const subscribeToNotifications = (userId, onChange) => {
   return () => supabase.removeChannel(ch);
 };
 
+// ── Admin subscriptions ───────────────────────────────────────────────────────
+
 export const subscribeToDistrictComplaints = (_district, onChange) => {
   const ch = supabase.channel(`district_all`)
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'complaints' }, p => onChange({ ...p, table: 'complaints' }))
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'user_milestone_progress' }, p => onChange({ ...p, table: 'milestones' }))
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'documents' }, p => onChange({ ...p, table: 'documents' }))
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'complaints' },
+      p => onChange({ ...p, table: 'complaints' }))
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'user_milestone_progress' },
+      p => onChange({ ...p, table: 'milestones' }))
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'documents' },
+      p => onChange({ ...p, table: 'documents' }))
     .subscribe();
   return () => supabase.removeChannel(ch);
 };
 
 /**
- * uploadDocument
- * Sends file as multipart/form-data to Express server.
- * Server uploads to Supabase Storage AND saves metadata to DB.
- * Returns the saved document record with signed file_url.
+ * subscribeToAdminAll — global admin subscription
+ * Watches complaints + milestones + documents for any change.
+ * Used by AdminApp to trigger re-fetches across all sections.
  */
+export const subscribeToAdminAll = (onChange) => {
+  const ch = supabase.channel('admin_global')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'complaints' },
+      p => onChange({ ...p, table: 'complaints' }))
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'user_milestone_progress' },
+      p => onChange({ ...p, table: 'milestones' }))
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'documents' },
+      p => onChange({ ...p, table: 'documents' }))
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'user_scheme_matches' },
+      p => onChange({ ...p, table: 'schemes' }))
+    .subscribe();
+  return () => supabase.removeChannel(ch);
+};
+
+// ── File upload (uses Express server → encrypt → Supabase Storage) ────────────
+
 export const uploadDocument = async (_userId, file, docType, extra = {}) => {
   if (file.size > 20 * 1024 * 1024) throw new Error('File too large. Max 20 MB.');
 
@@ -74,7 +99,8 @@ export const uploadDocument = async (_userId, file, docType, extra = {}) => {
     if (!okExt) throw new Error(`File type "${file.type}" not supported. Use JPG, PNG, PDF, WEBP or DOCX.`);
   }
 
-  const token = localStorage.getItem('token');
+  // FIX: was localStorage.getItem('token') — wrong key. AuthContext uses 'nc_token'
+  const token = localStorage.getItem('nc_token');
   const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:5000').replace(/\/api$/, '');
 
   const formData = new FormData();
@@ -87,7 +113,6 @@ export const uploadDocument = async (_userId, file, docType, extra = {}) => {
   const res = await fetch(`${API_URL}/api/documents/upload`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${token}` },
-    // Do NOT set Content-Type — browser sets multipart/form-data with boundary
     body: formData,
   });
 

@@ -31,6 +31,8 @@ export default function ComplaintsPage({ user }) {
   const [showForm, setShowForm] = useState(false);
   const [expanded, setExpanded] = useState({});
   const [submitting, setSubmitting] = useState(false);
+  const [toast, setToast] = useState(null);
+  const showToast = (msg, t = 'success') => { setToast({ msg, t }); setTimeout(() => setToast(null), 4000); };
   const [liveIndicator, setLiveIndicator] = useState(false);
   const [form, setForm] = useState({ title: '', category: '', description: '', location: '' });
 
@@ -52,7 +54,7 @@ export default function ComplaintsPage({ user }) {
       setTimeout(() => setLiveIndicator(false), 3000);
 
       if (payload.eventType === 'INSERT') {
-        setComplaints(c => [{ ...payload.new, timeline: [] }, ...c]);
+        setComplaints(c => c.some(x => x.id === payload.new.id) ? c : [{ ...payload.new, timeline: [] }, ...c]);
       } else if (payload.eventType === 'UPDATE') {
         setComplaints(c => c.map(comp =>
           comp.id === payload.new.id ? { ...comp, ...payload.new } : comp
@@ -63,15 +65,15 @@ export default function ComplaintsPage({ user }) {
   }, [user?.id]);
 
   const submit = async () => {
-    if (!form.title || !form.category) return alert('Title and category required');
+    if (!form.title || !form.category) { showToast('Title and category required', 'error'); return; }
     setSubmitting(true);
     try {
       const { data } = await API.post('/api/complaints', form);
-      setComplaints(c => [{ ...data, timeline: [] }, ...c]);
+      load();
       setForm({ title: '', category: '', description: '', location: '' });
       setShowForm(false);
-      alert(`✅ Complaint #${data.ticket_no} filed! District will respond within 14 days.`);
-    } catch (e) { alert(e.response?.data?.error || 'Filing failed'); }
+      showToast(`Complaint #${data.ticket_no} filed! District will respond within 14 days.`);
+    } catch (e) { showToast(e.response?.data?.error || 'Filing failed', 'error'); }
     finally { setSubmitting(false); }
   };
 
@@ -85,6 +87,20 @@ export default function ComplaintsPage({ user }) {
 
   return (
     <div className="page on">
+      {/* Toast notification */}
+      {toast && (
+        <div style={{
+          position: 'fixed', bottom: 24, right: 18, zIndex: 9999,
+          background: toast.t === 'success' ? 'var(--gn)' : 'var(--rd)',
+          color: '#fff', borderRadius: 'var(--r)', padding: '12px 18px',
+          fontSize: 13, fontWeight: 600, maxWidth: 340,
+          boxShadow: '0 4px 20px rgba(0,0,0,.2)',
+          display: 'flex', alignItems: 'center', gap: 8,
+          animation: 'nv-fadein .2s ease'
+        }}>
+          {toast.t === 'success' ? '✅' : '❌'} {toast.msg}
+        </div>
+      )}
       <div className="bc">Dashboard › <span>Complaints</span></div>
       <div className="ph" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div>

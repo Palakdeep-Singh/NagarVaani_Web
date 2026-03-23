@@ -5,7 +5,8 @@ const API = axios.create({
 });
 
 API.interceptors.request.use((req) => {
-  const token = localStorage.getItem("token");
+  // AuthContext stores token as 'nc_token' — must match exactly
+  const token = localStorage.getItem("nc_token");
   if (token) req.headers.Authorization = `Bearer ${token}`;
   return req;
 });
