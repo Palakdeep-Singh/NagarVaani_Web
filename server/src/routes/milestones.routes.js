@@ -1,5 +1,9 @@
 /**
- * milestones.routes.js — Fixed with proper disbursement + beneficiary tracking
+ * milestones.routes.js — Fixed
+ * 
+ * KEY FIX: Admin endpoint now only joins documents that have scheme_id or milestone_id set.
+ * Personal Document Locker files (no scheme_id, no milestone_id) are EXCLUDED from admin view.
+ * Admins should only see documents submitted as part of a scheme application.
  */
 import express from 'express';
 import { protect } from '../middleware/auth.middleware.js';
@@ -19,7 +23,7 @@ router.get('/my', protect, async (req, res) => {
           step_number, title, description, expected_days, amount
         ),
         schemes (
-          name, category, benefit_type, level, ministry, required_docs
+          name, category, level, ministry, required_docs
         )
       `)
       .eq('user_id', req.user.userId)
@@ -41,22 +45,22 @@ router.get('/scheme/:schemeId', protect, async (req, res) => {
 
     const { data: progress } = await supabase
       .from('user_milestone_progress')
-      .select(`*, documents(id, doc_name, doc_type, status, file_url, mime_type)`)
+      .select(`*, documents(id, doc_name, doc_type, status, file_url, mime_type, scheme_id, milestone_id)`)
       .eq('scheme_id', req.params.schemeId)
       .eq('user_id', req.user.userId);
 
     const progressMap = {};
     (progress || []).forEach(p => { progressMap[p.milestone_id] = p; });
 
-    // Fetch scheme-level required_docs as fallback
-    const { data: scheme } = await supabase.from('schemes').select('required_docs').eq('id', req.params.schemeId).single();
+    const { data: scheme } = await supabase
+      .from('schemes').select('required_docs').eq('id', req.params.schemeId).single();
     const schemeDocs = scheme?.required_docs?.split(',').filter(Boolean) || [];
 
     const merged = (milestones || []).map(m => ({
       ...m,
       progress: progressMap[m.id] || { status: 'not_started' },
-      // Fallback: Use scheme's required_docs for the first milestone if missing
-      documents_required: m.documents_required || (m.step_number === 1 ? schemeDocs : []),
+      // documents_required is handled via scheme-level required_docs or similar
+      documents_required: m.step_number === 1 ? schemeDocs : [],
     }));
 
     res.json(merged);
@@ -71,8 +75,7 @@ router.patch('/:id/resubmit', protect, async (req, res) => {
     const { data: prog } = await supabase
       .from('user_milestone_progress')
       .select('*, scheme_milestones(title), schemes(name)')
-      .eq('id', req.params.id)
-      .single();
+      .eq('id', req.params.id).single();
 
     if (!prog || prog.user_id !== req.user.userId)
       return res.status(403).json({ error: 'Not your milestone' });
@@ -85,10 +88,14 @@ router.patch('/:id/resubmit', protect, async (req, res) => {
       updated_at: new Date().toISOString(),
     }).eq('id', req.params.id);
 
-    // Link document to this milestone
     if (document_id) {
+      // Link this document to the scheme/milestone so admin can see it
       await supabase.from('documents')
-        .update({ milestone_id: req.params.id, status: 'pending_review' })
+        .update({
+          milestone_id: req.params.id,
+          scheme_id: prog.scheme_id,  // Also set scheme_id so admin can filter
+          status: 'pending_review',
+        })
         .eq('id', document_id)
         .eq('user_id', req.user.userId);
     }
@@ -97,49 +104,138 @@ router.patch('/:id/resubmit', protect, async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// ── Admin: get all milestone progress scoped by role ─────────────────────────
+// ── Admin: get milestone progress scoped by role ──────────────────────────────
+// IMPORTANT: Only returns documents that have scheme_id or milestone_id set
+// (i.e., documents submitted as part of a scheme, NOT personal Document Locker files)
 router.get('/admin/district', protect, async (req, res) => {
   try {
     const { scheme_id, status } = req.query;
     const role = req.user?.role;
 
+    // ── Build Base Jurisdiction Filter ──
+    const jurisdictionFilter = (q) => {
+      if (role === 'district' && req.user.district) return q.eq('users.district', req.user.district);
+      if (role === 'state' && req.user.state) return q.eq('users.state', req.user.state);
+      return q;
+    };
+
+    // ── 1. Fetch Status Counts for the Jurisdiction ──
+    const countsQuery = supabase
+      .from('user_milestone_progress')
+      .select('status, users!inner(district, state)');
+    
+    let { data: allStatuses, error: countErr } = await jurisdictionFilter(countsQuery);
+    if (countErr) console.error('[milestones/admin] Count fetch error:', countErr.message);
+
+    const counts = (allStatuses || []).reduce((acc, curr) => {
+      acc[curr.status] = (acc[curr.status] || 0) + 1;
+      return acc;
+    }, { applied: 0, pending: 0, completed: 0, error: 0, blocked: 0, locked: 0 });
+
+    // ── 2. Fetch Records with Enriched Profile Data ──
     let query = supabase
       .from('user_milestone_progress')
       .select(`
         *,
-        users!inner (id, full_name, phone, district, ward, state, booth, pincode, aadhaar_number, voter_id),
-        scheme_milestones (*),
-        schemes (name, category, level, benefit_amount),
-        documents (id, doc_name, file_url, status, doc_type, mime_type)
+        users!inner (
+          id, full_name, phone, district, ward, state, pincode, 
+          date_of_birth, gender, category, total_benefits
+        ),
+        scheme_milestones (step_number, title, amount),
+        schemes (name, category, level)
       `)
       .order('updated_at', { ascending: false })
       .limit(300);
 
-    if (role === 'district' && req.user.district) {
-      query = query.eq('users.district', req.user.district);
-      query = query.in('status', ['applied', 'pending', 'error']);
-    } else if (role === 'state' && req.user.state) {
-      query = query.eq('users.state', req.user.state);
+    query = jurisdictionFilter(query);
+
+    // Apply status filtering for the records being returned
+    if (status && status !== 'all') {
+      query = query.eq('status', status);
+    } else if (!status && (role === 'district' || role === 'state')) {
+      // Default to "Review Needed" if no status specified
       query = query.in('status', ['applied', 'pending', 'error']);
     }
-    // central sees all
 
     if (scheme_id) query = query.eq('scheme_id', scheme_id);
-    if (status && status !== 'all') query = query.eq('status', status);
 
     const { data, error } = await query;
     if (error) throw new Error(error.message);
 
-    const decrypted = (data || []).map(row => ({
-      ...row,
-      users: decryptUserFields(row.users),
-    }));
+    if (!data || data.length === 0) {
+      return res.json({ records: [], counts, total: 0 });
+    }
 
-    res.json(decrypted);
-  } catch (err) { res.status(500).json({ error: err.message }); }
+    // Extract IDs for batch document fetching
+    const userIds = [...new Set(data.map(r => r.user_id))];
+    const schemeIds = [...new Set(data.map(r => r.scheme_id).filter(Boolean))];
+    const milestoneIds = [...new Set(data.map(r => r.milestone_id).filter(Boolean))];
+
+    // Batch fetch documents for all milestones in this page
+    // We fetch documents that match user_id AND (scheme_id OR milestone_id)
+    let docQuery = supabase
+      .from('documents')
+      .select('id, user_id, scheme_id, milestone_id, doc_name, doc_type, status, file_url, mime_type, created_at')
+      .in('user_id', userIds);
+
+    const orFilters = [];
+    if (schemeIds.length > 0) orFilters.push(`scheme_id.in.(${schemeIds.join(',')})`);
+    if (milestoneIds.length > 0) orFilters.push(`milestone_id.in.(${milestoneIds.join(',')})`);
+
+    if (orFilters.length > 0) {
+      docQuery = docQuery.or(orFilters.join(','));
+    }
+
+    const { data: allDocs, error: docErr } = await docQuery.order('created_at', { ascending: false });
+
+    if (docErr) console.error('[milestones/admin] Doc fetch error:', docErr.message);
+
+    // Group documents by [user_id + scheme_id] or [user_id + milestone_id]
+    const docMap = {};
+    (allDocs || []).forEach(doc => {
+      // Map to both scheme and milestone buckets if applicable
+      if (doc.scheme_id) {
+        const key = `s_${doc.user_id}_${doc.scheme_id}`;
+        if (!docMap[key]) docMap[key] = [];
+        docMap[key].push(doc);
+      }
+      if (doc.milestone_id) {
+        const key = `m_${doc.user_id}_${doc.milestone_id}`;
+        if (!docMap[key]) docMap[key] = [];
+        docMap[key].push(doc);
+      }
+    });
+
+    const enriched = data.map(row => {
+      const decryptedUser = decryptUserFields(row.users);
+      
+      // Get documents for this specific milestone or scheme
+      const sKey = `s_${row.user_id}_${row.scheme_id}`;
+      const mKey = `m_${row.user_id}_${row.milestone_id}`;
+      
+      // Combine and remove duplicates by ID
+      const docs = [...(docMap[sKey] || []), ...(docMap[mKey] || [])];
+      const uniqueDocs = Array.from(new Map(docs.map(d => [d.id, d])).values());
+
+      return {
+        ...row,
+        users: decryptedUser,
+        documents: uniqueDocs,
+      };
+    });
+
+    res.json({ 
+      records: enriched, 
+      counts, 
+      total: status === 'all' || !status ? Object.values(counts).reduce((a,b)=>a+b,0) : (counts[status] || 0)
+    });
+  } catch (err) {
+    console.error('[milestones/admin] 500 Error:', err.message, err.stack);
+    res.status(500).json({ error: err.message });
+  }
 });
 
-// ── Admin: update milestone status + DISBURSEMENT + beneficiary credit ────────
+// ── Admin: update milestone status + disbursement + beneficiary credit ────────
 router.patch('/admin/:id', protect, async (req, res) => {
   try {
     const { status, admin_notes } = req.body;
@@ -147,13 +243,12 @@ router.patch('/admin/:id', protect, async (req, res) => {
     if (!validStatuses.includes(status))
       return res.status(400).json({ error: 'Invalid status' });
 
-    // Fetch full progress row
     const { data: prog, error: fetchErr } = await supabase
       .from('user_milestone_progress')
       .select(`
         *,
         users(id, total_benefits, phone, full_name),
-        schemes(name, benefit_type, level),
+        schemes(name, level),
         scheme_milestones(title, amount, step_number)
       `)
       .eq('id', req.params.id)
@@ -165,10 +260,10 @@ router.patch('/admin/:id', protect, async (req, res) => {
       status,
       admin_notes: admin_notes || null,
       updated_at: new Date().toISOString(),
-      approved_by: req.user.userId,
+      approved_by: req.user.adminId || req.user.userId,
       approved_at: status === 'completed' ? new Date().toISOString() : null,
+      completed_at: status === 'completed' ? new Date().toISOString() : null,
     };
-    if (status === 'completed') updates.completed_at = new Date().toISOString();
 
     const { error: updErr } = await supabase
       .from('user_milestone_progress')
@@ -180,35 +275,30 @@ router.patch('/admin/:id', protect, async (req, res) => {
     if (status === 'completed') {
       const milestoneAmount = prog.scheme_milestones?.amount || 0;
 
-      // ── DISBURSEMENT: Credit beneficiary account ──────────────────────────
+      // Credit beneficiary
       if (milestoneAmount > 0) {
         const currentBenefits = prog.users?.total_benefits || 0;
-        const newTotal = currentBenefits + milestoneAmount;
+        await supabase.from('users').update({
+          total_benefits: currentBenefits + milestoneAmount,
+          last_benefit_received_at: new Date().toISOString(),
+          last_benefit_amount: milestoneAmount,
+        }).eq('id', prog.user_id);
 
-        // Update user's total benefits received
-        await supabase.from('users')
-          .update({
-            total_benefits: newTotal,
-            last_benefit_received_at: new Date().toISOString(),
-            last_benefit_amount: milestoneAmount,
-          })
-          .eq('id', prog.user_id);
-
-        // Record in transactions/disbursement log
+        // Log disbursement transaction
         await supabase.from('benefit_transactions').insert({
           user_id: prog.user_id,
           scheme_id: prog.scheme_id,
           milestone_id: prog.milestone_id,
           amount: milestoneAmount,
-          type: prog.schemes?.benefit_type || 'cash_transfer',
+          type: 'cash_transfer',
           milestone_title: prog.scheme_milestones?.title,
           scheme_name: prog.schemes?.name,
-          approved_by: req.user.userId,
+          approved_by: req.user.adminId || req.user.userId,
           disbursed_at: new Date().toISOString(),
-        }).catch(() => { }); // non-fatal if table doesn't exist yet
+        }).catch(() => { }); // non-fatal if table doesn't exist
       }
 
-      // ── UNLOCK NEXT MILESTONE ──────────────────────────────────────────────
+      // Unlock next milestone
       const { data: nextMs } = await supabase
         .from('scheme_milestones')
         .select('id, title, step_number')
@@ -218,7 +308,6 @@ router.patch('/admin/:id', protect, async (req, res) => {
         .limit(1);
 
       if (nextMs?.[0]) {
-        // Unlock next milestone for this user
         await supabase.from('user_milestone_progress').upsert({
           user_id: prog.user_id,
           scheme_id: prog.scheme_id,
@@ -232,24 +321,21 @@ router.patch('/admin/:id', protect, async (req, res) => {
           user_id: prog.user_id,
           type: 'success',
           title: '✅ Milestone Cleared!',
-          message: `"${prog.scheme_milestones?.title}" verified.${milestoneAmount > 0 ? ` ₹${milestoneAmount.toLocaleString('en-IN')} credited to your account.` : ''} Next: ${nextMs[0].title}.`,
+          message: `"${prog.scheme_milestones?.title}" has been verified.${milestoneAmount > 0 ? ` ₹${milestoneAmount.toLocaleString('en-IN')} is being credited to your bank account.` : ''} Next step: "${nextMs[0].title}" is now unlocked.`,
           link: 'p-active',
         });
       } else {
-        // Last milestone — scheme complete
+        // Last milestone — mark scheme complete
         await supabase.from('user_scheme_matches').update({
           status: 'completed',
           updated_at: new Date().toISOString(),
-        })
-          .eq('user_id', prog.user_id)
-          .eq('scheme_id', prog.scheme_id);
+        }).eq('user_id', prog.user_id).eq('scheme_id', prog.scheme_id);
 
-        const totalAmount = milestoneAmount;
         await supabase.from('notifications').insert({
           user_id: prog.user_id,
           type: 'success',
-          title: '🎉 Scheme Completed!',
-          message: `All milestones for "${prog.schemes?.name}" completed!${totalAmount > 0 ? ` Total benefit: ₹${totalAmount.toLocaleString('en-IN')}.` : ''} Thank you!`,
+          title: '🎉 Scheme Fully Completed!',
+          message: `Congratulations! All milestones for "${prog.schemes?.name}" are complete.${milestoneAmount > 0 ? ` Final payment of ₹${milestoneAmount.toLocaleString('en-IN')} processed.` : ''} Thank you for participating.`,
           link: 'p-active',
         });
       }
@@ -257,21 +343,25 @@ router.patch('/admin/:id', protect, async (req, res) => {
       await supabase.from('notifications').insert({
         user_id: prog.user_id,
         type: 'error',
-        title: '⚠️ Action Required',
-        message: `Issue with "${prog.scheme_milestones?.title}": ${admin_notes || 'Document rejected. Please re-upload a clear copy.'}`,
+        title: '⚠️ Action Required — Document Issue',
+        message: `Your document for "${prog.scheme_milestones?.title}" (${prog.schemes?.name}) was rejected. Reason: ${admin_notes || 'Document unclear or invalid. Please re-upload a clear, valid copy.'}`,
         link: 'p-active',
       });
     }
 
-    res.json({ success: true, status, amount_disbursed: status === 'completed' ? (prog.scheme_milestones?.amount || 0) : 0 });
+    res.json({
+      success: true,
+      status,
+      amount_disbursed: status === 'completed' ? (prog.scheme_milestones?.amount || 0) : 0,
+    });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// ── Admin: bulk update ─────────────────────────────────────────────────────────
+// ── Admin: bulk update milestones ─────────────────────────────────────────────
 router.post('/admin/bulk', protect, async (req, res) => {
   try {
     const { ids, status, admin_notes } = req.body;
-    if (!ids?.length) return res.status(400).json({ error: 'No IDs' });
+    if (!ids?.length) return res.status(400).json({ error: 'No IDs provided' });
 
     const results = [];
     const { data: records } = await supabase
@@ -282,24 +372,16 @@ router.post('/admin/bulk', protect, async (req, res) => {
     for (const record of records || []) {
       try {
         const milestoneAmount = record.scheme_milestones?.amount || 0;
-        const updates = {
+        await supabase.from('user_milestone_progress').update({
           status,
           admin_notes: admin_notes || 'Bulk verified',
           updated_at: new Date().toISOString(),
-          approved_by: req.user.userId,
+          approved_by: req.user.adminId || req.user.userId,
           approved_at: status === 'completed' ? new Date().toISOString() : null,
           completed_at: status === 'completed' ? new Date().toISOString() : null,
-        };
-
-        const { error: updErr } = await supabase
-          .from('user_milestone_progress')
-          .update(updates)
-          .eq('id', record.id);
-
-        if (updErr) throw updErr;
+        }).eq('id', record.id);
 
         if (status === 'completed' && milestoneAmount > 0) {
-          // Benefit Credit
           const newTotal = (record.users?.total_benefits || 0) + milestoneAmount;
           await supabase.from('users').update({
             total_benefits: newTotal,
@@ -307,16 +389,15 @@ router.post('/admin/bulk', protect, async (req, res) => {
             last_benefit_amount: milestoneAmount,
           }).eq('id', record.user_id);
 
-          // Log Transaction
           await supabase.from('benefit_transactions').insert({
             user_id: record.user_id,
             scheme_id: record.scheme_id,
             milestone_id: record.milestone_id,
             amount: milestoneAmount,
-            type: record.schemes?.benefit_type || 'cash_transfer',
+            type: 'cash_transfer',
             milestone_title: record.scheme_milestones?.title,
             scheme_name: record.schemes?.name,
-            approved_by: req.user.userId,
+            approved_by: req.user.adminId || req.user.userId,
             disbursed_at: new Date().toISOString(),
           }).catch(() => { });
         }
@@ -326,6 +407,7 @@ router.post('/admin/bulk', protect, async (req, res) => {
         results.push({ id: record.id, ok: false, error: e.message });
       }
     }
+
     res.json({ success: true, count: ids.length, results });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });

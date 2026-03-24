@@ -172,10 +172,15 @@ export const applyToScheme = async (userId, schemeId, document_ids = []) => {
   };
 };
 
-export const getSchemeStats = async () => {
-  const { data: enrollments } = await supabase
+export const getSchemeStats = async (district, state, role) => {
+  let query = supabase
     .from('user_scheme_matches')
-    .select('scheme_id, status, score, schemes(name, category, benefit_amount)');
+    .select('scheme_id, status, score, users!inner(state, district), schemes(name, category, benefit_amount)');
+
+  if (role === 'district') query = query.eq('users.district', district);
+  else if (role === 'state') query = query.eq('users.state', state);
+
+  const { data: enrollments } = await query;
 
   const byScheme = {};
   (enrollments || []).forEach(e => {
@@ -212,7 +217,7 @@ export const getSchemeStats = async () => {
  * Shows: registrations, active schemes, complaints, satisfaction %
  */
 export const getBoothAnalytics = async (district, state, role) => {
-  let userQuery = supabase.from('users').select('id, booth, ward, village');
+  let userQuery = supabase.from('users').select('id, ward, village');
   if (role === 'district') userQuery = userQuery.eq('district', district);
   else if (role === 'state') userQuery = userQuery.eq('state', state);
 
@@ -222,7 +227,7 @@ export const getBoothAnalytics = async (district, state, role) => {
   const userIds = users.map(u => u.id);
   const boothMap = {};
   users.forEach(u => {
-    const key = u.booth || u.ward || u.village || 'Unknown';
+    const key = u.ward || u.village || 'Unknown';
     if (!boothMap[key]) boothMap[key] = { booth: key, userIds: [], citizens: 0 };
     boothMap[key].userIds.push(u.id);
     boothMap[key].citizens++;

@@ -31,7 +31,6 @@ export default function EditProfile({ onBack, onSaved, onComplaints }) {
     disability: user?.disability || '',
     area_type: user?.area_type || 'rural',
     bpl_card: user?.bpl_card || '',
-    booth: user?.booth || '',
   });
   const [loading, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -166,7 +165,6 @@ export default function EditProfile({ onBack, onSaved, onComplaints }) {
           <Field label="District" field="district" required hint="e.g. Latur" />
           <Field label="Ward / Taluka" field="ward" hint="Ward or Taluka name" />
           <Field label="Village / Area" field="village" hint="Village or locality" />
-          <Field label="Booth / Polling Station" field="booth" hint="e.g. Booth No. 42 / Primary School" />
           <Field label="Pincode" field="pincode" hint="6-digit pincode" />
           <div className="form-group">
             <label className="form-label">Area Type</label>

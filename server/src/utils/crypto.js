@@ -131,7 +131,6 @@ export const ENCRYPTED_FIELDS = [
   'land_acres',
   'date_of_birth',
   'full_name',
-  'booth',
 ];
 
 /**

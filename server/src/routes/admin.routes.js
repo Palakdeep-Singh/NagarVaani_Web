@@ -69,52 +69,58 @@ router.get('/stats', protect, requireRole('central', 'state', 'district'), async
     const adminState = req.user.state;
     const adminDistrict = req.user.district;
 
+    // Build base queries
+    const filters = {};
+    if (role === 'district') filters.district = adminDistrict;
+    if (role === 'state') filters.state = adminState;
+
+    // Build base queries
     let uq = supabase.from('users').select('*', { count: 'exact', head: true });
-    if (role === 'district') uq = uq.eq('district', adminDistrict);
-    else if (role === 'state') uq = uq.eq('state', adminState);
-    const { count: totalUsers } = await uq;
+    let sq = supabase.from('schemes').select('*', { count: 'exact', head: true }).eq('is_active', true);
+    let pq = supabase.from('user_scheme_matches').select('id, users!inner(id)', { count: 'exact', head: true }).eq('status', 'pending');
+    let cqo = supabase.from('complaints').select('*', { count: 'exact', head: true }).not('status', 'in', '("resolved","closed")');
+    let cqr = supabase.from('complaints').select('*', { count: 'exact', head: true }).in('status', ['resolved', 'closed']);
+    
+    // For sums and complex counts, we limit what we fetch to essential fields only
+    let eq = supabase.from('user_scheme_matches').select('user_id, users!inner(id)');
+    let fq = supabase.from('user_milestone_progress').select('scheme_milestones(amount), users!inner(id)').eq('status', 'completed');
+    let fcq = supabase.from('user_scheme_matches').select('schemes(benefit_amount), users!inner(id)');
 
-    const { count: activeSchemes } = await supabase.from('schemes')
-      .select('*', { count: 'exact', head: true }).eq('is_active', true);
+    // Apply role-based filters
+    if (role === 'district') {
+      uq = uq.eq('district', adminDistrict);
+      pq = pq.eq('users.district', adminDistrict);
+      cqo = cqo.eq('district', adminDistrict);
+      cqr = cqr.eq('district', adminDistrict);
+      eq = eq.eq('users.district', adminDistrict);
+      fq = fq.eq('users.district', adminDistrict);
+      fcq = fcq.eq('users.district', adminDistrict);
+    } else if (role === 'state') {
+      uq = uq.eq('state', adminState);
+      pq = pq.eq('users.state', adminState);
+      cqo = cqo.eq('state', adminState);
+      cqr = cqr.eq('state', adminState);
+      eq = eq.eq('users.state', adminState);
+      fq = fq.eq('users.state', adminState);
+      fcq = fcq.eq('users.state', adminState);
+    }
 
-    let eq = supabase.from('user_scheme_matches').select('user_id,users!inner(state,district)');
-    if (role === 'district') eq = eq.eq('users.district', adminDistrict);
-    else if (role === 'state') eq = eq.eq('users.state', adminState);
-    const { data: enrolledData } = await eq;
-    const uniqueUserIds = new Set((enrolledData || []).map(m => m.user_id));
-    const citizensEnrolled = uniqueUserIds.size;
+    // Execute all queries in parallel
+    const [
+      { count: totalUsers },
+      { count: activeSchemes },
+      { count: pendingApplications },
+      { count: openComplaints },
+      { count: resolvedComplaints },
+      { data: enrolledData },
+      { data: fundData },
+      { data: commitData }
+    ] = await Promise.all([
+      uq, sq, pq, cqo, cqr, eq, fq, fcq
+    ]);
 
-    let pq = supabase.from('user_scheme_matches').select('*,users!inner(state,district)', { count: 'exact', head: true })
-      .eq('status', 'pending');
-    if (role === 'district') pq = pq.eq('users.district', adminDistrict);
-    else if (role === 'state') pq = pq.eq('users.state', adminState);
-    const { count: pendingApplications } = await pq;
-
-    let cqo = supabase.from('complaints').select('*', { count: 'exact', head: true })
-      .not('status', 'in', '("resolved","closed")');
-    if (role === 'district') cqo = cqo.eq('district', adminDistrict);
-    else if (role === 'state') cqo = cqo.eq('state', adminState);
-    const { count: openComplaints } = await cqo;
-
-    let cqr = supabase.from('complaints').select('*', { count: 'exact', head: true })
-      .in('status', ['resolved', 'closed']);
-    if (role === 'district') cqr = cqr.eq('district', adminDistrict);
-    else if (role === 'state') cqr = cqr.eq('state', adminState);
-    const { count: resolvedComplaints } = await cqr;
-
-    let fq = supabase.from('user_milestone_progress')
-      .select('scheme_milestones(amount),users!inner(state,district)')
-      .eq('status', 'completed');
-    if (role === 'district') fq = fq.eq('users.district', adminDistrict);
-    else if (role === 'state') fq = fq.eq('users.state', adminState);
-    const { data: fundData } = await fq;
+    const citizensEnrolled = new Set((enrolledData || []).map(m => m.user_id)).size;
     const fundsDisbursed = (fundData || []).reduce((s, r) => s + (r.scheme_milestones?.amount || 0), 0);
-
-    let fcq = supabase.from('user_scheme_matches')
-      .select('schemes(benefit_amount),users!inner(state,district)');
-    if (role === 'district') fcq = fcq.eq('users.district', adminDistrict);
-    else if (role === 'state') fcq = fcq.eq('users.state', adminState);
-    const { data: commitData } = await fcq;
     const fundsCommitted = (commitData || []).reduce((s, r) => s + (r.schemes?.benefit_amount || 0), 0);
 
     const deliveryRate = (resolvedComplaints || 0) + (openComplaints || 0) > 0
@@ -124,7 +130,7 @@ router.get('/stats', protect, requireRole('central', 'state', 'district'), async
     res.json({
       totalUsers: totalUsers || 0,
       activeSchemes: activeSchemes || 0,
-      citizensEnrolled: citizensEnrolled || 0,
+      citizensEnrolled,
       pendingApplications: pendingApplications || 0,
       openComplaints: openComplaints || 0,
       resolvedComplaints: resolvedComplaints || 0,
@@ -293,12 +299,17 @@ router.get('/dashboard/demographics', protect, requireRole('central', 'state', '
 // ── GET /api/admin/dashboard/fund-history ────────────────────────────────────
 router.get('/dashboard/fund-history', protect, requireRole('central', 'state', 'district'), async (req, res) => {
   try {
+    const { year } = req.query; // optional year filter
     let q = supabase.from('user_milestone_progress')
       .select('completed_at,scheme_milestones(amount),users!inner(state,district)')
       .eq('status', 'completed').not('completed_at', 'is', null);
 
     if (req.user.role === 'district') q = q.eq('users.district', req.user.district);
     else if (req.user.role === 'state') q = q.eq('users.state', req.user.state);
+
+    if (year) {
+      q = q.gte('completed_at', `${year}-01-01T00:00:00Z`).lte('completed_at', `${year}-12-31T23:59:59Z`);
+    }
 
     const { data } = await q;
     const monthMap = {};
@@ -313,15 +324,23 @@ router.get('/dashboard/fund-history', protect, requireRole('central', 'state', '
     const predicted = [];
     if (months.length >= 2) {
       const lastVal = months[months.length - 1].disbursed;
-      const growth = (lastVal - months[0].disbursed) / (months.length - 1);
+      // Slightly more robust linear trend
+      const avgGrowth = months.reduce((acc, m, i) => {
+        if (i === 0) return acc;
+        return acc + (m.disbursed - months[i - 1].disbursed);
+      }, 0) / (months.length - 1);
+
       for (let i = 1; i <= 3; i++) {
-        predicted.push({ month: 'Next ' + i, disbursed: Math.max(0, Math.round(lastVal + growth * i)), predicted: true });
+        const nextMonth = new Date(months[months.length - 1].month + '-01');
+        nextMonth.setMonth(nextMonth.getMonth() + i);
+        const nextKey = `${nextMonth.getFullYear()}-${String(nextMonth.getMonth() + 1).padStart(2, '0')}`;
+        predicted.push({ month: nextKey, disbursed: Math.max(0, Math.round(lastVal + avgGrowth * i)), predicted: true });
       }
     }
 
     const change = months.length >= 2 ? {
       amount: months[months.length - 1].disbursed - months[months.length - 2].disbursed,
-      percent: months[months.length - 2].disbursed > 0 ? Math.round(((months[months.length-1].disbursed - months[months.length-2].disbursed) / months[months.length-2].disbursed) * 100) : 0
+      percent: months[months.length - 2].disbursed > 0 ? Math.round(((months[months.length - 1].disbursed - months[months.length - 2].disbursed) / months[months.length - 2].disbursed) * 100) : 0
     } : { amount: 0, percent: 0 };
 
     res.json({ actual: months, predicted, change });

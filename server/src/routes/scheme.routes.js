@@ -84,7 +84,7 @@ router.post('/rematch', protect, async (req, res) => {
 // GET /api/schemes/admin/stats
 router.get('/admin/stats', protect, async (req, res) => {
   try {
-    const stats = await getSchemeStats();
+    const stats = await getSchemeStats(req.user.district, req.user.state, req.user.role);
     res.json(stats);
   } catch (err) { res.status(500).json({ error: err.message }); }
 });

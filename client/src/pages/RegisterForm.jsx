@@ -38,7 +38,7 @@ export default function RegisterForm({ phone, onSuccess }) {
     full_name: "", gender: "", date_of_birth: "",
     religion: "", marital_status: "", disability: "no",
     // Address
-    state: "", district: "", ward: "", village: "", booth: "",
+    state: "", district: "", ward: "", village: "",
     pincode: "", area_type: "rural",
     // Socioeconomic
     category: "", occupation: "", annual_income: "",
@@ -224,11 +224,6 @@ export default function RegisterForm({ phone, onSuccess }) {
                 <input className="form-input" placeholder="Village name"
                   value={form.village} onChange={set("village")} />
               </div>
-            </div>
-            <div className="form-group">
-              <label className="form-label">Booth / Polling Station</label>
-              <input className="form-input" placeholder="e.g. Booth No. 42 / Primary School"
-                value={form.booth} onChange={set("booth")} />
             </div>
             <div className="form-group">
               <label className="form-label">Area Type</label>
