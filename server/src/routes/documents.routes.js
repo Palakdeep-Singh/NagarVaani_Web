@@ -141,7 +141,15 @@ router.get('/view/:id',
         .eq('id', req.params.id).single();
 
       if (error || !doc) return res.status(404).json({ error: 'Document not found' });
-      if (doc.user_id !== req.user.userId) return res.status(403).json({ error: 'Not authorized' });
+      
+      const isOwner = doc.user_id === req.user.userId;
+      const isAdmin = ['central', 'state', 'district'].includes(req.user.role);
+
+      if (!isOwner && !isAdmin) {
+        console.warn(`[DOC VIEW] 403 Forbidden: Owner(${doc.user_id}) != Requester(Citizen:${req.user.userId}, Admin:${req.user.adminId})`);
+        return res.status(403).json({ error: 'Not authorized' });
+      }
+      
       if (!doc.file_path) return res.status(404).json({ error: 'No file stored' });
 
       const { data: blob, error: dlErr } = await supabase.storage
@@ -210,12 +218,26 @@ router.get('/for-scheme', protect, async (req, res) => {
   } catch (err) { return res.status(500).json({ error: err.message }); }
 });
 
-// ── ADMIN: GET flagged/all docs for a district ────────────────────────────────
+// ── ADMIN: GET flagged/all docs — scoped by role ──────────────────────────────
 router.get('/admin/all', protect, async (req, res) => {
   try {
-    const { data, error } = await supabase.from('documents')
-      .select('id,doc_type,doc_name,file_size,mime_type,status,created_at,user_id,users(full_name,phone,district)')
+    let query = supabase.from('documents')
+      .select('id,doc_type,doc_name,file_size,mime_type,status,created_at,user_id,users!inner(full_name,phone,district,state)')
       .order('created_at', { ascending: false }).limit(200);
+
+    // Role-based scoping
+    if (req.user?.role === 'district') {
+      query = query.eq('users.district', req.user.district);
+    } else if (req.user?.role === 'state') {
+      query = query.eq('users.state', req.user.state);
+    }
+    // Central sees all
+
+    if (req.query.user_id) {
+      query = query.eq('user_id', req.query.user_id);
+    }
+
+    const { data, error } = await query;
     if (error) throw new Error(error.message);
     return res.json((data || []).map(d => ({
       ...d, file_url: `/api/documents/view/${d.id}`,
@@ -238,6 +260,39 @@ router.patch('/admin/:id/flag', protect, async (req, res) => {
       'p-docs');
     return res.json(doc);
   } catch (err) { return res.status(500).json({ error: err.message }); }
+});
+
+// ── ADMIN: View a document ───────────────────────────────────────────────────
+router.get('/admin/view/:id', protect, async (req, res) => {
+  try {
+    const { data: doc, error } = await supabase.from('documents')
+      .select('*, users!inner(district,state)')
+      .eq('id', req.params.id).single();
+
+    if (error || !doc) return res.status(404).json({ error: 'Document not found' });
+
+    // Scoping check
+    if (req.user.role === 'district' && doc.users.district !== req.user.district)
+      return res.status(403).json({ error: 'Not authorized for this district' });
+    if (req.user.role === 'state' && doc.users.state !== req.user.state)
+      return res.status(403).json({ error: 'Not authorized for this state' });
+
+    const { data: blob, error: dlErr } = await supabase.storage
+      .from(BUCKET).download(doc.file_path);
+    if (dlErr) return res.status(500).json({ error: 'Download failed: ' + dlErr.message });
+
+    const decryptedBuffer = decryptBuffer(Buffer.from(await blob.arrayBuffer()));
+
+    res.set({
+      'Content-Type': doc.mime_type || 'application/octet-stream',
+      'Content-Disposition': `inline; filename="${doc.doc_name}"`,
+      'Content-Length': decryptedBuffer.length,
+      'Cache-Control': 'private, no-store',
+    });
+    return res.send(decryptedBuffer);
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
 });
 
 export default router;

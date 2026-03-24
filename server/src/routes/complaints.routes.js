@@ -107,12 +107,22 @@ router.get('/:id', protect, async (req, res) => {
 // ── Admin: get district complaints ───────────────────────────────────────────
 router.get('/admin/district', protect, async (req, res) => {
   try {
-    const { district, status, priority } = req.query;
+    const { district, state, status, priority } = req.query;
     let query = supabase.from('complaints').select(`
       *, complaint_timeline(*)
     `).order('filed_at', { ascending: false });
 
+    // Role-based scoping
+    if (req.user?.role === 'district') {
+      query = query.eq('district', req.user.district);
+    } else if (req.user?.role === 'state') {
+      query = query.eq('state', req.user.state);
+    }
+    // Central sees all — no filter
+
+    // Additional filters from query params
     if (district) query = query.eq('district', district);
+    if (state && req.user?.role === 'central') query = query.eq('state', state);
     if (status) query = query.eq('status', status);
     if (priority) query = query.eq('priority', priority);
 
@@ -139,9 +149,9 @@ router.patch('/admin/:id', protect, async (req, res) => {
     if (priority) updates.priority = priority;
     if (status === 'resolved') updates.resolved_at = new Date().toISOString();
 
-    const { data, error } = await supabase
+    const { data: upData, error: upErr } = await supabase
       .from('complaints').update(updates).eq('id', req.params.id).select().single();
-    if (error) throw new Error(error.message);
+    if (upErr) throw new Error(upErr.message);
 
     // Add timeline entry
     const actionMap = {
@@ -175,7 +185,7 @@ router.patch('/admin/:id', protect, async (req, res) => {
       });
     }
 
-    res.json(data);
+    res.json(upData);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -191,8 +201,7 @@ router.post('/admin/bulk', protect, async (req, res) => {
     if (assigned_to) updates.assigned_to = assigned_to;
     if (action === 'resolved') updates.resolved_at = new Date().toISOString();
 
-    const { error } = await supabase.from('complaints')
-      .update(updates).in('id', ids);
+    const { error } = await supabase.from('complaints').update(updates).in('id', ids);
     if (error) throw new Error(error.message);
 
     // Timeline entries for all

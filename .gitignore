@@ -9,3 +9,4 @@ build/
 .vscode/
 .idea/
 server/seed_central_admin.js
+*.zip

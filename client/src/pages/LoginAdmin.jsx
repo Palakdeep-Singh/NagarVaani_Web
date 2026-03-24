@@ -9,7 +9,7 @@ import { AuthContext } from '../context/AuthContext.jsx';
 const ROLE_HINTS = [
   {
     role: 'district',
-    icon: '🏙',
+    icon: '',
     label: 'District',
     color: 'var(--nv)',
     emailFmt: 'dc.yourdistrict@yourstate.gov.in',
@@ -18,7 +18,7 @@ const ROLE_HINTS = [
   },
   {
     role: 'state',
-    icon: '🗺',
+    icon: '',
     label: 'State',
     color: 'var(--sf)',
     emailFmt: 'cs.yourstate@gov.in',
@@ -27,7 +27,7 @@ const ROLE_HINTS = [
   },
   {
     role: 'central',
-    icon: '🏛',
+    icon: '',
     label: 'Central',
     color: 'var(--gn)',
     emailFmt: 'secretary@ministry.gov.in',
@@ -71,7 +71,7 @@ export default function LoginAdmin() {
 
         {/* Header */}
         <div className="login-logo">
-          <div className="login-logo-ic" style={{ background: 'var(--nv)' }}>🏛</div>
+          <div className="login-logo-ic" style={{ background: 'var(--nv)' }}></div>
           <div className="login-brand">
             NagarikConnect Admin
             <span>Official Government Portal · Restricted Access</span>
@@ -118,7 +118,7 @@ export default function LoginAdmin() {
             background: '#FDF2F2', border: '.5px solid var(--rd)', borderRadius: 'var(--rs)',
             padding: '8px 12px', marginBottom: 14, fontSize: 12, color: 'var(--rd)',
           }}>
-            ❌ {error}
+             {error}
           </div>
         )}
 
@@ -158,7 +158,7 @@ export default function LoginAdmin() {
               tabIndex={-1}
               title={showPW ? 'Hide password' : 'Show password'}
             >
-              {showPW ? '🙈' : '👁'}
+              {showPW ? '' : ''}
             </button>
           </div>
         </div>
@@ -187,7 +187,7 @@ export default function LoginAdmin() {
           disabled={loading}
           style={{ marginBottom: 16 }}
         >
-          {loading ? '⏳ Authenticating…' : '🔐 Login to Admin Portal →'}
+          {loading ? ' Authenticating…' : ' Login to Admin Portal →'}
         </button>
 
         {/* Help note */}
@@ -211,7 +211,7 @@ export default function LoginAdmin() {
       </div>
 
       <div className="login-footer">
-        🔒 Restricted Access · For Authorised Officials Only · NagarikConnect v2.0
+         Restricted Access · For Authorised Officials Only · NagarikConnect v2.0
       </div>
     </div>
   );

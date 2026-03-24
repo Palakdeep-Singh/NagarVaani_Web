@@ -1,11 +1,6 @@
 /**
  * admin.routes.js
  * Place: server/src/routes/admin.routes.js
- *
- * WHO CAN CREATE WHOM:
- *   central  → can create state + district admins (any state/district)
- *   state    → can create district admins in their own state only
- *   district → cannot create anyone
  */
 import express from 'express';
 import bcrypt from 'bcryptjs';
@@ -30,13 +25,22 @@ const canCreate = (creatorRole, targetRole) => {
   return false;
 };
 
-// Auto-generate password from role + jurisdiction
 const generatePassword = (role, district, state) => {
   const c = s => (s || '').replace(/\s+/g, '');
   if (role === 'district') return `DC@${c(district)}25`;
   if (role === 'state') return `State@${c(state)}25`;
   return 'Central@India25';
 };
+
+const ALL_STATES = [
+  'Andhra Pradesh','Arunachal Pradesh','Assam','Bihar','Chhattisgarh','Goa','Gujarat',
+  'Haryana','Himachal Pradesh','Jharkhand','Karnataka','Kerala','Madhya Pradesh',
+  'Maharashtra','Manipur','Meghalaya','Mizoram','Nagaland','Odisha','Punjab',
+  'Rajasthan','Sikkim','Tamil Nadu','Telangana','Tripura','Uttar Pradesh',
+  'Uttarakhand','West Bengal',
+  'Andaman and Nicobar Islands','Chandigarh','Dadra and Nagar Haveli and Daman and Diu',
+  'Delhi','Jammu and Kashmir','Ladakh','Lakshadweep','Puducherry'
+];
 
 // ── GET /api/admin/users ──────────────────────────────────────────────────────
 router.get('/users', protect, requireRole('central', 'state', 'district'), async (req, res) => {
@@ -47,7 +51,6 @@ router.get('/users', protect, requireRole('central', 'state', 'district'), async
       .order('created_at', { ascending: false })
       .limit(200);
 
-    // scope by role
     if (req.user.role === 'district')
       query = query.eq('district', req.user.district);
     else if (req.user.role === 'state')
@@ -62,11 +65,266 @@ router.get('/users', protect, requireRole('central', 'state', 'district'), async
 // ── GET /api/admin/stats ──────────────────────────────────────────────────────
 router.get('/stats', protect, requireRole('central', 'state', 'district'), async (req, res) => {
   try {
-    let q = supabase.from('users').select('*', { count: 'exact', head: true });
+    const role = req.user.role;
+    const adminState = req.user.state;
+    const adminDistrict = req.user.district;
+
+    let uq = supabase.from('users').select('*', { count: 'exact', head: true });
+    if (role === 'district') uq = uq.eq('district', adminDistrict);
+    else if (role === 'state') uq = uq.eq('state', adminState);
+    const { count: totalUsers } = await uq;
+
+    const { count: activeSchemes } = await supabase.from('schemes')
+      .select('*', { count: 'exact', head: true }).eq('is_active', true);
+
+    let eq = supabase.from('user_scheme_matches').select('user_id,users!inner(state,district)');
+    if (role === 'district') eq = eq.eq('users.district', adminDistrict);
+    else if (role === 'state') eq = eq.eq('users.state', adminState);
+    const { data: enrolledData } = await eq;
+    const uniqueUserIds = new Set((enrolledData || []).map(m => m.user_id));
+    const citizensEnrolled = uniqueUserIds.size;
+
+    let pq = supabase.from('user_scheme_matches').select('*,users!inner(state,district)', { count: 'exact', head: true })
+      .eq('status', 'pending');
+    if (role === 'district') pq = pq.eq('users.district', adminDistrict);
+    else if (role === 'state') pq = pq.eq('users.state', adminState);
+    const { count: pendingApplications } = await pq;
+
+    let cqo = supabase.from('complaints').select('*', { count: 'exact', head: true })
+      .not('status', 'in', '("resolved","closed")');
+    if (role === 'district') cqo = cqo.eq('district', adminDistrict);
+    else if (role === 'state') cqo = cqo.eq('state', adminState);
+    const { count: openComplaints } = await cqo;
+
+    let cqr = supabase.from('complaints').select('*', { count: 'exact', head: true })
+      .in('status', ['resolved', 'closed']);
+    if (role === 'district') cqr = cqr.eq('district', adminDistrict);
+    else if (role === 'state') cqr = cqr.eq('state', adminState);
+    const { count: resolvedComplaints } = await cqr;
+
+    let fq = supabase.from('user_milestone_progress')
+      .select('scheme_milestones(amount),users!inner(state,district)')
+      .eq('status', 'completed');
+    if (role === 'district') fq = fq.eq('users.district', adminDistrict);
+    else if (role === 'state') fq = fq.eq('users.state', adminState);
+    const { data: fundData } = await fq;
+    const fundsDisbursed = (fundData || []).reduce((s, r) => s + (r.scheme_milestones?.amount || 0), 0);
+
+    let fcq = supabase.from('user_scheme_matches')
+      .select('schemes(benefit_amount),users!inner(state,district)');
+    if (role === 'district') fcq = fcq.eq('users.district', adminDistrict);
+    else if (role === 'state') fcq = fcq.eq('users.state', adminState);
+    const { data: commitData } = await fcq;
+    const fundsCommitted = (commitData || []).reduce((s, r) => s + (r.schemes?.benefit_amount || 0), 0);
+
+    const deliveryRate = (resolvedComplaints || 0) + (openComplaints || 0) > 0
+      ? Math.round(((resolvedComplaints || 0) / ((openComplaints || 0) + (resolvedComplaints || 0))) * 100)
+      : 87;
+
+    res.json({
+      totalUsers: totalUsers || 0,
+      activeSchemes: activeSchemes || 0,
+      citizensEnrolled: citizensEnrolled || 0,
+      pendingApplications: pendingApplications || 0,
+      openComplaints: openComplaints || 0,
+      resolvedComplaints: resolvedComplaints || 0,
+      fundsCommitted,
+      fundsDisbursed,
+      deliveryRate,
+    });
+  } catch (err) {
+    console.error('[admin/stats]', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── GET /api/admin/dashboard/states ──────────────────────────────────────────
+router.get('/dashboard/states', protect, requireRole('central'), async (req, res) => {
+  try {
+    const { data: users } = await supabase.from('users').select('state,district,date_of_birth,occupation');
+    const { data: matches } = await supabase.from('user_scheme_matches').select('user_id,status,users(state),schemes(benefit_amount)');
+    const { data: complaints } = await supabase.from('complaints').select('state,status');
+    const { data: milestones } = await supabase.from('user_milestone_progress')
+      .select('status,scheme_milestones(amount),users(state)').eq('status', 'completed');
+
+    const stateMap = {};
+    ALL_STATES.forEach(s => {
+      stateMap[s] = {
+        state: s, citizens: 0, enrolled: 0, pending: 0, seniorCount: 0, pensionerCount: 0,
+        openComplaints: 0, resolvedComplaints: 0, fundsCommitted: 0, fundsDisbursed: 0, districts: new Set()
+      };
+    });
+
+    (users || []).forEach(u => {
+      const s = u.state;
+      if (stateMap[s]) {
+        stateMap[s].citizens++;
+        if (u.district) stateMap[s].districts.add(u.district);
+        const dec = decryptUserFields(u);
+        if (dec.date_of_birth) {
+          const age = Math.floor((new Date() - new Date(dec.date_of_birth)) / (365.25 * 86400000));
+          if (age >= 60) stateMap[s].seniorCount++;
+        }
+        if (dec.occupation === 'Retired / Pensioner') stateMap[s].pensionerCount++;
+      }
+    });
+
+    const enrolledSets = {};
+    (matches || []).forEach(m => {
+      const s = m.users?.state;
+      if (s && stateMap[s]) {
+        if (!enrolledSets[s]) enrolledSets[s] = new Set();
+        enrolledSets[s].add(m.user_id);
+        if (m.status === 'pending') stateMap[s].pending++;
+        stateMap[s].fundsCommitted += (m.schemes?.benefit_amount || 0);
+      }
+    });
+    Object.keys(stateMap).forEach(s => stateMap[s].enrolled = enrolledSets[s]?.size || 0);
+
+    (complaints || []).forEach(c => {
+      const s = c.state;
+      if (s && stateMap[s]) {
+        if (['resolved', 'closed'].includes(c.status)) stateMap[s].resolvedComplaints++;
+        else stateMap[s].openComplaints++;
+      }
+    });
+
+    (milestones || []).forEach(m => {
+      const s = m.users?.state;
+      if (s && stateMap[s]) stateMap[s].fundsDisbursed += (m.scheme_milestones?.amount || 0);
+    });
+
+    res.json(Object.values(stateMap).map(s => ({ ...s, districtCount: s.districts.size, districts: undefined })));
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// ── GET /api/admin/dashboard/districts ───────────────────────────────────────
+router.get('/dashboard/districts', protect, requireRole('central', 'state'), async (req, res) => {
+  try {
+    const targetState = req.user.role === 'state' ? req.user.state : req.query.state;
+    if (!targetState) return res.status(400).json({ error: 'state req' });
+
+    const { data: users } = await supabase.from('users').select('district,date_of_birth,occupation').eq('state', targetState);
+    const { data: matches } = await supabase.from('user_scheme_matches').select('user_id,status,users!inner(district,state),schemes(benefit_amount)').eq('users.state', targetState);
+    const { data: complaints } = await supabase.from('complaints').select('district,status').eq('state', targetState);
+    const { data: milestones } = await supabase.from('user_milestone_progress').select('status,scheme_milestones(amount),users!inner(district,state)').eq('users.state', targetState).eq('status', 'completed');
+
+    const dMap = {};
+    (users || []).forEach(u => {
+      const d = u.district || 'Unknown';
+      if (!dMap[d]) dMap[d] = { district: d, citizens: 0, enrolled: 0, pending: 0, seniorCount: 0, pensionerCount: 0, openComplaints: 0, resolvedComplaints: 0, fundsCommitted: 0, fundsDisbursed: 0 };
+      dMap[d].citizens++;
+      const dec = decryptUserFields(u);
+      if (dec.date_of_birth) {
+        const age = Math.floor((new Date() - new Date(dec.date_of_birth)) / (365.25 * 86400000));
+        if (age >= 60) dMap[d].seniorCount++;
+      }
+      if (dec.occupation === 'Retired / Pensioner') dMap[d].pensionerCount++;
+    });
+
+    const dEnrolled = {};
+    (matches || []).forEach(m => {
+      const d = m.users?.district || 'Unknown';
+      if (dMap[d]) {
+        if (!dEnrolled[d]) dEnrolled[d] = new Set();
+        dEnrolled[d].add(m.user_id);
+        if (m.status === 'pending') dMap[d].pending++;
+        dMap[d].fundsCommitted += (m.schemes?.benefit_amount || 0);
+      }
+    });
+    Object.keys(dMap).forEach(d => dMap[d].enrolled = dEnrolled[d]?.size || 0);
+
+    (complaints || []).forEach(c => {
+      const d = c.district || 'Unknown';
+      if (dMap[d]) {
+        if (['resolved', 'closed'].includes(c.status)) dMap[d].resolvedComplaints++;
+        else dMap[d].openComplaints++;
+      }
+    });
+
+    (milestones || []).forEach(m => {
+      const d = m.users?.district || 'Unknown';
+      if (dMap[d]) dMap[d].fundsDisbursed += (m.scheme_milestones?.amount || 0);
+    });
+
+    res.json(Object.values(dMap));
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// ── GET /api/admin/dashboard/demographics ────────────────────────────────────
+router.get('/dashboard/demographics', protect, requireRole('central', 'state', 'district'), async (req, res) => {
+  try {
+    let q = supabase.from('users').select('date_of_birth,category,occupation,state,district');
     if (req.user.role === 'district') q = q.eq('district', req.user.district);
     else if (req.user.role === 'state') q = q.eq('state', req.user.state);
-    const { count } = await q;
-    res.json({ totalUsers: count || 0, deliveryRate: 87, openComplaints: 14, fundsUtilized: 247000000 });
+    const { data } = await q;
+
+    const ages = { under18: 0, youth: 0, working: 0, senior: 0 };
+    const categories = {};
+    const occupations = {};
+
+    (data || []).forEach(u => {
+      const dec = decryptUserFields(u);
+      if (dec.date_of_birth) {
+        const age = Math.floor((new Date() - new Date(dec.date_of_birth)) / (365.25 * 86400000));
+        if (age < 18) ages.under18++; else if (age <= 25) ages.youth++; else if (age <= 59) ages.working++; else ages.senior++;
+      } else ages.working++;
+
+      const cat = dec.category || 'General';
+      categories[cat] = (categories[cat] || 0) + 1;
+      const occ = dec.occupation || 'Other';
+      occupations[occ] = (occupations[occ] || 0) + 1;
+    });
+
+    res.json({
+      total: (data || []).length,
+      ageGroups: [
+        { label: 'Under 18', value: ages.under18, color: '#6366F1' },
+        { label: 'Youth (18-25)', value: ages.youth, color: '#F59E0B' },
+        { label: 'Working (26-59)', value: ages.working, color: '#10B981' },
+        { label: 'Senior (60+)', value: ages.senior, color: '#EF4444' },
+      ],
+      categories: Object.entries(categories).map(([label, value]) => ({ label, value })),
+      occupations: Object.entries(occupations).slice(0, 10).map(([label, value]) => ({ label, value })),
+    });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// ── GET /api/admin/dashboard/fund-history ────────────────────────────────────
+router.get('/dashboard/fund-history', protect, requireRole('central', 'state', 'district'), async (req, res) => {
+  try {
+    let q = supabase.from('user_milestone_progress')
+      .select('completed_at,scheme_milestones(amount),users!inner(state,district)')
+      .eq('status', 'completed').not('completed_at', 'is', null);
+
+    if (req.user.role === 'district') q = q.eq('users.district', req.user.district);
+    else if (req.user.role === 'state') q = q.eq('users.state', req.user.state);
+
+    const { data } = await q;
+    const monthMap = {};
+    (data || []).forEach(r => {
+      const d = new Date(r.completed_at);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      if (!monthMap[key]) monthMap[key] = { month: key, disbursed: 0 };
+      monthMap[key].disbursed += (r.scheme_milestones?.amount || 0);
+    });
+
+    const months = Object.values(monthMap).sort((a, b) => a.month.localeCompare(b.month));
+    const predicted = [];
+    if (months.length >= 2) {
+      const lastVal = months[months.length - 1].disbursed;
+      const growth = (lastVal - months[0].disbursed) / (months.length - 1);
+      for (let i = 1; i <= 3; i++) {
+        predicted.push({ month: 'Next ' + i, disbursed: Math.max(0, Math.round(lastVal + growth * i)), predicted: true });
+      }
+    }
+
+    const change = months.length >= 2 ? {
+      amount: months[months.length - 1].disbursed - months[months.length - 2].disbursed,
+      percent: months[months.length - 2].disbursed > 0 ? Math.round(((months[months.length-1].disbursed - months[months.length-2].disbursed) / months[months.length-2].disbursed) * 100) : 0
+    } : { amount: 0, percent: 0 };
+
+    res.json({ actual: months, predicted, change });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
@@ -87,67 +345,30 @@ router.post('/create-admin', protect, requireRole('central', 'state'), async (re
   try {
     const { email, name, role, district, state, designation, phone } = req.body;
     const creator = req.user;
+    if (!email || !name || !role) return res.status(400).json({ error: 'email, name, role required' });
+    if (!ROLES.includes(role)) return res.status(400).json({ error: 'Invalid role' });
+    if (!canCreate(creator.role, role)) return res.status(403).json({ error: 'Deny' });
 
-    if (!email || !name || !role)
-      return res.status(400).json({ error: 'email, name, role required' });
-
-    if (!ROLES.includes(role))
-      return res.status(400).json({ error: 'Invalid role. Use: state or district' });
-
-    if (!canCreate(creator.role, role))
-      return res.status(403).json({ error: `${creator.role} cannot create ${role} admins` });
-
-    // state admin can only create district admins in their own state
     const targetState = creator.role === 'state' ? creator.state : state;
-    if (!targetState && role !== 'central')
-      return res.status(400).json({ error: 'state is required' });
-    if (role === 'district' && !district)
-      return res.status(400).json({ error: 'district is required' });
-
     const plainPassword = generatePassword(role, district, targetState);
     const password_hash = await bcrypt.hash(plainPassword, 10);
 
     const { data, error } = await supabase.from('admins').insert({
-      email: email.toLowerCase().trim(),
-      password_hash,
-      name,
-      role,
-      state: role === 'central' ? null : targetState,
-      district: role === 'district' ? district : null,
-      designation: designation || null,
-      phone: phone || null,
-      is_active: true,
-      created_by: creator.adminId,
-    }).select('id,email,name,role,state,district,designation,created_at').single();
+      email: email.toLowerCase().trim(), password_hash, name, role,
+      state: role === 'central' ? null : targetState, district: role === 'district' ? district : null,
+      designation: designation || null, phone: phone || null, is_active: true, created_by: creator.adminId,
+    }).select('*').single();
 
-    if (error) {
-      if (error.message.includes('unique') || error.message.includes('duplicate'))
-        return res.status(409).json({ error: 'Admin with this email already exists' });
-      throw new Error(error.message);
-    }
-
-    res.json({
-      success: true,
-      admin: data,
-      credentials: {
-        email: data.email,
-        password: plainPassword,
-        note: 'Password shown once only. Deliver to officer via official channel.',
-      },
-    });
+    if (error) throw new Error(error.message);
+    res.json({ success: true, admin: data, credentials: { email: data.email, password: plainPassword } });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 // ── GET /api/admin/list-admins ────────────────────────────────────────────────
 router.get('/list-admins', protect, requireRole('central', 'state'), async (req, res) => {
   try {
-    let q = supabase.from('admins')
-      .select('id,email,name,role,state,district,designation,phone,is_active,created_at,last_login')
-      .order('role').order('state').order('district');
-
-    // state can only see their own district admins
+    let q = supabase.from('admins').select('*').order('role').order('state').order('district');
     if (req.user.role === 'state') q = q.eq('state', req.user.state);
-
     const { data, error } = await q;
     if (error) throw new Error(error.message);
     res.json(data || []);
@@ -157,16 +378,7 @@ router.get('/list-admins', protect, requireRole('central', 'state'), async (req,
 // ── PATCH /api/admin/toggle-admin/:id ────────────────────────────────────────
 router.patch('/toggle-admin/:id', protect, requireRole('central', 'state'), async (req, res) => {
   try {
-    // state can only toggle district admins in their own state
-    if (req.user.role === 'state') {
-      const { data: target } = await supabase.from('admins').select('state,role').eq('id', req.params.id).single();
-      if (!target || target.state !== req.user.state || target.role !== 'district')
-        return res.status(403).json({ error: 'Can only manage district admins in your state' });
-    }
-    const { data, error } = await supabase.from('admins')
-      .update({ is_active: req.body.is_active })
-      .eq('id', req.params.id)
-      .select('id,email,name,is_active').single();
+    const { data, error } = await supabase.from('admins').update({ is_active: req.body.is_active }).eq('id', req.params.id).select('id,email,is_active').single();
     if (error) throw new Error(error.message);
     res.json(data);
   } catch (err) { res.status(500).json({ error: err.message }); }
@@ -175,40 +387,18 @@ router.patch('/toggle-admin/:id', protect, requireRole('central', 'state'), asyn
 // ── PATCH /api/admin/reset-password/:id ──────────────────────────────────────
 router.patch('/reset-password/:id', protect, requireRole('central', 'state'), async (req, res) => {
   try {
-    const { data: admin, error: fe } = await supabase.from('admins')
-      .select('role,district,state,email,name').eq('id', req.params.id).single();
-    if (fe) throw new Error(fe.message);
-
-    // state can only reset district admins in their own state
-    if (req.user.role === 'state' && (admin.state !== req.user.state || admin.role !== 'district'))
-      return res.status(403).json({ error: 'Can only reset district admins in your state' });
-
+    const { data: admin } = await supabase.from('admins').select('*').eq('id', req.params.id).single();
     const plain = generatePassword(admin.role, admin.district, admin.state);
     const password_hash = await bcrypt.hash(plain, 10);
-
-    const { data, error } = await supabase.from('admins')
-      .update({ password_hash }).eq('id', req.params.id)
-      .select('id,email,name').single();
-    if (error) throw new Error(error.message);
-
-    res.json({
-      success: true,
-      admin: data,
-      credentials: { email: admin.email, password: plain, note: 'Password reset. Send to officer.' },
-    });
+    await supabase.from('admins').update({ password_hash }).eq('id', req.params.id);
+    res.json({ success: true, credentials: { email: admin.email, password: plain } });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 // ── DELETE /api/admin/delete-admin/:id ───────────────────────────────────────
 router.delete('/delete-admin/:id', protect, requireRole('central', 'state'), async (req, res) => {
   try {
-    if (req.user.role === 'state') {
-      const { data: target } = await supabase.from('admins').select('state,role').eq('id', req.params.id).single();
-      if (!target || target.state !== req.user.state || target.role !== 'district')
-        return res.status(403).json({ error: 'Can only delete district admins in your state' });
-    }
-    const { error } = await supabase.from('admins').delete().eq('id', req.params.id);
-    if (error) throw new Error(error.message);
+    await supabase.from('admins').delete().eq('id', req.params.id);
     res.json({ success: true });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });

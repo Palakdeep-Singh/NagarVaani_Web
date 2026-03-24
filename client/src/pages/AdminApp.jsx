@@ -9,10 +9,39 @@
  *  - 30s polling on every data section
  *  - Central gets 💰 Fund Predictor with commit/disburse/predict bars
  */
-import { useState, useEffect, useContext, useCallback } from 'react';
+import { useState, useEffect, useContext, useCallback, useMemo } from 'react';
 import API from '../api/api.js';
 import { AuthContext } from '../context/AuthContext.jsx';
 import { subscribeToAdminAll, subscribeToDistrictComplaints } from '../services/realtime.js';
+
+// Chart.js imports
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  ArcElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler
+} from 'chart.js';
+import { Bar, Doughnut, Line } from 'react-chartjs-2';
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  ArcElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler
+);
 
 const ROLE_META = {
   central: { label: 'Central Authority', icon: '🏛', color: 'var(--gn)' },
@@ -75,6 +104,7 @@ export default function AdminApp() {
   const [page, setPage] = useState(visible[0]?.id || 'overview');
   const [live, setLive] = useState(0);
   const [tick, setTick] = useState(0);   // global refresh trigger
+  const [drilledState, setDrilledState] = useState(''); // for Central -> State drilldown
 
   /* Global Supabase subscription → bump tick → every section re-fetches */
   useEffect(() => {
@@ -156,11 +186,27 @@ export default function AdminApp() {
         </aside>
 
         <main className="main">
-          {page === 'overview' && can(role, 'overview') && <AdminOverview role={role} district={district} state={state} user={user} tick={tick} />}
+          {page === 'overview' && can(role, 'overview') && (
+            <AdminOverview
+              role={role}
+              district={district}
+              state={state}
+              user={user}
+              tick={tick}
+              onDrill={(s) => { setDrilledState(s); setPage('district_view'); }}
+            />
+          )}
           {page === 'complaints' && can(role, 'complaints') && <AdminComplaints role={role} district={district} state={state} onLive={setLive} tick={tick} />}
           {page === 'milestones' && can(role, 'milestones') && <AdminMilestones tick={tick} />}
           {page === 'documents' && can(role, 'documents') && <AdminDocuments tick={tick} />}
-          {page === 'district_view' && can(role, 'district_view') && <AdminDistrictView role={role} state={state} tick={tick} />}
+          {page === 'district_view' && can(role, 'district_view') && (
+            <AdminDistrictView
+              role={role}
+              state={drilledState || state}
+              tick={tick}
+              onBack={role === 'central' && drilledState ? () => { setDrilledState(''); setPage('overview'); } : null}
+            />
+          )}
           {page === 'scheme_stats' && can(role, 'scheme_stats') && <AdminSchemeStats tick={tick} />}
           {page === 'fund_predictor' && can(role, 'fund_predictor') && <AdminFundPredictor tick={tick} />}
           {page === 'manage_admins' && can(role, 'manage_admins') && <AdminManageAdmins role={role} creatorState={state} />}
@@ -178,60 +224,300 @@ export default function AdminApp() {
 }
 
 /* ─── OVERVIEW ─────────────────────────────────────────────────────────────── */
-function AdminOverview({ role, district, state, user, tick }) {
+function AdminOverview({ role, district, state, user, tick, onDrill }) {
   const [s, setS] = useState(null);
+  const [states, setStates] = useState([]);
+  const [demog, setDemog] = useState(null);
+  const [history, setHistory] = useState([]);
   const [ldg, setLdg] = useState(true);
 
   const load = useCallback(async () => {
-    try { const { data } = await API.get('/api/admin/stats'); setS(data); }
-    catch (e) { console.error(e); } finally { setLdg(false); }
-  }, []);
+    try {
+      const [statsRes, demogRes, historyRes] = await Promise.all([
+        API.get('/api/admin/stats'),
+        API.get('/api/admin/dashboard/demographics'),
+        API.get('/api/admin/dashboard/fund-history')
+      ]);
+      setS(statsRes.data);
+      setDemog(demogRes.data);
+      setHistory(historyRes.data || []);
+
+      if (role === 'central') {
+        const { data } = await API.get('/api/admin/dashboard/states');
+        setStates(data || []);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLdg(false);
+    }
+  }, [role]);
 
   useAutoRefresh(load, 30);
   useEffect(() => { if (tick > 0) load(); }, [tick]);
 
-  const fmt = (n) => n >= 1e7 ? '₹' + (n / 1e7).toFixed(1) + 'Cr' : n >= 1e5 ? '₹' + (n / 1e5).toFixed(0) + 'L' : n;
+  const fmt = (n) => n >= 1e7 ? '₹' + (n / 1e7).toFixed(1) + ' Cr' : n >= 1e5 ? '₹' + (n / 1e5).toFixed(1) + ' L' : '₹' + n.toLocaleString('en-IN');
 
   const title = role === 'district' ? (district || 'Your') + ' District'
     : role === 'state' ? (state || 'Your') + ' State'
       : 'National Overview';
 
+  const scopeLabel = role === 'central' ? 'India (National)' : (state || district || 'Local Administration');
+
   const cards = {
     district: [
-      { l: 'Citizens', v: s?.totalUsers ?? '…', sub: 'Registered', c: 'c-sf' },
-      { l: 'Complaints', v: s?.openComplaints ?? '…', sub: 'Open', c: 'c-am' },
-      { l: 'Delivery', v: s?.deliveryRate ? s.deliveryRate + '%' : '…', sub: 'Rate', c: 'c-gn' },
-      { l: 'Funds', v: s?.fundsUtilized ? fmt(s.fundsUtilized) : '…', sub: 'Utilised', c: 'c-nv' },
+      { l: 'Citizens', v: s?.totalUsers ?? '…', sub: 'Registered', c: 'c-sf', ic: '👥' },
+      { l: 'Complaints', v: (s?.openComplaints || 0) + (s?.resolvedComplaints || 0), sub: 'Total Filed', c: 'c-am', ic: '📢' },
+      { l: 'Delivery', v: s?.deliveryRate ? s.deliveryRate + '%' : '…', sub: 'Resolution Rate', c: 'c-gn', ic: '✅' },
+      { l: 'Funds Disbursed', v: s?.fundsDisbursed ? fmt(s.fundsDisbursed) : '…', sub: 'Utilised', c: 'c-nv', ic: '💰' },
     ],
     state: [
-      { l: 'Citizens', v: s?.totalUsers ?? '…', sub: 'Registered', c: 'c-sf' },
-      { l: 'Escalated', v: s?.openComplaints ?? '…', sub: 'Open', c: 'c-am' },
-      { l: 'Coverage', v: s?.deliveryRate ? s.deliveryRate + '%' : '…', sub: 'Enrolled', c: 'c-gn' },
-      { l: 'DBT Sent', v: s?.fundsUtilized ? fmt(s.fundsUtilized) : '…', sub: 'Disbursed', c: 'c-nv' },
+      { l: 'Citizens', v: s?.totalUsers ?? '…', sub: 'Registered', c: 'c-sf', ic: '👥' },
+      { l: 'Active Schemes', v: s?.activeSchemes ?? '…', sub: 'State-wide', c: 'c-am', ic: '📋' },
+      { l: 'Avg Delivery', v: s?.deliveryRate ? s.deliveryRate + '%' : '…', sub: 'Districts Avg', c: 'c-gn', ic: '📈' },
+      { l: 'Total DBT', v: s?.fundsDisbursed ? fmt(s.fundsDisbursed) : '…', sub: 'Disbursed', c: 'c-nv', ic: '💰' },
     ],
     central: [
-      { l: 'Citizens', v: s?.totalUsers ?? '…', sub: 'Registered', c: 'c-sf' },
-      { l: 'Complaints', v: s?.openComplaints ?? '…', sub: 'Open', c: 'c-am' },
-      { l: 'Delivery', v: s?.deliveryRate ? s.deliveryRate + '%' : '…', sub: 'National avg', c: 'c-gn' },
-      { l: 'DBT', v: s?.fundsUtilized ? fmt(s.fundsUtilized) : '…', sub: 'FY 2024-25', c: 'c-nv' },
+      { l: 'Citizens', v: s?.totalUsers ?? '…', sub: 'National', c: 'c-sf', ic: '🇮🇳' },
+      { l: 'Applications', v: s?.pendingApplications ?? '…', sub: 'Pending Review', c: 'c-am', ic: '📝' },
+      { l: 'Delivery Rate', v: s?.deliveryRate ? s.deliveryRate + '%' : '…', sub: 'National Avg', c: 'c-gn', ic: '🚀' },
+      { l: 'National DBT', v: s?.fundsDisbursed ? fmt(s.fundsDisbursed) : '…', sub: 'Funds Distributed', c: 'c-nv', ic: '💰' },
     ],
   };
 
+  const chartData = useMemo(() => {
+    if (!demog) return null;
+    const histAll = history.actual || [];
+    const predAll = history.predicted || [];
+    const combo = [...histAll, ...predAll];
+
+    return {
+      demog: {
+        labels: demog.ageGroups.map(a => a.label),
+        datasets: [{
+          data: demog.ageGroups.map(a => a.value),
+          backgroundColor: demog.ageGroups.map(a => a.color),
+          borderWidth: 0,
+          hoverOffset: 4
+        }]
+      },
+      categories: {
+        labels: demog.categories.map(c => c.label),
+        datasets: [{
+          label: 'Count',
+          data: demog.categories.map(c => c.value),
+          backgroundColor: 'rgba(79, 70, 229, 0.6)',
+          borderColor: 'rgb(79, 70, 229)',
+          borderWidth: 1
+        }]
+      },
+      trend: {
+        labels: combo.map(h => h.month),
+        datasets: [
+          {
+            label: 'Actual',
+            data: combo.map(h => h.predicted ? null : h.disbursed),
+            borderColor: 'var(--nv)',
+            backgroundColor: 'rgba(15, 30, 54, 0.1)',
+            fill: true,
+            tension: 0.4
+          },
+          {
+            label: 'Predicted',
+            data: combo.map(h => h.predicted ? h.disbursed : (h === histAll[histAll.length - 1] ? h.disbursed : null)),
+            borderColor: 'var(--am)',
+            borderDash: [5, 5],
+            backgroundColor: 'transparent',
+            tension: 0.4
+          }
+        ]
+      }
+    };
+  }, [demog, history]);
+
+  const priorityRegions = useMemo(() => {
+    if (role !== 'central' || !states.length) return null;
+    const byComplaints = [...states].sort((a, b) => (b.openComplaints || 0) - (a.openComplaints || 0)).slice(0, 3);
+    const byEnrollment = [...states].sort((a, b) => (b.enrolled || 0) - (a.enrolled || 0)).slice(0, 3);
+    return { byComplaints, byEnrollment };
+  }, [states, role]);
+
   return (
-    <div>
-      <div className="bc">Admin › <span>Overview</span></div>
-      <div className="ph" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-        <div><h1>📊 {title}</h1><p>{user?.designation} · {user?.name}</p></div>
-        <LiveDot label="Refreshes every 30s" />
+    <div style={{ animation: 'nv-fadein .5s ease' }}>
+      <div className="bc">Admin › <span>Management Dashboard</span></div>
+      <div className="ph" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 25, borderBottom: '1px solid var(--gy-m)', paddingBottom: 15 }}>
+        <div>
+          <h1 style={{ marginBottom: 4 }}>📊 {title}</h1>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span className="pill p-nv" style={{ fontSize: 9 }}>{user?.designation}</span>
+            <span style={{ fontSize: 11, color: 'var(--t3)' }}>Region: {scopeLabel}</span>
+          </div>
+        </div>
+        <div style={{ textAlign: 'right' }}>
+          <LiveDot label="Real-time Analytics" />
+          <div style={{ fontSize: 10, color: 'var(--t3)', fontWeight: 600, marginTop: 4 }}>Sync: {new Date().toLocaleTimeString('en-IN')}</div>
+        </div>
       </div>
+
+      {/* Main Stats Cards */}
       <div className="sr">
         {(cards[role] || cards.district).map((c, i) => (
-          <div key={i} className={`sc ${c.c}`}>
-            <div className="sl">{c.l}</div>
-            <div className="sv">{ldg ? '…' : c.v}</div>
-            <div className="ss">{c.sub}</div>
+          <div key={i} className={`sc ${c.c}`} style={{ position: 'relative', overflow: 'hidden', padding: 22 }}>
+            <div style={{ position: 'absolute', right: -15, bottom: -15, fontSize: 60, opacity: 0.08 }}>{c.ic}</div>
+            <div className="sl" style={{ letterSpacing: '0.05em' }}>{c.l}</div>
+            <div className="sv" style={{ fontSize: 32, margin: '8px 0', fontWeight: 900 }}>{ldg ? '…' : c.v}</div>
+            <div className="ss" style={{ fontWeight: 700, opacity: 0.8 }}>{c.sub}</div>
           </div>
         ))}
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: 20, marginTop: 20 }}>
+        {/* Left Col: Trends & Priority */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+          {/* Trend Chart Card */}
+          <div style={{ background: 'var(--wh)', borderRadius: 'var(--r)', border: '.5px solid var(--gy-m)', padding: 22, boxShadow: 'var(--sh1)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 25 }}>
+              <div>
+                <div style={{ fontWeight: 900, fontSize: 14, color: 'var(--nv)' }}>Disbursement Trends & Projections</div>
+                <div style={{ fontSize: 10, color: 'var(--t3)', marginTop: 2 }}>Monthly national fund utilization with AI-driven forecasting</div>
+              </div>
+              <div style={{ display: 'flex', gap: 12 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 10, color: 'var(--nv)', fontWeight: 700 }}><span style={{ width: 10, height: 3, background: 'var(--nv)', borderRadius: 2 }} /> Actual</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 10, color: 'var(--am)', fontWeight: 700 }}><span style={{ width: 10, height: 3, border: '1.5px dashed var(--am)', borderRadius: 2 }} /> Forecast</div>
+              </div>
+            </div>
+            <div style={{ height: 260 }}>
+              {ldg ? <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--t3)' }}>Loading analytics engine…</div> :
+                chartData && <Line data={chartData.trend} options={{
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  plugins: { legend: { display: false }, tooltip: { padding: 10, backgroundColor: 'rgba(15,30,54,0.9)', titleFont: { size: 13 }, bodyFont: { size: 12 } } },
+                  scales: { y: { beginAtZero: true, grid: { color: '#f5f5f5' } }, x: { grid: { display: false } } }
+                }} />}
+            </div>
+          </div>
+
+          {/* Priority Regions Monitor */}
+          {priorityRegions && (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+              <div style={{ background: 'var(--wh)', borderRadius: 'var(--r)', border: '.5px solid var(--gy-m)', padding: 18, boxShadow: 'var(--sh1)' }}>
+                <div style={{ fontWeight: 800, fontSize: 12, color: 'var(--rd)', marginBottom: 12, textTransform: 'uppercase', letterSpacing: '.05em' }}>🚨 High Complaint Zones</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {priorityRegions.byComplaints.map(st => (
+                    <div key={st.state} className="region-row" onClick={() => onDrill(st.state)} style={{
+                      display: 'flex', justifyContent: 'space-between', padding: '10px 14px', background: '#FEF2F2',
+                      borderRadius: 10, border: '1px solid #FEE2E2', cursor: 'pointer', transition: 'all .2s'
+                    }}>
+                      <style>{`.region-row:hover { transform: scale(1.02); border-color: var(--rd); }`}</style>
+                      <div style={{ fontWeight: 700, fontSize: 13 }}>{st.state}</div>
+                      <div style={{ color: 'var(--rd)', fontWeight: 900 }}>{st.openComplaints} Open</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div style={{ background: 'var(--wh)', borderRadius: 'var(--r)', border: '.5px solid var(--gy-m)', padding: 18, boxShadow: 'var(--sh1)' }}>
+                <div style={{ fontWeight: 800, fontSize: 12, color: 'var(--gn)', marginBottom: 12, textTransform: 'uppercase', letterSpacing: '.05em' }}>🚀 Growth Hotspots</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {priorityRegions.byEnrollment.map(st => (
+                    <div key={st.state} className="region-row-gn" onClick={() => onDrill(st.state)} style={{
+                      display: 'flex', justifyContent: 'space-between', padding: '10px 14px', background: '#F0FDF4',
+                      borderRadius: 10, border: '1px solid #DCFCE7', cursor: 'pointer', transition: 'all .2s'
+                    }}>
+                      <style>{`.region-row-gn:hover { transform: scale(1.02); border-color: var(--gn); }`}</style>
+                      <div style={{ fontWeight: 700, fontSize: 13 }}>{st.state}</div>
+                      <div style={{ color: 'var(--gn)', fontWeight: 900 }}>{st.enrolled} Enrolled</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Central: States Grid */}
+          {role === 'central' && (
+            <div style={{ background: 'var(--wh)', borderRadius: 'var(--r)', border: '.5px solid var(--gy-m)', padding: 22, boxShadow: 'var(--sh1)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
+                <div>
+                  <div style={{ fontWeight: 900, fontSize: 14, color: 'var(--nv)' }}>Regional Monitoring</div>
+                  <div style={{ fontSize: 10, color: 'var(--t3)' }}>Comprehensive state-level performance metrics</div>
+                </div>
+                <div className="pill p-nv" style={{ fontSize: 9, fontWeight: 700 }}>{states.length} Active States</div>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 12, maxHeight: 420, overflowY: 'auto', paddingRight: 8 }}>
+                {ldg ? [...Array(8)].map((_, i) => <div key={i} className="sc" style={{ height: 90, opacity: 0.3 }} />) :
+                  states.map(st => (
+                    <div key={st.state} className="sc-state" onClick={() => onDrill(st.state)} style={{
+                      background: '#fff', borderRadius: 12, padding: '15px 18px', cursor: 'pointer',
+                      border: '1.5px solid var(--gy-m)', transition: 'all .3s cubic-bezier(0.19, 1, 0.22, 1)',
+                    }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12, alignItems: 'center' }}>
+                        <div style={{ fontWeight: 900, fontSize: 14, color: 'var(--nv)' }}>{st.state}</div>
+                        <div style={{ fontSize: 9, background: 'var(--nv-l)', padding: '2px 8px', borderRadius: 6, color: 'var(--nv)', fontWeight: 800 }}>{st.districtCount} Dist.</div>
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 15 }}>
+                        <div><div style={{ fontSize: 8, color: 'var(--t3)', textTransform: 'uppercase', marginBottom: 4 }}>Citizens</div><div style={{ fontWeight: 800, fontSize: 14 }}>{st.citizens.toLocaleString('en-IN')}</div></div>
+                        <div style={{ textAlign: 'right' }}><div style={{ fontSize: 8, color: 'var(--t3)', textTransform: 'uppercase', marginBottom: 4 }}>Comp.</div><div style={{ fontWeight: 800, fontSize: 14, color: st.openComplaints > 0 ? 'var(--rd)' : 'var(--gn)' }}>{st.openComplaints}</div></div>
+                      </div>
+                    </div>
+                  ))}
+                <style>{`.sc-state:hover { border-color: var(--nv); background: #fbfcfe; transform: translateY(-4px); box-shadow: var(--sh2); }`}</style>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Right Col: Fixed Charts */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+          {/* Age Doughnut */}
+          <div style={{ background: 'var(--wh)', borderRadius: 'var(--r)', border: '.5px solid var(--gy-m)', padding: 22, boxShadow: 'var(--sh1)' }}>
+            <div style={{ fontWeight: 900, fontSize: 14, color: 'var(--nv)', marginBottom: 25 }}>Demographic Distribution</div>
+            <div style={{ height: 240, position: 'relative' }}>
+              {!ldg && chartData && (
+                <>
+                  <Doughnut data={chartData.demog} options={{
+                    cutout: '72%',
+                    plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, padding: 15, font: { size: 10, weight: 600 } } } }
+                  }} />
+                  <div style={{ position: 'absolute', left: '50%', top: '42%', transform: 'translate(-50%,-50%)', textAlign: 'center' }}>
+                    <div style={{ fontSize: 28, fontWeight: 900, color: 'var(--nv)' }}>{demog?.total?.toLocaleString('en-IN')}</div>
+                    <div style={{ fontSize: 10, color: 'var(--t3)', textTransform: 'uppercase', fontWeight: 800 }}>Total</div>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* Horizontal Categories */}
+          <div style={{ background: 'var(--wh)', borderRadius: 'var(--r)', border: '.5px solid var(--gy-m)', padding: 22, boxShadow: 'var(--sh1)' }}>
+            <div style={{ fontWeight: 900, fontSize: 14, color: 'var(--nv)', marginBottom: 20 }}>Participation by Category</div>
+            <div style={{ height: 200 }}>
+              {!ldg && chartData && <Bar data={chartData.categories} options={{
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: { x: { display: false }, y: { grid: { display: false }, ticks: { font: { size: 10, weight: 700 } } } }
+              }} />}
+            </div>
+          </div>
+
+          {/* Performance Insight */}
+          <div style={{ background: 'linear-gradient(135deg, var(--nv), #0A1528)', borderRadius: 'var(--r)', padding: 25, color: '#fff', boxShadow: 'var(--sh2)', position: 'relative', overflow: 'hidden' }}>
+            <div style={{ position: 'absolute', right: -20, top: -20, fontSize: 120, opacity: 0.05, transform: 'rotate(-15deg)' }}>📈</div>
+            <div style={{ fontSize: 11, opacity: 0.8, textTransform: 'uppercase', letterSpacing: '.15em', fontWeight: 700, marginBottom: 15 }}>National Performance index</div>
+            <div style={{ display: 'flex', alignItems: 'flex-end', gap: 12, marginBottom: 15 }}>
+              <div style={{ fontSize: 44, fontWeight: 950, lineHeight: 1 }}>{ldg ? '…' : s?.deliveryRate}%</div>
+              <div style={{ fontSize: 13, padding: '2px 8px', background: 'rgba(16,185,129,0.2)', borderRadius: 6, color: '#10B981', fontWeight: 800, marginBottom: 5 }}>▲ 2.4%</div>
+            </div>
+            <div style={{ background: 'rgba(255,255,255,0.08)', borderRadius: 20, height: 10, overflow: 'hidden', marginBottom: 20 }}>
+              <div style={{ width: (s?.deliveryRate || 0) + '%', height: '100%', background: 'linear-gradient(90deg, #6366F1, #10B981)', borderRadius: 20, transition: 'width 1.5s ease-out' }} />
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, opacity: 0.9, fontWeight: 600 }}>
+              <span>✅ {s?.resolvedComplaints?.toLocaleString()} Resolved</span>
+              <span>🎯 Target 92%</span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -617,65 +903,112 @@ function DocPreview({ doc, onClose }) {
 }
 
 /* ─── DISTRICT VIEW — dynamic ──────────────────────────────────────────────── */
-function AdminDistrictView({ role, state, tick }) {
-  const [complaints, setComplaints] = useState([]);
+function AdminDistrictView({ role, state, tick, onBack }) {
+  const [districts, setDistricts] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
     try {
       const p = new URLSearchParams();
-      if (role === 'state' && state) p.set('state', state);
-      const { data } = await API.get(`/api/complaints/admin/district?${p}`);
-      setComplaints(data || []);
+      if (state) p.set('state', state);
+      const { data } = await API.get(`/api/admin/dashboard/districts?${p}`);
+      setDistricts(data || []);
     } catch (e) { console.error(e); } finally { setLoading(false); }
-  }, [role, state]);
+  }, [state]);
 
   useAutoRefresh(load, 30);
   useEffect(() => { if (tick > 0) load(); }, [tick]);
 
-  const byDistrict = complaints.reduce((acc, c) => {
-    const d = c.district || 'Unknown';
-    if (!acc[d]) acc[d] = { open: 0, resolved: 0, escalated: 0, total: 0 };
-    acc[d].total++;
-    if (c.status === 'resolved' || c.status === 'closed') acc[d].resolved++;
-    else if (c.status.includes('escalated')) acc[d].escalated++;
-    else acc[d].open++;
-    return acc;
-  }, {});
-  const districts = Object.entries(byDistrict).sort((a, b) => b[1].open - a[1].open);
+  const fmt = (n) => n >= 1e7 ? '₹' + (n / 1e7).toFixed(1) + ' Cr' : n >= 1e5 ? '₹' + (n / 1e5).toFixed(1) + ' L' : '₹' + n.toLocaleString('en-IN');
 
   return (
-    <div>
+    <div style={{ animation: 'nv-fadein .4s ease' }}>
       <div className="bc">Admin › <span>District View</span></div>
-      <div className="ph" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-        <div><h1>🗺 Districts — {role === 'state' ? (state || 'Your State') : 'All States'}</h1><p>Live complaint breakdown</p></div>
-        <LiveDot label="Live" />
-      </div>
-      {loading ? <div style={{ textAlign: 'center', padding: 40, color: 'var(--t3)' }}>Loading...</div>
-        : districts.length === 0 ? <div style={{ textAlign: 'center', padding: 60, color: 'var(--t3)' }}><div style={{ fontSize: 36 }}>📭</div><div>No data yet</div></div> : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(210px,1fr))', gap: 10 }}>
-            {districts.map(([dist, s]) => {
-              const pct = s.total > 0 ? Math.round(s.resolved / s.total * 100) : 100;
-              return (
-                <div key={dist} style={{ background: 'var(--wh)', border: '.5px solid var(--gy-m)', borderRadius: 'var(--r)', padding: 14 }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 8 }}>🏙 {dist}</div>
-                  <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', marginBottom: 8 }}>
-                    {s.open > 0 && <span className="pill p-am" style={{ fontSize: 10 }}>{s.open} open</span>}
-                    {s.escalated > 0 && <span className="pill p-sf" style={{ fontSize: 10 }}>{s.escalated} escalated</span>}
-                    {s.resolved > 0 && <span className="pill p-gn" style={{ fontSize: 10 }}>{s.resolved} resolved</span>}
-                  </div>
-                  <div style={{ background: 'var(--gy-l)', borderRadius: 4, height: 5, overflow: 'hidden' }}>
-                    <div style={{
-                      height: '100%', borderRadius: 4, transition: 'width .3s',
-                      background: pct >= 80 ? 'var(--gn)' : pct >= 50 ? 'var(--am)' : 'var(--rd)', width: pct + '%'
-                    }} />
-                  </div>
-                  <div style={{ fontSize: 10, color: 'var(--t3)', marginTop: 3 }}>{pct}% resolved · {s.total} total</div>
-                </div>
-              );
-            })}
+      <div className="ph" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 25 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 15 }}>
+          {onBack && (
+            <button onClick={onBack} style={{
+              background: 'var(--wh)', border: '1px solid var(--gy-m)', borderRadius: '50%', width: 32, height: 32,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: 14,
+              boxShadow: 'var(--sh1)', transition: 'all .2s'
+            }} title="Back to National Stats">
+              <style>{`button:hover { transform: translateX(-2px); border-color: var(--nv); color: var(--nv); }`}</style>
+              ←
+            </button>
+          )}
+          <div>
+            <h1 style={{ margin: 0 }}>🗺 {state ? `${state} Districts` : 'All Districts'}</h1>
+            <p style={{ margin: 0, opacity: 0.7 }}>{districts.length} active administrative zones</p>
           </div>
-        )}
+        </div>
+        <div style={{ textAlign: 'right' }}>
+          <LiveDot label="Live Updates" />
+        </div>
+      </div>
+
+      {loading ? (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(300px,1fr))', gap: 20 }}>
+          {[...Array(6)].map((_, i) => <div key={i} style={{ height: 200, background: 'var(--wh)', borderRadius: 'var(--r)', opacity: 0.5, border: '.5px solid var(--gy-m)' }} />)}
+        </div>
+      ) : districts.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: 100, background: 'var(--wh)', borderRadius: 'var(--r)', border: '.5px dashed var(--gy-m)' }}>
+          <div style={{ fontSize: 40, marginBottom: 10 }}>🗺️</div>
+          <div style={{ fontWeight: 700, color: 'var(--t3)' }}>No data found for this region</div>
+          {onBack && <button className="btn b-nv" style={{ marginTop: 20 }} onClick={onBack}>Go Back</button>}
+        </div>
+      ) : (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(290px,1fr))', gap: 18 }}>
+          {districts.map((d) => {
+            const totalComp = (d.openComplaints || 0) + (d.resolvedComplaints || 0);
+            const resPct = totalComp > 0 ? Math.round(d.resolvedComplaints / totalComp * 100) : 100;
+            return (
+              <div key={d.district} className="d-card" style={{
+                background: 'var(--wh)', border: '.5px solid var(--gy-m)', borderRadius: 'var(--r)',
+                padding: 18, boxShadow: 'var(--sh1)', transition: 'all .3s ease', position: 'relative'
+              }}>
+                <style>{`.d-card:hover { transform: translateY(-3px); box-shadow: var(--sh2); border-color: var(--nv); }`}</style>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 15 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <div style={{ width: 32, height: 32, background: 'var(--nv-l)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>🏙</div>
+                    <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--nv)' }}>{d.district}</div>
+                  </div>
+                  <div className="pill p-gn" style={{ fontSize: 9, fontWeight: 700 }}>{resPct}% Resolved</div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 15 }}>
+                  <div style={{ padding: '10px 12px', background: 'var(--sf-l)', borderRadius: 10, border: '.5px solid rgba(79,70,229,0.1)' }}>
+                    <div style={{ fontSize: 8, color: 'var(--sf)', fontWeight: 800, textTransform: 'uppercase', marginBottom: 2 }}>Citizens</div>
+                    <div style={{ fontSize: 18, fontWeight: 900 }}>{d.citizens?.toLocaleString('en-IN') || 0}</div>
+                  </div>
+                  <div style={{ padding: '10px 12px', background: 'var(--nv-l)', borderRadius: 10, border: '.5px solid rgba(15,30,54,0.1)' }}>
+                    <div style={{ fontSize: 8, color: 'var(--nv)', fontWeight: 800, textTransform: 'uppercase', marginBottom: 2 }}>Enrolled</div>
+                    <div style={{ fontSize: 18, fontWeight: 900 }}>{d.enrolled || 0}</div>
+                  </div>
+                  <div style={{ padding: '10px 12px', background: 'var(--am-l)', borderRadius: 10, border: '.5px solid rgba(245,158,11,0.1)' }}>
+                    <div style={{ fontSize: 8, color: 'var(--am)', fontWeight: 800, textTransform: 'uppercase', marginBottom: 2 }}>Open Comp.</div>
+                    <div style={{ fontSize: 18, fontWeight: 900, color: 'var(--rd)' }}>{d.openComplaints || 0}</div>
+                  </div>
+                  <div style={{ padding: '10px 12px', background: 'var(--gn-l)', borderRadius: 10, border: '.5px solid rgba(16,185,129,0.1)' }}>
+                    <div style={{ fontSize: 8, color: 'var(--gn)', fontWeight: 800, textTransform: 'uppercase', marginBottom: 2 }}>Funds Sent</div>
+                    <div style={{ fontSize: 16, fontWeight: 900 }}>{fmt(d.fundsDisbursed || 0)}</div>
+                  </div>
+                </div>
+
+                <div style={{ background: 'var(--gy-l)', borderRadius: 10, height: 6, overflow: 'hidden', marginBottom: 8, position: 'relative' }}>
+                  <div style={{
+                    height: '100%', borderRadius: 10, transition: 'width 1s cubic-bezier(0.19, 1, 0.22, 1)',
+                    background: resPct >= 80 ? 'var(--gn)' : resPct >= 50 ? 'var(--am)' : 'var(--rd)', width: resPct + '%'
+                  }} />
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: 'var(--t3)', fontWeight: 600 }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>📈 {d.resolvedComplaints || 0} resolved</span>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>💳 {fmt(d.fundsCommitted || 0)} budget</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
@@ -747,7 +1080,7 @@ function AdminFundPredictor({ tick }) {
   useAutoRefresh(load, 60);
   useEffect(() => { if (tick > 0) load(); }, [tick]);
 
-  const m = schemes.reduce((a, s) => {
+  const m = useMemo(() => schemes.reduce((a, s) => {
     const amt = s.benefit_amount || 0;
     return {
       committed: a.committed + (s.total_applied || 0) * amt,
@@ -757,7 +1090,7 @@ function AdminFundPredictor({ tick }) {
       totalDone: a.totalDone + (s.total_completed || 0),
       totalMatched: a.totalMatched + (s.total_matched || 0),
     };
-  }, { committed: 0, disbursed: 0, potential: 0, totalApplied: 0, totalDone: 0, totalMatched: 0 });
+  }, { committed: 0, disbursed: 0, potential: 0, totalApplied: 0, totalDone: 0, totalMatched: 0 }), [schemes]);
 
   const approvalRate = m.totalApplied > 0 ? Math.round(m.totalDone / m.totalApplied * 100) : 0;
   const conversionRate = m.totalMatched > 0 ? Math.round(m.totalApplied / m.totalMatched * 100) : 0;
@@ -765,69 +1098,128 @@ function AdminFundPredictor({ tick }) {
 
   const fmt = (n) => n >= 1e7 ? '₹' + (n / 1e7).toFixed(1) + ' Cr' : n >= 1e5 ? '₹' + (n / 1e5).toFixed(1) + ' L' : '₹' + n.toLocaleString('en-IN');
 
-  const topSchemes = [...schemes]
+  const topSchemes = useMemo(() => [...schemes]
     .filter(s => s.benefit_amount > 0)
     .map(s => ({
       ...s,
       committed: (s.total_applied || 0) * (s.benefit_amount || 0),
       disbursed: (s.total_completed || 0) * (s.benefit_amount || 0),
     }))
-    .sort((a, b) => b.committed - a.committed).slice(0, 10);
+    .sort((a, b) => b.committed - a.committed).slice(0, 10), [schemes]);
+
   const maxC = topSchemes[0]?.committed || 1;
 
+  const chartData = useMemo(() => ({
+    labels: ['Committed', 'Disbursed', 'Potential Needed'],
+    datasets: [{
+      label: 'Funds (₹)',
+      data: [m.committed, m.disbursed, m.potential],
+      backgroundColor: ['rgba(79, 70, 229, 0.6)', 'rgba(16, 185, 129, 0.6)', 'rgba(245, 158, 11, 0.6)'],
+      borderColor: ['var(--sf)', 'var(--gn)', 'var(--am)'],
+      borderWidth: 1.5,
+      borderRadius: 8,
+    }]
+  }), [m]);
+
   return (
-    <div>
+    <div style={{ animation: 'nv-fadein .4s ease' }}>
       <div className="bc">Admin › <span>Fund Predictor</span></div>
-      <div className="ph" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-        <div><h1>💰 Fund Predictor</h1><p>DBT commitment forecast based on live scheme data</p></div>
-        <LiveDot label="Refreshes every 60s" />
+      <div className="ph" style={{ marginBottom: 25, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div>
+          <h1 style={{ marginBottom: 4 }}>💰 Financial Forecasting</h1>
+          <p style={{ margin: 0, opacity: 0.7 }}>Predictive budget analysis based on current application density and matched eligibility</p>
+        </div>
+        <LiveDot label="Sync: 60s" />
       </div>
 
-      <div className="sr" style={{ marginBottom: 16 }}>
-        <div className="sc c-nv"><div className="sl">Committed</div><div className="sv">{loading ? '…' : fmt(m.committed)}</div><div className="ss">Applied × benefit</div></div>
-        <div className="sc c-gn"><div className="sl">Disbursed</div><div className="sv">{loading ? '…' : fmt(m.disbursed)}</div><div className="ss">Completed milestones</div></div>
-        <div className="sc c-sf"><div className="sl">Potential</div><div className="sv">{loading ? '…' : fmt(m.potential)}</div><div className="ss">All matched × benefit</div></div>
-        <div className="sc c-am"><div className="sl">Predicted Qtr</div><div className="sv">{loading ? '…' : fmt(predictedNext)}</div><div className="ss">At current rate ×1.1</div></div>
-      </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 16 }}>
-        {[
-          { label: 'Approval Rate', value: approvalRate, sub: `${m.totalDone} of ${m.totalApplied} approved`, color: 'var(--gn)' },
-          { label: 'Conversion Rate', value: conversionRate, sub: `${m.totalApplied} of ${m.totalMatched} applied`, color: 'var(--nv)' },
-        ].map(({ label, value, sub, color }) => (
-          <div key={label} style={{ background: 'var(--wh)', border: '.5px solid var(--gy-m)', borderRadius: 'var(--r)', padding: 14 }}>
-            <div style={{ fontSize: 11, color: 'var(--t3)', marginBottom: 6 }}>{label}</div>
-            <div style={{ fontSize: 26, fontWeight: 800, color, marginBottom: 4 }}>{value}%</div>
-            <div style={{ background: 'var(--gy-l)', borderRadius: 4, height: 6, overflow: 'hidden', marginBottom: 4 }}>
-              <div style={{ height: '100%', width: value + '%', background: color, borderRadius: 4, transition: 'width .5s' }} />
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr', gap: 20, marginBottom: 25 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 15 }}>
+          <div className="sc c-nv" style={{ padding: 25, position: 'relative', overflow: 'hidden' }}>
+            <div style={{ position: 'absolute', right: -10, bottom: -10, fontSize: 60, opacity: 0.1 }}>💎</div>
+            <div className="sl" style={{ opacity: 0.8, letterSpacing: '.05em' }}>Potential Funds Needed</div>
+            <div className="sv" style={{ fontSize: 36, margin: '10px 0', fontWeight: 900 }}>{loading ? '…' : fmt(m.potential)}</div>
+            <div className="ss" style={{ fontWeight: 700 }}>Based on {m.totalMatched?.toLocaleString()} eligible matches</div>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 15 }}>
+            <div className="sc c-sf" style={{ padding: 20 }}>
+              <div className="sl" style={{ fontSize: 10, fontWeight: 700 }}>Committed</div>
+              <div className="sv" style={{ fontSize: 20, margin: '4px 0' }}>{loading ? '…' : fmt(m.committed)}</div>
+              <div className="ss">Active Pipeline</div>
             </div>
-            <div style={{ fontSize: 10, color: 'var(--t3)' }}>{sub}</div>
+            <div className="sc c-gn" style={{ padding: 20 }}>
+              <div className="sl" style={{ fontSize: 10, fontWeight: 700 }}>Disbursed</div>
+              <div className="sv" style={{ fontSize: 20, margin: '4px 0' }}>{loading ? '…' : fmt(m.disbursed)}</div>
+              <div className="ss">Total Credited</div>
+            </div>
+          </div>
+        </div>
+
+        <div style={{ background: 'var(--wh)', borderRadius: 'var(--r)', border: '.5px solid var(--gy-m)', padding: 25, boxShadow: 'var(--sh1)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+            <div>
+              <div style={{ fontWeight: 900, fontSize: 14, color: 'var(--nv)' }}>Budget Utilization & Exposure</div>
+              <div style={{ fontSize: 10, color: 'var(--t3)' }}>Live side-by-side comparison of fiscal requirements</div>
+            </div>
+            <div className="pill p-am" style={{ fontSize: 9 }}>Forecasting Q3</div>
+          </div>
+          <div style={{ height: 200 }}>
+            {loading ? <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--t3)' }}>Calculating projections…</div> :
+              <Bar data={chartData} options={{
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: { x: { grid: { display: false }, ticks: { callback: (v) => fmt(v), font: { size: 9 } } }, y: { grid: { display: false }, ticks: { font: { weight: 700, size: 10 } } } }
+              }} />}
+          </div>
+        </div>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 25 }}>
+        {[
+          { label: 'Approval Rate', value: approvalRate, sub: `${m.totalDone} of ${m.totalApplied} projects completed`, color: 'var(--gn)', ic: '✅' },
+          { label: 'Conversion Rate', value: conversionRate, sub: `${m.totalApplied} of ${m.totalMatched} eligible citizens applied`, color: 'var(--nv)', ic: '⚡' },
+        ].map(({ label, value, sub, color, ic }) => (
+          <div key={label} style={{ background: 'var(--wh)', border: '.5px solid var(--gy-m)', borderRadius: 'var(--r)', padding: 22, boxShadow: 'var(--sh1)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
+              <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--t3)', textTransform: 'uppercase' }}>{ic} {label}</div>
+              <div style={{ fontSize: 22, fontWeight: 900, color }}>{value}%</div>
+            </div>
+            <div style={{ background: 'var(--gy-l)', borderRadius: 10, height: 8, overflow: 'hidden', marginBottom: 12 }}>
+              <div style={{ height: '100%', width: value + '%', background: color, borderRadius: 10, transition: 'width 1s ease' }} />
+            </div>
+            <div style={{ fontSize: 11, color: 'var(--t3)', fontWeight: 600 }}>{sub}</div>
           </div>
         ))}
       </div>
 
       {!loading && topSchemes.length > 0 && (
-        <div style={{ background: 'var(--wh)', border: '.5px solid var(--gy-m)', borderRadius: 'var(--r)', padding: 16 }}>
-          <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 12 }}>Top Schemes by Fund Commitment</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div style={{ background: 'var(--wh)', border: '.5px solid var(--gy-m)', borderRadius: 'var(--r)', padding: 25, boxShadow: 'var(--sh1)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+            <div style={{ fontSize: 14, fontWeight: 900, color: 'var(--nv)' }}>Top 10 Schemes by Fund Commitment</div>
+            <div className="pill p-gn" style={{ fontSize: 9 }}>Highest Fiscal Impact</div>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 15 }}>
             {topSchemes.map(s => {
               const bW = Math.round(s.committed / maxC * 100);
               const dW = s.committed > 0 ? Math.round(s.disbursed / s.committed * 100) : 0;
               return (
                 <div key={s.id}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3, fontSize: 12 }}>
-                    <span style={{ fontWeight: 600 }}>{s.name}</span>
-                    <span style={{ color: 'var(--t3)', fontSize: 11 }}>{fmt(s.committed)} committed</span>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6, fontSize: 13 }}>
+                    <span style={{ fontWeight: 800, color: 'var(--nv)' }}>{s.name}</span>
+                    <span style={{ color: 'var(--sf)', fontWeight: 800 }}>{fmt(s.committed)} committed</span>
                   </div>
-                  <div style={{ background: 'var(--gy-l)', borderRadius: 4, height: 8, overflow: 'hidden', position: 'relative' }}>
-                    <div style={{ height: '100%', width: bW + '%', background: 'var(--nv-m)', borderRadius: 4, position: 'relative' }}>
-                      <div style={{ position: 'absolute', top: 0, left: 0, height: '100%', width: dW + '%', background: 'var(--gn)', borderRadius: 4 }} />
+                  <div style={{ background: 'var(--gy-l)', borderRadius: 6, height: 10, overflow: 'hidden', position: 'relative' }}>
+                    <div style={{ height: '100%', width: bW + '%', background: 'var(--nv-m)', borderRadius: 6, position: 'relative' }}>
+                      <div style={{ position: 'absolute', top: 0, left: 0, height: '100%', width: dW + '%', background: 'var(--gn)', borderRadius: 6 }} />
                     </div>
                   </div>
-                  <div style={{ display: 'flex', gap: 12, fontSize: 9, color: 'var(--t3)', marginTop: 2 }}>
-                    <span><span style={{ width: 6, height: 6, borderRadius: 2, background: 'var(--nv-m)', display: 'inline-block', marginRight: 3 }} />Committed</span>
-                    <span><span style={{ width: 6, height: 6, borderRadius: 2, background: 'var(--gn)', display: 'inline-block', marginRight: 3 }} />Disbursed ({dW}%)</span>
-                    <span style={{ marginLeft: 'auto' }}>{fmt(s.disbursed)} of {fmt(s.committed)}</span>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: 'var(--t3)', marginTop: 5, fontWeight: 600 }}>
+                    <div style={{ display: 'flex', gap: 12 }}>
+                      <span><span style={{ width: 8, height: 8, borderRadius: 2, background: 'var(--nv-m)', display: 'inline-block', marginRight: 4 }} />Committed</span>
+                      <span><span style={{ width: 8, height: 8, borderRadius: 2, background: 'var(--gn)', display: 'inline-block', marginRight: 4 }} />Disbursed ({dW}%)</span>
+                    </div>
+                    <span>{fmt(s.disbursed)} of {fmt(s.committed)} Paid</span>
                   </div>
                 </div>
               );

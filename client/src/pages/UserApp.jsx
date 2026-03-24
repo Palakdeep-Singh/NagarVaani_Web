@@ -94,14 +94,17 @@ export default function UserApp() {
   };
 
   const u = user || {};
+  const msCount = dashboard?.milestones?.length || 0;
+  const complaints = dashboard?.complaints || [];
+  const appliedCount = dashboard?.schemes?.length || 0;
 
   const SIDEBAR_ITEMS = [
     { id: "p-home", icon: "🏠", label: "My Dashboard", section: "Dashboard" },
-    { id: "p-schemes", icon: "🤖", label: "AI Matched Schemes", section: "Schemes" },
-    { id: "p-active", icon: "📋", label: "Active Schemes", section: null },
+    { id: "p-schemes", icon: "🏛️", label: "Apply for Schemes", section: "Schemes" },
+    { id: "p-active", icon: "📋", label: "Active Tracking", count: msCount || 0 },
     { id: "p-past", icon: "📁", label: "Completed", section: null },
     { id: "p-docs", icon: "🔐", label: "Document Locker", section: "Tools" },
-    { id: "p-complaints", icon: "📢", label: "Complaints", section: null },
+    { id: "p-complaints", icon: "📢", label: "Complaints", count: complaints.filter(c => c.status !== 'resolved').length || 0 },
     { id: "p-edit", icon: "✏️", label: "Edit Profile", section: null },
   ];
 
@@ -219,8 +222,8 @@ export default function UserApp() {
                 >
                   <span className="si-ic">{item.icon}</span>
                   {item.label}
-                  {item.id === "p-complaints" && unreadCount > 0 && (
-                    <span className="sbadge">{unreadCount}</span>
+                  {item.count > 0 && (
+                    <span className="sbadge">{item.count}</span>
                   )}
                 </div>
               </span>
@@ -245,7 +248,7 @@ export default function UserApp() {
 
         {/* ── MAIN CONTENT ── */}
         <main className="main" onClick={() => { if (sidebarOpen) setSidebar(false); }}>
-          {page === "p-home" && <HomeDash user={u} d={dashboard} maskAadhaar={maskAadhaar} fmtIncome={fmtIncome} goPage={goPage} />}
+          {page === "p-home" && <HomeDash user={u} d={dashboard} maskAadhaar={maskAadhaar} fmtIncome={fmtIncome} goPage={goPage} appliedCount={appliedCount} />}
           {page === "p-schemes" && <SchemesPage user={u} />}
           {page === "p-active" && <ActiveSchemes user={u} />}
           {page === "p-past" && <PastSchemes />}
@@ -254,8 +257,9 @@ export default function UserApp() {
           {page === "p-edit" && (
             <EditProfile
               onBack={() => goPage("p-home")}
+              onComplaints={() => goPage("p-complaints")}
               onSaved={(updated) => {
-                login({ user: updated, token: localStorage.getItem("token") });
+                login({ user: updated, token: localStorage.getItem("nc_token") });
                 goPage("p-home");
               }}
             />
@@ -309,7 +313,7 @@ export default function UserApp() {
 }
 
 // ── HOME DASHBOARD ─────────────────────────────────────────────────────────────
-function HomeDash({ user: u, d, maskAadhaar, fmtIncome, goPage }) {
+function HomeDash({ user: u, d, maskAadhaar, fmtIncome, goPage, appliedCount }) {
   return (
     <div className="page on">
       <div className="bc">Dashboard › <span>Home</span></div>
@@ -341,12 +345,12 @@ function HomeDash({ user: u, d, maskAadhaar, fmtIncome, goPage }) {
         </div>
         <div className="pc-grid">
           <div className="pc-cell">
-            <div className="pc-val">{u.active_schemes || 0}</div>
-            <div className="pc-lbl">Total Schemes</div>
+            <div className="pc-val">₹{(u.total_benefits || 0).toLocaleString('en-IN')}</div>
+            <div className="pc-lbl">Benefits Received</div>
           </div>
           <div className="pc-cell">
-            <div className="pc-val">₹{(u.total_benefits || 0).toLocaleString("en-IN")}</div>
-            <div className="pc-lbl">Benefits Received</div>
+            <div className="pc-val">{appliedCount}</div>
+            <div className="pc-lbl">Active Schemes</div>
           </div>
           <div className="pc-cell">
             <div className="pc-val">{u.civic_score || 74}/100</div>

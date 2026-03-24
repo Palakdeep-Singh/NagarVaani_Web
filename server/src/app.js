@@ -8,6 +8,8 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import multer from 'multer';
+import fs from 'fs';
+import path from 'path';
 
 const app = express();
 
@@ -51,6 +53,8 @@ app.use((req, res) => res.status(404).json({ error: `Route not found: ${req.meth
 
 // ── Error handler ─────────────────────────────────────────────────────────────
 app.use((err, _req, res, _next) => {
+  const msg = `[${new Date().toISOString()}] ${err.stack || err.message}\n`;
+  fs.appendFileSync('server_error.log', msg);
   console.error('[APP ERROR]', err.message);
   res.status(err.status || 500).json({ error: err.message || 'Internal server error' });
 });

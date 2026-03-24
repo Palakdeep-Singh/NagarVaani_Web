@@ -60,7 +60,7 @@ function PreviewModal({ doc, onClose }) {
     if (!doc?.id) return;
     setLoading(true); setError(null); setBlobUrl(null);
 
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('nc_token');
     const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:5000').replace(/\/api$/, '');
 
     fetch(`${API_URL}/api/documents/view/${doc.id}`, {
@@ -216,21 +216,53 @@ export default function DocumentLocker({ user }) {
   const deleteDoc = async (doc) => {
     if (!window.confirm(`Delete "${doc.doc_name}" from your locker?`)) return;
     try {
-      await API.delete(`/api/documents/${doc.id}`);
-      setDocs(d => d.filter(x => x.id !== doc.id));
+      // Find all copies of this doc_type to prevent "ghost" documents reappearing from duplicates
+      const duplicates = docs.filter(d => d.doc_type === doc.doc_type);
+      await Promise.all(duplicates.map(d => API.delete(`/api/documents/${d.id}`)));
+      setDocs(d => d.filter(x => x.doc_type !== doc.doc_type));
       toast(`${doc.doc_name} removed from locker.`, 'info');
     } catch (e) { toast('Delete failed: ' + e.message, 'error'); }
+  };
+
+  const ALIAS_MAP = {
+    'aadhaar': ['aadhaar card', 'aadhaar'],
+    'voter_id': ['voter id', 'voter id (epic)', 'identity proof'],
+    'passbook': ['bank passbook', 'passbook'],
+    'photo': ['passport photo', 'photo'],
+    'land_record': ['land records / khatauni', 'land ownership proof', 'land records (7/12)', 'land record'],
+    'ration_card': ['ration card', 'ration card / bpl card', 'bpl card', 'bpl certificate'],
+    'income_cert': ['income certificate'],
+    'caste_cert': ['caste certificate'],
+    'birth_cert': ['birth certificate', 'age proof', 'age proof (birth certificate)'],
+    'disability': ['disability certificate'],
   };
 
   // Best doc per type (prefer available over flagged)
   const docMap = {};
   docs.forEach(d => {
-    const ex = docMap[d.doc_type];
-    if (!ex || d.status === 'available') docMap[d.doc_type] = d;
+    let resolvedType = d.doc_type;
+    const lowerType = (d.doc_type || d.doc_name || '').toLowerCase();
+    
+    // Attempt alias map resolution to map scheme naming convention back to locker card type
+    for (const [key, aliases] of Object.entries(ALIAS_MAP)) {
+      if (aliases.some(alias => lowerType.includes(alias))) {
+        resolvedType = key;
+        break;
+      }
+    }
+    
+    // Always fallback to custom if it's not a core type so it renders correctly
+    if (!DOC_TYPES.find(dt => dt.type === resolvedType)) {
+      resolvedType = 'custom_' + d.id;
+    }
+
+    const ex = docMap[resolvedType];
+    if (!ex || d.status === 'available') docMap[resolvedType] = d;
   });
 
-  const available = docs.filter(d => d.status === 'available').length;
-  const flagged = docs.filter(d => d.status === 'flagged').length;
+  const uniqueDocs = Object.values(docMap);
+  const available = uniqueDocs.filter(d => d.status === 'available').length;
+  const flagged = uniqueDocs.filter(d => d.status === 'flagged').length;
 
   return (
     <div className="page on">
@@ -279,12 +311,12 @@ export default function DocumentLocker({ user }) {
           <div className="ss">Ready to use</div>
         </div>
         <div className="sc c-nv">
-          <div className="sl">Encrypted</div>
-          <div className="sv">{docs.length}</div>
-          <div className="ss">Total files</div>
+          <div className="sl">Uploaded Types</div>
+          <div className="sv">{uniqueDocs.length}</div>
+          <div className="ss">Unique files</div>
         </div>
         <div className="sc c-sf">
-          <div className="sl">Required</div>
+          <div className="sl">Missing Core</div>
           <div className="sv">{DOC_TYPES.filter(d => d.required && !docMap[d.type]).length}</div>
           <div className="ss">Still missing</div>
         </div>
@@ -398,6 +430,51 @@ export default function DocumentLocker({ user }) {
               </div>
             );
           })}
+
+          {/* Render custom documents uploaded from Active Schemes */}
+          {Object.keys(docMap)
+            .filter(key => key.startsWith('custom_'))
+            .map(key => {
+              const doc = docMap[key];
+              const sc = STATUS_CONFIG[doc.status] || STATUS_CONFIG.available;
+              const isFlash = liveFlash[doc.id];
+
+              return (
+                <div key={key}
+                  className={`doc-card${sc?.cardClass || ''}`}
+                  style={{
+                    border: isFlash ? '2px solid var(--gn)' : undefined,
+                    boxShadow: isFlash ? '0 0 0 4px var(--gn-l)' : undefined,
+                    transition: 'all .3s', position: 'relative',
+                  }}
+                >
+                  <div style={{ position: 'absolute', top: 7, left: 7, fontSize: 9, opacity: .4 }}>🔒</div>
+                  
+                  <span className="doc-status" style={{
+                    background: isFlash ? 'var(--gn-l)' : sc?.bg,
+                    color: isFlash ? 'var(--gn)' : sc?.color,
+                    position: 'absolute', top: 7, right: 7,
+                    fontSize: '9.5px', padding: '2px 8px', borderRadius: 20, fontWeight: 700,
+                    border: `1px solid ${isFlash ? 'var(--gn)' : sc?.color}40`,
+                  }}>
+                    {isFlash ? '🟢 Saved!' : `${sc?.icon} ${sc?.label}`}
+                  </span>
+
+                  <div className="doc-ic">📄</div>
+                  <div className="doc-name">{doc.doc_type === 'custom' ? doc.doc_name : doc.doc_type}</div>
+
+                  <div style={{ fontSize: '9.5px', color: 'var(--t3)', marginTop: 3, textAlign: 'center' }}>
+                    {doc.doc_name}
+                    {doc.file_size ? ` · ${(doc.file_size / 1024).toFixed(0)}KB` : ''}
+                  </div>
+
+                  <div style={{ marginTop: 10, display: 'flex', gap: 4, justifyContent: 'center', flexWrap: 'wrap' }}>
+                    <button className="btn b-gh b-sm" onClick={() => setPreviewDoc(doc)}>👁 View</button>
+                    <button className="btn b-rd b-sm" onClick={() => deleteDoc(doc)}>🗑</button>
+                  </div>
+                </div>
+              );
+            })}
 
           {/* Add custom */}
           <div className="doc-card doc-add" onClick={() => triggerUpload('custom')} style={{ cursor: 'pointer' }}>

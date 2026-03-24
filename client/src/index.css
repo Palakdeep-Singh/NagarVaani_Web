@@ -1207,8 +1207,8 @@ input[type=file] {
 /* ══ DOCUMENT LOCKER ══ */
 .doc-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px;
   margin-bottom: 14px
 }
 
@@ -1216,11 +1216,15 @@ input[type=file] {
   background: var(--wh);
   border: .5px solid var(--gy-m);
   border-radius: var(--r);
-  padding: 12px;
+  padding: 16px 12px;
   text-align: center;
   cursor: pointer;
   transition: all .2s;
-  position: relative
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 150px
 }
 
 .doc-card:hover {

@@ -1,15 +1,10 @@
 /**
- * scheme.service.js — Production Service (fixes ALL tab bug)
- * Place: server/src/services/scheme.service.js
- *
- * KEY FIX: getAllSchemesWithScores now runs matcher against real user profile
- * instead of returning raw DB rows without scores.
+ * scheme.service.js — Fixed: apply-with-documents, payment disbursement, booth scoping
  */
 import { supabase } from '../config/supabase.js';
 import { decryptUserFields } from '../utils/crypto.js';
-import { matchAllSchemes, matchSchemeToUser } from './scheme.matcher.js';
+import { matchAllSchemes } from './scheme.matcher.js';
 
-// ─── Internal helpers ─────────────────────────────────────────────────────
 const getUser = async (userId) => {
   const { data, error } = await supabase.from('users').select('*').eq('id', userId).single();
   if (error) throw new Error('User not found: ' + error.message);
@@ -31,7 +26,6 @@ const getAppMap = async (userId) => {
   return map;
 };
 
-// ─── Merge match results with application status ──────────────────────────
 const mergeResults = (results, appMap, includeUnmatched) =>
   results
     .filter(r => includeUnmatched || r.matched)
@@ -47,9 +41,6 @@ const mergeResults = (results, appMap, includeUnmatched) =>
       applied_at: appMap[r.scheme.id]?.applied_at || null,
     }));
 
-// ─── PUBLIC FUNCTIONS ─────────────────────────────────────────────────────
-
-/** "Matched for Me" tab — only schemes user qualifies for */
 export const getMatchedSchemes = async (userId) => {
   const [user, schemes, appMap] = await Promise.all([
     getUser(userId), getSchemes(), getAppMap(userId)
@@ -58,17 +49,14 @@ export const getMatchedSchemes = async (userId) => {
   return mergeResults(results, appMap, false);
 };
 
-/** "All Schemes" tab — EVERY scheme with real match score computed against user */
 export const getAllSchemesWithScores = async (userId) => {
   const [user, schemes, appMap] = await Promise.all([
     getUser(userId), getSchemes(), getAppMap(userId)
   ]);
-  // KEY FIX: includeAll=true so non-matched schemes also get scores + reasons
   const results = matchAllSchemes(user, schemes, true);
   return mergeResults(results, appMap, true);
 };
 
-/** Re-run matcher and persist results to DB */
 export const runMatchingForUser = async (userId) => {
   const [user, schemes] = await Promise.all([getUser(userId), getSchemes()]);
   const matched = matchAllSchemes(user, schemes, false);
@@ -79,81 +67,210 @@ export const runMatchingForUser = async (userId) => {
         user_id: userId,
         scheme_id: m.scheme.id,
         score: m.score,
+        grade: m.grade,
         status: 'eligible',
-        reasons: m.reasons,
+        matched_at: new Date().toISOString(),
       })),
       { onConflict: 'user_id,scheme_id' }
     );
   }
-
-  return { matched: matched.length, top: matched.slice(0, 5).map(m => m.scheme.name) };
+  return matched;
 };
 
-/** Apply to a scheme — validates eligibility first */
-export const applyToScheme = async (userId, schemeId) => {
-  const [user, schemes] = await Promise.all([getUser(userId), getSchemes()]);
-  const scheme = schemes.find(s => s.id === schemeId);
-  if (!scheme) throw new Error('Scheme not found');
+/**
+ * applyToScheme — Now accepts document_ids (already uploaded docs)
+ * Routes documents to correct admin level based on scheme.level
+ */
+export const applyToScheme = async (userId, schemeId, document_ids = []) => {
+  // Get scheme details
+  const { data: scheme, error: schErr } = await supabase
+    .from('schemes').select('*').eq('id', schemeId).single();
+  if (schErr) throw new Error('Scheme not found');
 
-  const result = matchSchemeToUser(user, scheme);
-  if (!result.matched)
-    throw new Error(result.hard_fail_reason || 'Not eligible for this scheme');
+  // Get user for routing
+  const { data: user, error: userErr } = await supabase
+    .from('users').select('id, district, state').eq('id', userId).single();
+  if (userErr) throw new Error('User not found');
 
-  const { error } = await supabase.from('user_scheme_matches').upsert({
+  // Upsert application record
+  const { error: appErr } = await supabase.from('user_scheme_matches').upsert({
     user_id: userId,
     scheme_id: schemeId,
-    score: result.score,
     status: 'applied',
-    reasons: result.reasons,
     applied_at: new Date().toISOString(),
   }, { onConflict: 'user_id,scheme_id' });
-  if (error) throw new Error(error.message);
+  if (appErr) throw new Error(appErr.message);
 
-  // Create milestone progress entries
-  const { data: milestones } = await supabase.from('scheme_milestones')
-    .select('id').eq('scheme_id', schemeId).order('step_number');
+  // Get scheme milestones
+  let { data: milestones } = await supabase
+    .from('scheme_milestones')
+    .select('id, step_number, title')
+    .eq('scheme_id', schemeId)
+    .order('step_number');
 
-  if (milestones?.length) {
-    await supabase.from('user_milestone_progress').upsert(
-      milestones.map((m, i) => ({
-        user_id: userId, scheme_id: schemeId, milestone_id: m.id,
-        status: i === 0 ? 'pending' : 'locked',
-      })),
-      { onConflict: 'user_id,scheme_id,milestone_id' }
-    );
+  // Auto-seed default milestones if scheme has none
+  if (!milestones?.length) {
+    const defaultMs = [
+      { scheme_id: schemeId, step_number: 1, title: 'Application & Document Verification',
+        description: 'Submit required documents for initial verification.', amount: 0, expected_days: 15 },
+      { scheme_id: schemeId, step_number: 2, title: 'Eligibility Review',
+        description: 'Officials review eligibility and verify submitted documents.', amount: 0, expected_days: 30 },
+      { scheme_id: schemeId, step_number: 3, title: 'Approval & Disbursement',
+        description: 'Final approval and benefit transfer.', amount: scheme.benefit_amount || 0, expected_days: 15 },
+    ];
+    const { data: seeded } = await supabase.from('scheme_milestones').insert(defaultMs).select();
+    milestones = seeded || [];
   }
 
-  return { success: true, score: result.score };
-};
+  if (milestones?.length) {
+    // Create progress records for each milestone
+    const progressRows = milestones.map((m, idx) => ({
+      user_id: userId,
+      scheme_id: schemeId,
+      milestone_id: m.id,
+      status: idx === 0 ? 'pending' : 'locked',   // first milestone = upload docs, rest locked
+      document_ids: idx === 0 ? document_ids : [],
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    }));
 
-/** Single scheme detail with milestones and user progress */
-export const getSchemeDetail = async (userId, schemeId) => {
-  const [user, schRes, msRes, progRes] = await Promise.all([
-    getUser(userId),
-    supabase.from('schemes').select('*').eq('id', schemeId).single(),
-    supabase.from('scheme_milestones').select('*').eq('scheme_id', schemeId).order('step_number'),
-    supabase.from('user_milestone_progress').select('*').eq('scheme_id', schemeId).eq('user_id', userId),
-  ]);
-  if (schRes.error) throw new Error(schRes.error.message);
-  const match = matchSchemeToUser(user, schRes.data);
-  return { ...schRes.data, ...match, milestones: msRes.data || [], progress: progRes.data || [] };
-};
+    await supabase.from('user_milestone_progress')
+      .upsert(progressRows, { onConflict: 'user_id,milestone_id' });
+  }
 
-/** Admin scheme analytics */
-export const getSchemeStats = async () => {
-  const [{ data: schemes }, { data: matches }] = await Promise.all([
-    supabase.from('schemes').select('*').eq('is_active', true),
-    supabase.from('user_scheme_matches').select('scheme_id, status, score'),
-  ]);
-  return (schemes || []).map(s => {
-    const sm = (matches || []).filter(m => m.scheme_id === s.id);
-    return {
-      ...s,
-      total_matched: sm.length,
-      total_applied: sm.filter(m => m.status === 'applied').length,
-      total_active: sm.filter(m => m.status === 'active').length,
-      total_completed: sm.filter(m => m.status === 'completed').length,
-      avg_score: sm.length ? Math.round(sm.reduce((a, b) => a + b.score, 0) / sm.length) : 0,
-    };
+  // Link uploaded documents to this scheme's application
+  if (document_ids.length > 0) {
+    // Determine target admin level for document routing
+    const adminLevel = scheme.level?.toLowerCase() === 'state' ? 'state' :
+      scheme.level?.toLowerCase() === 'central' ? 'central' : 'district';
+
+    await supabase.from('documents')
+      .update({
+        scheme_id: schemeId,
+        doc_scope: adminLevel,          // routes to correct admin level
+        status: 'pending_review',
+        updated_at: new Date().toISOString(),
+      })
+      .in('id', document_ids)
+      .eq('user_id', userId);
+  }
+
+  // Send notification
+  await supabase.from('notifications').insert({
+    user_id: userId,
+    type: 'info',
+    title: `Applied: ${scheme.name}`,
+    message: `Your application for "${scheme.name}" has been submitted with ${document_ids.length} document(s). Track milestones in Active Schemes.`,
+    link: 'p-active',
   });
+
+  return {
+    scheme_name: scheme.name,
+    milestones_created: milestones?.length || 0,
+    documents_attached: document_ids.length,
+    admin_level: scheme.level,
+  };
+};
+
+export const getSchemeStats = async () => {
+  const { data: enrollments } = await supabase
+    .from('user_scheme_matches')
+    .select('scheme_id, status, score, schemes(name, category, benefit_amount)');
+
+  const byScheme = {};
+  (enrollments || []).forEach(e => {
+    const s = e.schemes;
+    if (!s) return;
+    const sid = e.scheme_id;
+    if (!byScheme[sid]) {
+      byScheme[sid] = {
+        id: sid,
+        name: s.name,
+        category: s.category,
+        benefit_amount: s.benefit_amount || 0,
+        total_matched: 0,
+        total_applied: 0,
+        total_completed: 0,
+        scores: [],
+      };
+    }
+    const m = byScheme[sid];
+    m.total_matched++;
+    if (['applied', 'active', 'completed'].includes(e.status)) m.total_applied++;
+    if (e.status === 'completed') m.total_completed++;
+    if (e.score) m.scores.push(e.score);
+  });
+
+  return Object.values(byScheme).map(m => {
+    const avg = m.scores.length > 0 ? Math.round(m.scores.reduce((a, b) => a + b, 0) / m.scores.length) : 0;
+    return { ...m, avg_score: avg, scores: undefined };
+  }).sort((a, b) => b.total_matched - a.total_matched);
+};
+
+/**
+ * getBoothAnalytics — Per-booth stats for admin dashboard
+ * Shows: registrations, active schemes, complaints, satisfaction %
+ */
+export const getBoothAnalytics = async (district, state, role) => {
+  let userQuery = supabase.from('users').select('id, booth, ward, village');
+  if (role === 'district') userQuery = userQuery.eq('district', district);
+  else if (role === 'state') userQuery = userQuery.eq('state', state);
+
+  const { data: users } = await userQuery;
+  if (!users?.length) return [];
+
+  const userIds = users.map(u => u.id);
+  const boothMap = {};
+  users.forEach(u => {
+    const key = u.booth || u.ward || u.village || 'Unknown';
+    if (!boothMap[key]) boothMap[key] = { booth: key, userIds: [], citizens: 0 };
+    boothMap[key].userIds.push(u.id);
+    boothMap[key].citizens++;
+  });
+
+  // Get complaints per booth
+  const { data: complaints } = await supabase
+    .from('complaints')
+    .select('user_id, status')
+    .in('user_id', userIds);
+
+  // Get scheme enrollments per booth
+  const { data: enrollments } = await supabase
+    .from('user_scheme_matches')
+    .select('user_id, status')
+    .in('user_id', userIds);
+
+  // Get disbursements per booth
+  const { data: disbursements } = await supabase
+    .from('user_milestone_progress')
+    .select('user_id, status, scheme_milestones(amount)')
+    .in('user_id', userIds)
+    .eq('status', 'completed');
+
+  // Aggregate per booth
+  return Object.values(boothMap).map(b => {
+    const bIds = new Set(b.userIds);
+    const bComplaints = (complaints || []).filter(c => bIds.has(c.user_id));
+    const bEnrollments = (enrollments || []).filter(e => bIds.has(e.user_id));
+    const bDisbursed = (disbursements || []).filter(d => bIds.has(d.user_id));
+    const resolvedComplaints = bComplaints.filter(c => c.status === 'resolved').length;
+    const totalDisburse = bDisbursed.reduce((sum, d) => sum + (d.scheme_milestones?.amount || 0), 0);
+
+    return {
+      booth: b.booth,
+      citizens: b.citizens,
+      registrations: b.citizens,
+      total_complaints: bComplaints.length,
+      resolved_complaints: resolvedComplaints,
+      active_schemes: bEnrollments.filter(e => ['applied', 'active'].includes(e.status)).length,
+      completed_schemes: bEnrollments.filter(e => e.status === 'completed').length,
+      total_disbursed: totalDisburse,
+      satisfaction_pct: bComplaints.length > 0
+        ? Math.round((resolvedComplaints / bComplaints.length) * 100)
+        : 100,  // no complaints = happy
+      complaint_rate_pct: b.citizens > 0
+        ? Math.round((bComplaints.length / b.citizens) * 100)
+        : 0,
+    };
+  }).sort((a, b) => b.citizens - a.citizens);
 };

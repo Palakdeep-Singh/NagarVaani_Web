@@ -10,7 +10,7 @@ const STATES = ["Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhatt
 
 const OCCUPATIONS = ["Farmer / Kisan", "Agricultural Labour", "Animal Husbandry / Dairy", "Fisherman / Fisher", "Daily Wage Labour", "Construction Worker", "Artisan / Craftsman", "Carpenter", "Blacksmith / Lohar", "Weaver / Handloom", "Tailor / Darzi", "Barber / Nai", "Potter / Kumhar", "Goldsmith / Sunar", "Cobbler / Mochi", "Street Vendor / Hawker", "Small Shopkeeper", "Business / Trader", "MSME / Small Enterprise", "Transport / Driver", "Domestic Worker", "Asha Worker / Anganwadi", "Social / NGO Worker", "Student", "Salaried (Private)", "Salaried (Govt)", "Self Employed", "Homemaker", "Retired / Pensioner", "Unemployed / Job Seeker", "Other"];
 
-export default function EditProfile({ onBack, onSaved }) {
+export default function EditProfile({ onBack, onSaved, onComplaints }) {
   const { user, login } = useContext(AuthContext);
   const [form, setForm] = useState({
     full_name: user?.full_name || '',
@@ -31,6 +31,7 @@ export default function EditProfile({ onBack, onSaved }) {
     disability: user?.disability || '',
     area_type: user?.area_type || 'rural',
     bpl_card: user?.bpl_card || '',
+    booth: user?.booth || '',
   });
   const [loading, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -60,7 +61,7 @@ export default function EditProfile({ onBack, onSaved }) {
     try {
       const { data } = await API.put('/api/user/profile', form);
       // Update auth context with new user data
-      login({ user: data, token: localStorage.getItem('token') });
+      login({ user: data, token: localStorage.getItem('nc_token') });
       setSaved(true);
       setTimeout(() => { if (onSaved) onSaved(data); }, 800);
     } catch (e) {
@@ -165,6 +166,7 @@ export default function EditProfile({ onBack, onSaved }) {
           <Field label="District" field="district" required hint="e.g. Latur" />
           <Field label="Ward / Taluka" field="ward" hint="Ward or Taluka name" />
           <Field label="Village / Area" field="village" hint="Village or locality" />
+          <Field label="Booth / Polling Station" field="booth" hint="e.g. Booth No. 42 / Primary School" />
           <Field label="Pincode" field="pincode" hint="6-digit pincode" />
           <div className="form-group">
             <label className="form-label">Area Type</label>
@@ -215,12 +217,12 @@ export default function EditProfile({ onBack, onSaved }) {
 
       {/* Section: Identity */}
       <div className="card" style={{ marginBottom: 12 }}>
-        <div className="card-title" style={{ marginBottom: 14, fontSize: 13 }}>🪪 Identity Documents</div>
+        <div className="card-title" style={{ marginBottom: 14, fontSize: 13 }}>🪪 Identity Information</div>
         <div style={{
           background: 'var(--am-l)', border: '.5px solid var(--am)', borderRadius: 'var(--rs)',
-          padding: '9px 12px', marginBottom: 12, fontSize: 11.5, color: 'var(--am)'
+          padding: '11px 14px', marginBottom: 12, fontSize: 11.5, color: 'var(--am)'
         }}>
-          ⚠️ Aadhaar number is encrypted with AES-256-GCM. It is never stored in plain text.
+          💡 Aadhaar and other sensitive fields are encrypted with AES-256-GCM.
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
           <div className="form-group">
@@ -228,9 +230,23 @@ export default function EditProfile({ onBack, onSaved }) {
             <input className="form-input" value={form.voter_id} onChange={set('voter_id')}
               placeholder="e.g. MH/18/142/0083921" />
           </div>
+          <div className="form-group">
+            <label className="form-label">Aadhaar (Masked)</label>
+            <input className="form-input" value={user?.aadhaar_number ? `XXXX-XXXX-${String(user.aadhaar_number).slice(-4)}` : 'Not provided'} disabled />
+          </div>
         </div>
-        <div style={{ fontSize: 11, color: 'var(--t3)', marginTop: 4 }}>
-          To update Aadhaar number, please contact District Administration for re-verification.
+        
+        <div style={{
+          marginTop: 14, paddingTop: 14, borderTop: '.5px solid var(--gy-l)',
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12
+        }}>
+          <div style={{ fontSize: 11, color: 'var(--t3)', lineHeight: 1.4 }}>
+            <strong>Official Correction Request</strong><br/>
+            Fields like Name, Date of Birth, and Aadhaar can only be updated via an official verification process.
+          </div>
+          <button className="btn b-nv b-sm" onClick={onComplaints} style={{ flexShrink: 0 }}>
+            📝 Request Correction
+          </button>
         </div>
       </div>
 

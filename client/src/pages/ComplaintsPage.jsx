@@ -6,7 +6,7 @@ import { useState, useEffect, useRef } from 'react';
 import API from '../api/api.js';
 import { subscribeToComplaints, subscribeToComplaintTimeline } from '../services/realtime.js';
 
-const CATEGORIES = ['Water Supply', 'Electricity', 'Roads', 'Sanitation', 'Scheme Issue', 'Public Health', 'Education', 'Other'];
+const CATEGORIES = ['Water Supply', 'Electricity', 'Roads', 'Sanitation', 'Scheme Issue', 'Public Health', 'Education', 'Data Correction', 'Other'];
 
 const STATUS_CONFIG = {
   open: { label: 'Filed — Awaiting Assignment', color: 'var(--am)', bg: 'var(--am-l)', icon: '📋' },
@@ -145,7 +145,21 @@ export default function ComplaintsPage({ user }) {
               </select>
             </div>
             <div className="form-group">
-              <label className="form-label">Location / Ward</label>
+              <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between' }}>
+                Location / Ward
+                <button onClick={async () => {
+                  if (!navigator.geolocation) return showToast('Geolocation not supported', 'error');
+                  navigator.geolocation.getCurrentPosition(async (pos) => {
+                    try {
+                      const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${pos.coords.latitude}&lon=${pos.coords.longitude}`);
+                      const data = await res.json();
+                      const loc = data.address.suburb || data.address.neighbourhood || data.address.city || data.display_name.split(',')[0];
+                      setForm(f => ({ ...f, location: loc + ' (Auto-detected)' }));
+                      showToast('Location detected!');
+                    } catch (e) { showToast('Could not fetch address', 'error'); }
+                  }, () => showToast('Permission denied', 'error'));
+                }} style={{ background: 'none', border: 'none', color: 'var(--nv)', fontSize: 10, fontWeight: 700, cursor: 'pointer', padding: 0 }}>📍 Detect</button>
+              </label>
               <input className="form-input" placeholder="Ward 4, Near Hanuman Mandir..."
                 value={form.location} onChange={e => setForm(f => ({ ...f, location: e.target.value }))} />
             </div>

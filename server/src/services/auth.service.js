@@ -125,7 +125,7 @@ export const adminLoginService = async (email, password) => {
 // ── User Registration ─────────────────────────────────────────────────────────
 export const registerUserService = async (phone, data) => {
   const {
-    full_name, gender, date_of_birth, state, district, ward, village, pincode,
+    full_name, gender, date_of_birth, state, district, ward, village, pincode, booth,
     category, occupation, annual_income, land_acres, voter_id,
     religion, marital_status, disability, area_type, bpl_card,
   } = data;
@@ -162,7 +162,7 @@ export const registerUserService = async (phone, data) => {
   // Encrypt sensitive fields
   const raw = {
     full_name: full_name.trim(),
-    gender, date_of_birth, state, district, ward, village, pincode,
+    gender, date_of_birth, state, district, ward, village, pincode, booth,
     category, occupation,
     annual_income: annual_income ? Number(annual_income) : null,
     land_acres: land_acres ? Number(land_acres) : null,
