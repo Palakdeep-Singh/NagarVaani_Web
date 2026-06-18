@@ -15,6 +15,38 @@ export const Chatbot: React.FC = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
+  // Resizable sidebar panel width (default 384px, constrained between 300px and 600px)
+  const [width, setWidth] = useState<number>(384);
+  const [isDragging, setIsDragging] = useState<boolean>(false);
+
+  const startResizing = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  useEffect(() => {
+    if (!isDragging) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const newWidth = window.innerWidth - e.clientX;
+      if (newWidth >= 300 && newWidth <= 600) {
+        setWidth(newWidth);
+      }
+    };
+
+    const handleMouseUp = () => {
+      setIsDragging(false);
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDragging]);
+
   // Initialize chatbot messages
   useEffect(() => {
     if (messages.length === 0) {
@@ -142,9 +174,7 @@ export const Chatbot: React.FC = () => {
         </p>
       );
     });
-  };
-
-  return (
+  };  return (
     <>
       {/* Backdrop for click outside (mobile drawer overlay only) */}
       {showAIPanel && (
@@ -156,17 +186,36 @@ export const Chatbot: React.FC = () => {
 
       {/* Chat Container as Side Panel */}
       <aside
-        className={`bg-white flex flex-col transition-all duration-300 z-40 shrink-0 h-full overflow-hidden fixed md:relative inset-y-0 right-0 border-l border-slate-200 ${
+        className={`bg-white flex flex-col z-40 shrink-0 h-full overflow-hidden fixed md:relative inset-y-0 right-0 border-l border-slate-200 ${
+          isDragging ? 'transition-none' : 'transition-all duration-300'
+        } ${
           showAIPanel
-            ? 'translate-x-0 w-full md:w-96 shadow-xl md:shadow-none animate-in slide-in-from-right duration-300'
-            : 'translate-x-full md:translate-x-0 md:w-0 border-l-transparent pointer-events-none'
+            ? 'translate-x-0 w-full shadow-xl md:shadow-none animate-in slide-in-from-right duration-300 md:translate-x-0'
+            : 'translate-x-full md:translate-x-0 border-l-transparent pointer-events-none'
         }`}
+        style={
+          showAIPanel
+            ? { width: typeof window !== 'undefined' && window.innerWidth >= 768 ? `${width}px` : undefined }
+            : { width: typeof window !== 'undefined' && window.innerWidth >= 768 ? '0px' : undefined }
+        }
       >
+        {/* Resize Handle (Desktop Only) */}
+        {showAIPanel && (
+          <div
+            onMouseDown={startResizing}
+            onDoubleClick={() => setWidth(384)}
+            className="absolute left-0 top-0 bottom-0 w-1.5 cursor-col-resize hover:bg-indigo-500/20 active:bg-indigo-500/30 transition-colors group z-50 flex items-center justify-center"
+            title="Drag to resize panel (Double click to reset)"
+          >
+            {/* Visual drag indicator inside the handle */}
+            <div className="w-0.5 h-8 bg-slate-300 rounded group-hover:bg-indigo-500 group-active:bg-indigo-600 transition-colors" />
+          </div>
+        )}
         
         {/* Header */}
-        <div className="px-5 py-4 flex items-center justify-between border-b border-slate-200 bg-white shrink-0">
+        <div className="px-5 py-4 flex items-center justify-between border-b border-slate-200 bg-white shrink-0 pl-7">
           <div className="flex items-center gap-3">
-            <div className="h-9 w-9 rounded-xl bg-slate-50 flex items-center justify-center border border-slate-200 text-slate-700">
+            <div className="h-9 w-9 rounded-xl bg-indigo-50 flex items-center justify-center border border-indigo-100 text-indigo-600">
               <Bot className="h-5 w-5" />
             </div>
             <div>
@@ -174,7 +223,7 @@ export const Chatbot: React.FC = () => {
                 Chat Assistant
               </h4>
               <div className="flex items-center gap-1.5 mt-0.5">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                 <span className="text-xs text-slate-500 font-medium">Active</span>
               </div>
             </div>
@@ -197,7 +246,7 @@ export const Chatbot: React.FC = () => {
               <div
                 className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed border ${
                   msg.sender === 'user'
-                    ? 'bg-slate-100 text-slate-800 border-slate-200 rounded-tr-none shadow-sm'
+                    ? 'bg-indigo-50 text-indigo-950 border-indigo-100/80 rounded-tr-none shadow-sm'
                     : 'bg-white text-slate-700 border-slate-200 rounded-tl-none shadow-sm'
                 }`}
               >
@@ -215,7 +264,7 @@ export const Chatbot: React.FC = () => {
             <button
               key={idx}
               onClick={() => handleSend(p)}
-              className="text-xs text-slate-600 hover:text-slate-850 bg-white hover:bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-full text-left transition-colors cursor-pointer shadow-sm"
+              className="text-xs text-indigo-600 hover:text-indigo-855 bg-indigo-50/50 hover:bg-indigo-50 border border-indigo-100/60 px-3 py-1.5 rounded-full text-left transition-colors cursor-pointer shadow-sm"
             >
               {p}
             </button>
@@ -230,11 +279,11 @@ export const Chatbot: React.FC = () => {
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSend()}
             placeholder="Ask about files, worst district, health..."
-            className="flex-1 bg-slate-50 border border-slate-200 focus:bg-white focus:border-slate-400 focus:ring-0 rounded-xl px-3.5 py-2 text-sm text-slate-800 placeholder-slate-400 focus:outline-none transition-all"
+            className="flex-1 bg-slate-50 border border-slate-200 focus:bg-white focus:border-indigo-400 focus:ring-0 rounded-xl px-3.5 py-2 text-sm text-slate-800 placeholder-slate-400 focus:outline-none transition-all"
           />
           <button
             onClick={() => handleSend()}
-            className="h-9 w-9 rounded-xl bg-slate-800 hover:bg-slate-900 text-white flex items-center justify-center cursor-pointer transition-colors border border-slate-800 shrink-0"
+            className="h-9 w-9 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white flex items-center justify-center cursor-pointer transition-colors border border-indigo-750 shrink-0 shadow-sm shadow-indigo-600/10"
           >
             <Send className="h-4 w-4" />
           </button>
