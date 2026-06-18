@@ -1,0 +1,78 @@
+/**
+ * app.js
+ * Place: server/src/app.js
+ *
+ * Registers ALL routes. Import order matters for ES modules.
+ */
+import express from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
+import multer from 'multer';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const app = express();
+
+// ── Security & parsing ────────────────────────────────────────────────────────
+app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
+app.use(cors({
+  origin: ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:3000'],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// ── Health check ──────────────────────────────────────────────────────────────
+app.get('/', (_req, res) => res.json({
+  status: 'running',
+  service: 'EM Dashboard API v1.0',
+  routes: ['/api/booth/status', '/api/complaints', '/api/actions', '/api/checklist', '/api/assistant/ask', '/api/auth/login'],
+}));
+
+// ── API Routes ────────────────────────────────────────────────────────────────
+import dashboardRoutes from './routes/dashboard.routes.js';
+import authRoutes from './routes/auth.routes.js';
+import userRoutes from './routes/user.routes.js';
+import adminRoutes from './routes/admin.routes.js';
+import complaintsRoutes from './routes/complaints.routes.js';
+import documentsRoutes from './routes/documents.routes.js';
+import milestonesRoutes from './routes/milestones.routes.js';
+import schemeRoutes from './routes/scheme.routes.js';
+
+app.use('/api', dashboardRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api/user', userRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/complaints', complaintsRoutes);
+app.use('/api/documents', documentsRoutes);
+app.use('/api/milestones', milestonesRoutes);
+app.use('/api/schemes', schemeRoutes);
+
+// ── Static Files (Production) ────────────────────────────────────────────────
+const clientDist = path.resolve(__dirname, '../../client/dist');
+if (fs.existsSync(clientDist)) {
+  app.use(express.static(clientDist));
+  app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api')) return next();
+    res.sendFile(path.join(clientDist, 'index.html'));
+  });
+}
+
+// ── 404 ───────────────────────────────────────────────────────────────────────
+app.use((req, res) => res.status(404).json({ error: `Route not found: ${req.method} ${req.path}` }));
+
+// ── Error handler ─────────────────────────────────────────────────────────────
+app.use((err, _req, res, _next) => {
+  const msg = `[${new Date().toISOString()}] ${err.stack || err.message}\n`;
+  fs.appendFileSync('server_error.log', msg);
+  console.error('[APP ERROR]', err.message);
+  res.status(err.status || 500).json({ error: err.message || 'Internal server error' });
+});
+
+export default app;
