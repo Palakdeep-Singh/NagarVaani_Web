@@ -134,14 +134,38 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   });
 
   
-  const [complaints, setComplaints] = useState<Complaint[]>([]);
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [officers, setOfficers] = useState<Officer[]>([]);
-  const [files, setFiles] = useState<DigitalFile[]>([]);
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [complaints, setComplaints] = useState<Complaint[]>(() => {
+    const saved = localStorage.getItem('nagarvaani_complaints');
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [projects, setProjects] = useState<Project[]>(() => {
+    const saved = localStorage.getItem('nagarvaani_projects');
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [officers, setOfficers] = useState<Officer[]>(() => {
+    const saved = localStorage.getItem('nagarvaani_officers');
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [files, setFiles] = useState<DigitalFile[]>(() => {
+    const saved = localStorage.getItem('nagarvaani_files');
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [messages, setMessages] = useState<Message[]>(() => {
+    const saved = localStorage.getItem('nagarvaani_messages');
+    return saved ? JSON.parse(saved) : [];
+  });
 
   
   useEffect(() => {
+    const savedComplaints = localStorage.getItem('nagarvaani_complaints');
+    const savedProjects = localStorage.getItem('nagarvaani_projects');
+    const savedOfficers = localStorage.getItem('nagarvaani_officers');
+    const savedFiles = localStorage.getItem('nagarvaani_files');
+    const savedMessages = localStorage.getItem('nagarvaani_messages');
+
+    if (savedComplaints && savedProjects && savedOfficers && savedFiles && savedMessages) {
+      return;
+    }
     
     const initialComplaints: Complaint[] = [
       {
@@ -681,7 +705,6 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     ];
     setFiles(initialFiles);
 
-    
     const initialMessages: Message[] = [
       { id: 'MSG-001', senderName: 'Alice Vaz', senderRole: 'New Delhi DM', receiverRole: 'Chief Minister', content: 'Sir, the Connaught Place restoration project is 95% complete. The streetlights and pedestrian zones are now operational. Ready for site visit.', timestamp: '2026-06-18 10:15 AM' },
       { id: 'MSG-002', senderName: 'Chief Minister', senderRole: 'Chief Minister', receiverRole: 'New Delhi DM', content: 'Excellent work, Alice. Let\'s schedule the inauguration for next Monday. Meanwhile, ensure the open manhole complaint near the school is fixed by tonight.', timestamp: '2026-06-18 10:20 AM' },
@@ -689,7 +712,43 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       { id: 'MSG-004', senderName: 'Director of Education', senderRole: 'Director of Education', receiverRole: 'West Delhi DM', content: 'Acknowledged DM. We have sent the proposal (File Ref: DF-2026-405) for alignment check. Once cleared, funds will be released.', timestamp: '2026-06-18 11:45 AM' }
     ];
     setMessages(initialMessages);
+
+    localStorage.setItem('nagarvaani_complaints', JSON.stringify(initialComplaints));
+    localStorage.setItem('nagarvaani_projects', JSON.stringify(initialProjects));
+    localStorage.setItem('nagarvaani_officers', JSON.stringify(initialOfficers));
+    localStorage.setItem('nagarvaani_files', JSON.stringify(initialFiles));
+    localStorage.setItem('nagarvaani_messages', JSON.stringify(initialMessages));
   }, []);
+
+  useEffect(() => {
+    if (complaints.length > 0) {
+      localStorage.setItem('nagarvaani_complaints', JSON.stringify(complaints));
+    }
+  }, [complaints]);
+
+  useEffect(() => {
+    if (projects.length > 0) {
+      localStorage.setItem('nagarvaani_projects', JSON.stringify(projects));
+    }
+  }, [projects]);
+
+  useEffect(() => {
+    if (officers.length > 0) {
+      localStorage.setItem('nagarvaani_officers', JSON.stringify(officers));
+    }
+  }, [officers]);
+
+  useEffect(() => {
+    if (files.length > 0) {
+      localStorage.setItem('nagarvaani_files', JSON.stringify(files));
+    }
+  }, [files]);
+
+  useEffect(() => {
+    if (messages.length > 0) {
+      localStorage.setItem('nagarvaani_messages', JSON.stringify(messages));
+    }
+  }, [messages]);
 
   
 
@@ -723,53 +782,21 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     );
   };
 
-  
   const updateComplaintStatus = (id: string, status: ComplaintStatus, remarkText?: string, actor?: string) => {
     const todayStr = new Date().toISOString().split('T')[0];
+    const targetComplaint = complaints.find(c => c.id === id);
+    if (!targetComplaint) return;
+    const originalStatus = targetComplaint.status;
+
     setComplaints((prevComplaints) =>
       prevComplaints.map((c) => {
         if (c.id === id) {
-          const originalStatus = c.status;
           const newTimeline: TimelineEvent = {
             date: todayStr,
             action: `Status updated to ${status}`,
             actor: actor || activeRole,
             notes: remarkText
           };
-
-          
-          if (status === 'Resolved' && originalStatus !== 'Resolved') {
-            setOfficers((prevOffs) =>
-              prevOffs.map((off) => {
-                if (off.district === c.district) {
-                  const comp = off.completedComplaints + 1;
-                  const act = Math.max(0, off.activeComplaints - 1);
-                  const rate = Math.round((comp / (comp + act)) * 100);
-                  return {
-                    ...off,
-                    completedComplaints: comp,
-                    activeComplaints: act,
-                    resolutionRate: rate,
-                    rating: Math.min(5, Number((off.rating + 0.1).toFixed(1)))
-                  };
-                }
-                if (off.department === c.department && !off.district) {
-                  const comp = off.completedComplaints + 1;
-                  const act = Math.max(0, off.activeComplaints - 1);
-                  const rate = Math.round((comp / (comp + act)) * 100);
-                  return {
-                    ...off,
-                    completedComplaints: comp,
-                    activeComplaints: act,
-                    resolutionRate: rate,
-                    rating: Math.min(5, Number((off.rating + 0.05).toFixed(1)))
-                  };
-                }
-                return off;
-              })
-            );
-          }
-
           return {
             ...c,
             status,
@@ -779,9 +806,39 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         return c;
       })
     );
-  };
 
-  
+    if (status === 'Resolved' && originalStatus !== 'Resolved') {
+      setOfficers((prevOffs) =>
+        prevOffs.map((off) => {
+          if (off.district === targetComplaint.district) {
+            const comp = off.completedComplaints + 1;
+            const act = Math.max(0, off.activeComplaints - 1);
+            const rate = Math.round((comp / (comp + act)) * 100);
+            return {
+              ...off,
+              completedComplaints: comp,
+              activeComplaints: act,
+              resolutionRate: rate,
+              rating: Math.min(5, Number((off.rating + 0.1).toFixed(1)))
+            };
+          }
+          if (off.department === targetComplaint.department && !off.district) {
+            const comp = off.completedComplaints + 1;
+            const act = Math.max(0, off.activeComplaints - 1);
+            const rate = Math.round((comp / (comp + act)) * 100);
+            return {
+              ...off,
+              completedComplaints: comp,
+              activeComplaints: act,
+              resolutionRate: rate,
+              rating: Math.min(5, Number((off.rating + 0.05).toFixed(1)))
+            };
+          }
+          return off;
+        })
+      );
+    }
+  };
   const addMessage = (content: string, receiverRole: string) => {
     const today = new Date();
     const timeStr = today.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' ' + (today.getHours() >= 12 ? 'PM' : 'AM');
