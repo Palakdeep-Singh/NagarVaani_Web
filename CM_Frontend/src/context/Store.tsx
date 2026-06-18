@@ -9,7 +9,8 @@ import type {
   ComplaintStatus,
   ComplaintPriority,
   ComplaintCategory,
-  TimelineEvent
+  TimelineEvent,
+  UserProfile
 } from '../types';
 
 interface DashboardContextType {
@@ -22,6 +23,7 @@ interface DashboardContextType {
   activeDistrict: DistrictName;
   activeDepartment: 'Education & Schools' | 'Public Health' | 'PWD & Infrastructure';
   activeTab: string;
+  currentUser: UserProfile | null;
   setActiveRole: (role: 'Chief Minister' | 'District Magistrate' | 'Department Head') => void;
   setActiveDistrict: (district: DistrictName) => void;
   setActiveDepartment: (dept: 'Education & Schools' | 'Public Health' | 'PWD & Infrastructure') => void;
@@ -33,6 +35,11 @@ interface DashboardContextType {
   rejectFile: (fileId: string, remarkText: string) => void;
   updateProjectProgress: (projectId: string, progress: number, status?: 'On Track' | 'Delayed' | 'Critical' | 'Completed') => void;
   addNewProject: (project: Omit<Project, 'id' | 'budgetSpent' | 'physicalProgress'>) => void;
+  loginUser: (username: string, password: string) => boolean;
+  registerUser: (username: string, password: string, role: 'Chief Minister' | 'District Magistrate' | 'Department Head', district?: DistrictName, department?: 'Education & Schools' | 'Public Health' | 'PWD & Infrastructure') => boolean;
+  logoutUser: () => void;
+  showAIPanel: boolean;
+  setShowAIPanel: (val: boolean) => void;
 }
 
 const DashboardContext = createContext<DashboardContextType | undefined>(undefined);
@@ -55,11 +62,76 @@ const DEPARTMENTS = {
 };
 
 export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Navigation States
-  const [activeRole, setActiveRole] = useState<'Chief Minister' | 'District Magistrate' | 'Department Head'>('Chief Minister');
-  const [activeDistrict, setActiveDistrict] = useState<DistrictName>('New Delhi');
-  const [activeDepartment, setActiveDepartment] = useState<'Education & Schools' | 'Public Health' | 'PWD & Infrastructure'>('Public Health');
-  const [activeTab, setActiveTab] = useState<string>('Overview');
+  // Authentication States
+  const [currentUser, setCurrentUser] = useState<UserProfile | null>(() => {
+    const savedUser = localStorage.getItem('nagarvaani_user');
+    return savedUser ? JSON.parse(savedUser) : null;
+  });
+
+  const [showAIPanel, setShowAIPanel] = useState(false);
+
+  const [registeredUsers, setRegisteredUsers] = useState<Record<string, { password: string; profile: UserProfile }>>(() => {
+    const savedList = localStorage.getItem('nagarvaani_users');
+    if (savedList) return JSON.parse(savedList);
+
+    // Pre-seed default accounts
+    const initialAccounts = {
+      cm: {
+        password: 'cm123',
+        profile: { username: 'cm', role: 'Chief Minister' as const }
+      },
+      newdelhidm: {
+        password: 'dm123',
+        profile: { username: 'newdelhidm', role: 'District Magistrate' as const, district: 'New Delhi' as const }
+      },
+      healthhead: {
+        password: 'dept123',
+        profile: { username: 'healthhead', role: 'Department Head' as const, department: 'Public Health' as const }
+      }
+    };
+    localStorage.setItem('nagarvaani_users', JSON.stringify(initialAccounts));
+    return initialAccounts;
+  });
+
+  // Navigation States (initialized from active user session)
+  const [activeRole, setActiveRole] = useState<'Chief Minister' | 'District Magistrate' | 'Department Head'>(() => {
+    const savedUser = localStorage.getItem('nagarvaani_user');
+    if (savedUser) {
+      const parsed = JSON.parse(savedUser) as UserProfile;
+      return parsed.role;
+    }
+    return 'Chief Minister';
+  });
+
+  const [activeDistrict, setActiveDistrict] = useState<DistrictName>(() => {
+    const savedUser = localStorage.getItem('nagarvaani_user');
+    if (savedUser) {
+      const parsed = JSON.parse(savedUser) as UserProfile;
+      if (parsed.district) return parsed.district;
+    }
+    return 'New Delhi';
+  });
+
+  const [activeDepartment, setActiveDepartment] = useState<'Education & Schools' | 'Public Health' | 'PWD & Infrastructure'>(() => {
+    const savedUser = localStorage.getItem('nagarvaani_user');
+    if (savedUser) {
+      const parsed = JSON.parse(savedUser) as UserProfile;
+      if (parsed.department) return parsed.department;
+    }
+    return 'Public Health';
+  });
+
+  const [activeTab, setActiveTab] = useState<string>(() => {
+    const savedUser = localStorage.getItem('nagarvaani_user');
+    if (savedUser) {
+      const parsed = JSON.parse(savedUser) as UserProfile;
+      if (parsed.role === 'District Magistrate') return 'DM View';
+      if (parsed.role === 'Department Head') {
+        return parsed.department === 'Public Health' ? 'Health' : 'Education';
+      }
+    }
+    return 'Overview';
+  });
 
   // Core Data States
   const [complaints, setComplaints] = useState<Complaint[]>([]);
@@ -834,6 +906,80 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     setProjects((prev) => [...prev, proj]);
   };
 
+  const loginUser = (username: string, password: string): boolean => {
+    const userKey = username.trim().toLowerCase();
+    const account = registeredUsers[userKey];
+    if (account && account.password === password) {
+      setCurrentUser(account.profile);
+      localStorage.setItem('nagarvaani_user', JSON.stringify(account.profile));
+      
+      setActiveRole(account.profile.role);
+      if (account.profile.district) {
+        setActiveDistrict(account.profile.district);
+        setActiveTab('DM View');
+      } else if (account.profile.department) {
+        setActiveDepartment(account.profile.department);
+        setActiveTab(account.profile.department === 'Public Health' ? 'Health' : 'Education');
+      } else {
+        setActiveTab('Overview');
+      }
+      return true;
+    }
+    return false;
+  };
+
+  const registerUser = (
+    username: string,
+    password: string,
+    role: 'Chief Minister' | 'District Magistrate' | 'Department Head',
+    district?: DistrictName,
+    department?: 'Education & Schools' | 'Public Health' | 'PWD & Infrastructure'
+  ): boolean => {
+    const userKey = username.trim().toLowerCase();
+    if (registeredUsers[userKey]) {
+      return false;
+    }
+
+    const newProfile: UserProfile = {
+      username: username.trim(),
+      role,
+      district,
+      department
+    };
+
+    const newUsers = {
+      ...registeredUsers,
+      [userKey]: {
+        password,
+        profile: newProfile
+      }
+    };
+
+    setRegisteredUsers(newUsers);
+    localStorage.setItem('nagarvaani_users', JSON.stringify(newUsers));
+    
+    setCurrentUser(newProfile);
+    localStorage.setItem('nagarvaani_user', JSON.stringify(newProfile));
+    setActiveRole(role);
+    if (district) {
+      setActiveDistrict(district);
+      setActiveTab('DM View');
+    } else if (department) {
+      setActiveDepartment(department);
+      setActiveTab(department === 'Public Health' ? 'Health' : 'Education');
+    } else {
+      setActiveTab('Overview');
+    }
+    return true;
+  };
+
+  const logoutUser = () => {
+    setCurrentUser(null);
+    localStorage.removeItem('nagarvaani_user');
+    setActiveRole('Chief Minister');
+    setActiveTab('Overview');
+  };
+
   return (
     <DashboardContext.Provider
       value={{
@@ -846,6 +992,7 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         activeDistrict,
         activeDepartment,
         activeTab,
+        currentUser,
         setActiveRole,
         setActiveDistrict,
         setActiveDepartment,
@@ -856,7 +1003,12 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         approveFile,
         rejectFile,
         updateProjectProgress,
-        addNewProject
+        addNewProject,
+        loginUser,
+        registerUser,
+        logoutUser,
+        showAIPanel,
+        setShowAIPanel
       }}
     >
       {children}

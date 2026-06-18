@@ -112,3 +112,10 @@ export interface DistrictMetric {
   resolvedGrievances: number;
   score: number; // 0 - 100 performance score
 }
+
+export interface UserProfile {
+  username: string;
+  role: 'Chief Minister' | 'District Magistrate' | 'Department Head';
+  district?: DistrictName;
+  department?: 'Education & Schools' | 'Public Health' | 'PWD & Infrastructure';
+}

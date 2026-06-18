@@ -6,11 +6,11 @@
   --font-sans: 'Inter', sans-serif;
   --font-heading: 'Outfit', sans-serif;
   
-  --color-brand-primary: #1e3a8a; /* Navy Blue */
-  --color-brand-secondary: #0d9488; /* Teal */
-  --color-brand-accent: #f59e0b; /* Amber */
-  --color-brand-success: #10b981; /* Green */
-  --color-brand-danger: #ef4444; /* Red */
+  --color-brand-primary: #1e40af; /* Royal Navy Blue */
+  --color-brand-secondary: #0f766e; /* Teal */
+  --color-brand-accent: #d97706; /* Amber */
+  --color-brand-success: #059669; /* Green */
+  --color-brand-danger: #dc2626; /* Red */
   
   --animate-pulse-slow: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   --animate-float: float 6s ease-in-out infinite;
@@ -18,12 +18,16 @@
 
 @layer base {
   :root {
-    color-scheme: dark;
+    color-scheme: light;
+  }
+
+  html {
+    font-size: 17px;
   }
 
   body {
-    background-color: #0b0f19;
-    color: #f1f5f9;
+    background-color: #f8fafc; /* Slate-50 Light Background */
+    color: #1e293b; /* Slate-800 Primary Text */
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -39,6 +43,7 @@
   
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-heading);
+    color: #0f172a; /* Slate-900 Headings */
   }
 }
 
@@ -47,12 +52,13 @@
   50% { transform: translateY(-10px); }
 }
 
-/* Glassmorphism Classes */
+/* Light Mode Glassmorphism Panels */
 .glass-panel {
-  background: rgba(17, 24, 39, 0.7);
+  background: rgba(255, 255, 255, 0.8);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.03);
 }
 
 .glass-panel-hover {
@@ -60,9 +66,9 @@
 }
 
 .glass-panel-hover:hover {
-  background: rgba(20, 30, 50, 0.85);
-  border-color: rgba(99, 102, 241, 0.3);
-  box-shadow: 0 10px 30px -10px rgba(99, 102, 241, 0.2);
+  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(99, 102, 241, 0.25);
+  box-shadow: 0 10px 30px -10px rgba(99, 102, 241, 0.15);
   transform: translateY(-2px);
 }
 
@@ -73,23 +79,23 @@
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(15, 23, 42, 0.3);
+  background: rgba(241, 245, 249, 0.5);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(100, 116, 139, 0.4);
+  background: rgba(148, 163, 184, 0.4);
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(99, 102, 241, 0.6);
+  background: rgba(99, 102, 241, 0.5);
 }
 
-/* Active glowing effects */
+/* Active glowing effects adapted for light mode */
 .glow-text-teal {
-  text-shadow: 0 0 15px rgba(13, 148, 136, 0.5);
+  text-shadow: 0 0 10px rgba(13, 148, 136, 0.2);
 }
 
 .glow-text-indigo {
-  text-shadow: 0 0 15px rgba(99, 102, 241, 0.5);
+  text-shadow: 0 0 10px rgba(99, 102, 241, 0.2);
 }
