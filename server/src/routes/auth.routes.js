@@ -8,6 +8,8 @@ import {
   verifyOTPService,
   adminLoginService,
   registerUserService,
+  getOTPMode,
+  setOTPMode,
 } from '../services/auth.service.js';
 import { protect } from '../middleware/auth.middleware.js';
 import { supabase } from '../config/supabase.js';
@@ -111,6 +113,18 @@ router.get('/debug', async (req, res) => {
     key_role: role,
     db_error: error?.message || null,
   });
+});
+
+// ── GET/SET OTP Mode (Demo) ──────────────────────────────────────────────────
+router.get('/otp/mode', (req, res) => {
+  res.json({ mode: getOTPMode() });
+});
+
+router.post('/otp/mode', (req, res) => {
+  const { mode } = req.body;
+  if (!['dev', 'twilio'].includes(mode)) return res.status(400).json({ error: 'Invalid mode' });
+  setOTPMode(mode);
+  res.json({ success: true, mode });
 });
 
 export default router;

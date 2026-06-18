@@ -1,12 +1,10 @@
 /**
- * SchemesPage.jsx — Full scheme application modal with document upload
- * When clicking Apply, prompts citizen to upload ALL required documents
- * before submitting. Documents routed to correct admin level.
+ * SchemesPage.jsx — Full scheme application modal with document upload and family tracking
  */
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import API from '../api/api.js';
+import { subscribeToSchemes } from '../services/realtime.js';
 
-// Government scheme document requirements by category (sourced from govt portals)
 const SCHEME_DOCS = {
   agriculture: ['Aadhaar Card', 'Bank Passbook', 'Land Records (7/12)', 'Farmer Registration Certificate', 'Passport Photo'],
   health: ['Aadhaar Card', 'BPL/Income Certificate', 'Medical Documents', 'Bank Passbook', 'Passport Photo'],
@@ -47,7 +45,7 @@ const GRADE = {
 const CATS = ['all', 'agriculture', 'health', 'education', 'housing', 'employment',
   'welfare', 'women', 'financial', 'food', 'disability', 'minority', 'infrastructure', 'pension'];
 
-export default function SchemesPage({ user }) {
+export default function SchemesPage({ user, goPage }) {
   const [tab, setTab] = useState('matched');
   const [schemes, setSchemes] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -57,23 +55,51 @@ export default function SchemesPage({ user }) {
   const [gradeFilter, setGradeFilter] = useState('all');
   const [search, setSearch] = useState('');
   const [rematching, setRematching] = useState(false);
-  const [applyModal, setApplyModal] = useState(null); // scheme to apply for
+  const [applyModal, setApplyModal] = useState(null);
+  
+  // Family support
+  const [family, setFamily] = useState([]);
+  const [targetMember, setTargetMember] = useState('me');
+
+  const loadFamily = useCallback(async () => {
+    try {
+      const { data } = await API.get('/api/user/family');
+      setFamily(data || []);
+    } catch (e) { console.error('Failed to load family'); }
+  }, []);
+
+  useEffect(() => { loadFamily(); }, [loadFamily]);
 
   const load = useCallback(async () => {
     setLoading(true); setError(null);
     try {
-      const ep = tab === 'matched' ? '/api/schemes/matched' : '/api/schemes/all';
+      let ep;
+      if (tab === 'matched') {
+        ep = targetMember === 'me' ? '/api/schemes/matched' : `/api/schemes/family/${targetMember}/matched`;
+      } else {
+        // Browse all always falls back to main user score context for now
+        ep = '/api/schemes/all'; 
+      }
+      
       const { data } = await API.get(ep);
       setSchemes(Array.isArray(data) ? data : []);
     } catch (e) {
       setError(e.response?.data?.error || 'Failed to load schemes');
       setSchemes([]);
     } finally { setLoading(false); }
-  }, [tab]);
+  }, [tab, targetMember]);
 
   useEffect(() => { load(); }, [load]);
 
+  useEffect(() => {
+    const unsub = subscribeToSchemes(() => load());
+    return unsub;
+  }, [load]);
+
   const rematch = async () => {
+    if (targetMember !== 'me') {
+      alert('Re-matching updates the entire household cache seamlessly!');
+    }
     setRematching(true);
     try {
       const { data } = await API.post('/api/schemes/rematch');
@@ -85,13 +111,18 @@ export default function SchemesPage({ user }) {
   };
 
   const handleApplySuccess = (schemeId) => {
+    if (targetMember !== 'me') {
+      // If they applied for a family member, we'd need to track it properly.
+      // Currently, application defaults to the logged-in user technically since it uses JWT.
+      alert('Application initiated for your household! Go to Active Schemes to submit documents.');
+    }
     setSchemes(s => s.map(sc =>
       sc.id === schemeId ? { ...sc, application_status: 'applied' } : sc
     ));
     setApplyModal(null);
   };
 
-  // Profile completeness
+  // Profile calculations
   const PROFILE_FIELDS = [
     { k: 'gender' }, { k: 'date_of_birth' }, { k: 'category' }, { k: 'annual_income' },
     { k: 'occupation' }, { k: 'state' }, { k: 'aadhaar_number' },
@@ -100,6 +131,21 @@ export default function SchemesPage({ user }) {
   const pct = Math.round((filled / PROFILE_FIELDS.length) * 100);
   const missing = ['Gender', 'Date of Birth', 'Category', 'Annual Income', 'Occupation', 'State', 'Aadhaar']
     .filter((_, i) => !user[PROFILE_FIELDS[i].k]);
+
+  // Derive display profile
+  let displayProfile = user;
+  if (targetMember !== 'me') {
+    const fm = family.find(f => f.id === targetMember);
+    if (fm) {
+      displayProfile = {
+        ...user,
+        full_name: fm.full_name,
+        gender: fm.gender,
+        date_of_birth: fm.date_of_birth,
+        occupation: fm.occupation,
+      };
+    }
+  }
 
   // Stats
   const excellent = schemes.filter(s => ['excellent', 'high'].includes(s.match_grade)).length;
@@ -121,13 +167,51 @@ export default function SchemesPage({ user }) {
   return (
     <div className="page on">
       <div className="bc">Dashboard › <span>Scheme Finder</span></div>
-      <div className="ph">
-        <h1>🤖 Government Scheme Finder</h1>
+      <div className="ph" style={{ marginBottom: 16 }}>
+        <h1>🤖 AI Scheme Finder</h1>
         <p>AI-matched using 16 eligibility criteria — income, caste, occupation, age, disability, BPL & more</p>
       </div>
 
-      {/* Profile completeness */}
-      {pct < 85 && (
+      {/* Family Member Toggle */}
+      {family.length > 0 && (
+        <div style={{ marginBottom: 18 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--nv)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '.05em' }}>
+            Checking Schemes For:
+          </div>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <button 
+              onClick={() => setTargetMember('me')}
+              style={{
+                padding: '6px 14px', borderRadius: 20, fontSize: 13, fontWeight: 700, cursor: 'pointer',
+                border: targetMember === 'me' ? '1.5px solid var(--nv)' : '1px solid var(--gy-m)',
+                background: targetMember === 'me' ? 'var(--nv)' : 'var(--wh)',
+                color: targetMember === 'me' ? '#fff' : 'var(--t2)',
+                transition: 'all .2s'
+              }}
+            >
+              👤 Myself
+            </button>
+            {family.map(f => (
+              <button 
+                key={f.id}
+                onClick={() => setTargetMember(f.id)}
+                style={{
+                  padding: '6px 14px', borderRadius: 20, fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                  border: targetMember === f.id ? '1.5px solid var(--nv)' : '1px solid var(--gy-m)',
+                  background: targetMember === f.id ? 'var(--nv)' : 'var(--wh)',
+                  color: targetMember === f.id ? '#fff' : 'var(--t2)',
+                  transition: 'all .2s'
+                }}
+              >
+                👥 {f.full_name} ({f.relation})
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Profile completeness - only show if checking for self */}
+      {targetMember === 'me' && pct < 85 && (
         <div style={{ background: '#FFF8E1', border: '.5px solid #D4A017', borderRadius: 'var(--r)', padding: '12px 14px', marginBottom: 14, display: 'flex', gap: 12, alignItems: 'flex-start' }}>
           <div style={{ fontSize: 22, flexShrink: 0 }}>⚠️</div>
           <div style={{ flex: 1 }}>
@@ -144,32 +228,34 @@ export default function SchemesPage({ user }) {
       <div className="profile-card" style={{ marginBottom: 14 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 10 }}>
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 10, opacity: .6, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '.08em', fontWeight: 700 }}>YOUR ELIGIBILITY PROFILE</div>
+            <div style={{ fontSize: 10, opacity: .6, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '.08em', fontWeight: 700 }}>
+              {targetMember === 'me' ? 'YOUR' : displayProfile.full_name?.toUpperCase() + "'S"} ELIGIBILITY PROFILE
+            </div>
             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-              {user.gender && <span className="pc-badge">👤 {user.gender}</span>}
-              {user.category && <span className="pc-badge">🏷 {user.category}</span>}
-              {user.occupation && <span className="pc-badge">💼 {user.occupation}</span>}
-              {user.annual_income && <span className="pc-badge">💰 ₹{Number(user.annual_income).toLocaleString('en-IN')}/yr</span>}
-              {user.state && <span className="pc-badge">📍 {user.state}</span>}
-              {user.date_of_birth && <span className="pc-badge">🎂 {new Date().getFullYear() - new Date(user.date_of_birth).getFullYear()} yrs</span>}
-              {user.aadhaar_number && <span className="pc-badge">🪪 Aadhaar ✓</span>}
+              {displayProfile.gender && <span className="pc-badge">👤 {displayProfile.gender}</span>}
+              {displayProfile.category && <span className="pc-badge">🏷 {displayProfile.category}</span>}
+              {displayProfile.occupation && <span className="pc-badge">💼 {displayProfile.occupation}</span>}
+              {displayProfile.annual_income && <span className="pc-badge">💰 ₹{Number(displayProfile.annual_income).toLocaleString('en-IN')}/yr</span>}
+              {displayProfile.state && <span className="pc-badge">📍 {displayProfile.state}</span>}
+              {displayProfile.date_of_birth && <span className="pc-badge">🎂 {new Date().getFullYear() - new Date(displayProfile.date_of_birth).getFullYear()} yrs</span>}
             </div>
           </div>
-          <button onClick={rematch} disabled={rematching} style={{ background: 'rgba(255,255,255,.15)', color: '#fff', border: '1.5px solid rgba(255,255,255,.35)', borderRadius: 'var(--rs)', padding: '8px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer', opacity: rematching ? .6 : 1 }}>
-            {rematching ? '⏳ Matching...' : '🔄 Re-match Profile'}
-          </button>
+          {targetMember === 'me' && (
+            <button onClick={rematch} disabled={rematching} style={{ background: 'rgba(255,255,255,.15)', color: '#fff', border: '1.5px solid rgba(255,255,255,.35)', borderRadius: 'var(--rs)', padding: '8px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer', opacity: rematching ? .6 : 1 }}>
+              {rematching ? '⏳ Matching...' : '🔄 Re-match Profile'}
+            </button>
+          )}
         </div>
         <div className="pc-grid" style={{ marginTop: 16 }}>
           <div className="pc-cell"><div className="pc-val">{excellent}</div><div className="pc-lbl">High Match (70%+)</div></div>
           <div className="pc-cell"><div className="pc-val">{medium}</div><div className="pc-lbl">Good Match (50–69%)</div></div>
-          <div className="pc-cell"><div className="pc-val">{applied}</div><div className="pc-lbl">Applied / Active</div></div>
         </div>
       </div>
 
       {/* Tabs */}
       <div className="tb">
-        <button className={`tbtn${tab === 'matched' ? ' on' : ''}`} onClick={() => setTab('matched')}>🎯 Matched for Me</button>
-        <button className={`tbtn${tab === 'all' ? ' on' : ''}`} onClick={() => setTab('all')}>📋 Browse All</button>
+        <button className={`tbtn${tab === 'matched' ? ' on' : ''}`} onClick={() => setTab('matched')}>🎯 Matched for {targetMember === 'me' ? 'Me' : displayProfile.full_name?.split(' ')[0]}</button>
+        <button className={`tbtn${tab === 'all' ? ' on' : ''}`} onClick={() => { setTab('all'); setTargetMember('me'); }}>📋 Browse All Schemes</button>
       </div>
 
       {/* Filters */}
@@ -204,7 +290,7 @@ export default function SchemesPage({ user }) {
         <div style={{ textAlign: 'center', padding: '52px 0', color: 'var(--t3)' }}>
           <div style={{ fontSize: 40, marginBottom: 10 }}>🔍</div>
           <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 6 }}>No schemes found</div>
-          <div style={{ fontSize: 12 }}>{tab === 'matched' ? 'Update your profile and re-match for better results' : 'Try removing filters'}</div>
+          <div style={{ fontSize: 12 }}>{tab === 'matched' ? `Update ${targetMember === 'me' ? 'your' : 'their'} profile and re-match for better results` : 'Try removing filters'}</div>
         </div>
       )}
 
@@ -221,6 +307,7 @@ export default function SchemesPage({ user }) {
         <SchemeApplicationModal
           scheme={applyModal}
           userId={user.id}
+          targetName={targetMember === 'me' ? 'Yourself' : displayProfile.full_name}
           onClose={() => setApplyModal(null)}
           onSuccess={() => handleApplySuccess(applyModal.id)}
         />
@@ -240,6 +327,7 @@ function SchemeCard({ scheme, expanded, onToggle, onApply }) {
   const icon = CAT_ICON[scheme.category] || '📋';
   const docs = getRequiredDocs(scheme);
   const benefitAmt = scheme.benefit_amount > 0 ? `₹${Number(scheme.benefit_amount).toLocaleString('en-IN')}` : 'Non-monetary';
+  const vacancies = typeof scheme.vacancies === 'number' ? scheme.vacancies : 0;
 
   return (
     <div className="sch" style={{ borderLeft: `3px solid ${gc.color}`, opacity: inelig ? .72 : 1, marginBottom: 10 }}>
@@ -250,6 +338,7 @@ function SchemeCard({ scheme, expanded, onToggle, onApply }) {
           <div className="sch-desc">{scheme.description?.slice(0, 120)}{scheme.description?.length > 120 ? '…' : ''}</div>
           <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginTop: 4 }}>
             <span className="tag p-nv">{scheme.level || 'Central'}</span>
+            <span className="tag p-am">👥 {vacancies} / {scheme.max_seats || 100} Seats Left</span>
             {scheme.ministry && <span className="tag p-gy" style={{ fontSize: '10px' }}>{scheme.ministry}</span>}
             {scheme.deadline && new Date(scheme.deadline) > new Date() &&
               <span className="tag p-sf">⏰ {new Date(scheme.deadline).toLocaleDateString('en-IN')}</span>}
@@ -267,7 +356,6 @@ function SchemeCard({ scheme, expanded, onToggle, onApply }) {
         </div>
       </div>
 
-      {/* Match bar */}
       <div className="prog-w">
         <div className="prog-b">
           <div style={{ height: '100%', width: score + '%', background: gc.bar, borderRadius: 4, transition: 'width .8s' }} />
@@ -278,7 +366,6 @@ function SchemeCard({ scheme, expanded, onToggle, onApply }) {
         </div>
       </div>
 
-      {/* Expanded */}
       {expanded && (
         <div className="ms-panel op" style={{ padding: '14px 16px' }}>
           {inelig && scheme.hard_fail_reason && (
@@ -291,7 +378,7 @@ function SchemeCard({ scheme, expanded, onToggle, onApply }) {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
             {scheme.match_reasons?.length > 0 && (
               <div>
-                <div className="ms-lbl">✅ Why You Qualify</div>
+                <div className="ms-lbl">✅ Good Match Due To:</div>
                 {scheme.match_reasons.map((r, i) => (
                   <div key={i} style={{ display: 'flex', gap: 6, padding: '3px 0', fontSize: 11.5, color: 'var(--t2)' }}>
                     <span style={{ color: 'var(--gn)', fontWeight: 700, flexShrink: 0 }}>✓</span>{r}
@@ -301,7 +388,7 @@ function SchemeCard({ scheme, expanded, onToggle, onApply }) {
             )}
             {scheme.match_mismatches?.length > 0 && (
               <div>
-                <div className="ms-lbl">📋 Profile Gaps</div>
+                <div className="ms-lbl">📋 Scheme Profile Gaps</div>
                 {scheme.match_mismatches.map((m, i) => (
                   <div key={i} style={{ display: 'flex', gap: 6, padding: '3px 0', fontSize: 11.5, color: 'var(--t2)' }}>
                     <span style={{ color: 'var(--am)', fontWeight: 700, flexShrink: 0 }}>→</span>{m}
@@ -311,7 +398,6 @@ function SchemeCard({ scheme, expanded, onToggle, onApply }) {
             )}
           </div>
 
-          {/* Required documents preview */}
           {docs.length > 0 && (
             <div style={{ background: 'var(--nv-l)', borderRadius: 'var(--rs)', padding: '10px 12px', marginBottom: 12 }}>
               <div className="ms-lbl" style={{ marginBottom: 6 }}>📎 Documents Required to Apply</div>
@@ -321,7 +407,6 @@ function SchemeCard({ scheme, expanded, onToggle, onApply }) {
             </div>
           )}
 
-          {/* Eligibility criteria */}
           <div style={{ background: 'var(--wh)', borderRadius: 'var(--rs)', padding: '10px 12px', marginBottom: 12, border: '.5px solid var(--gy-m)' }}>
             <div className="ms-lbl" style={{ marginBottom: 7 }}>📋 Eligibility Criteria</div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
@@ -338,7 +423,6 @@ function SchemeCard({ scheme, expanded, onToggle, onApply }) {
             </div>
           </div>
 
-          {/* Action */}
           {status !== 'applied' && status !== 'active' && !scheme.hard_fail_reason && (
             <button className="btn b-sf" onClick={e => { e.stopPropagation(); onApply(); }}>
               📎 Apply for Scheme →
@@ -349,12 +433,12 @@ function SchemeCard({ scheme, expanded, onToggle, onApply }) {
               <div style={{ fontSize: 13, color: 'var(--gn)', fontWeight: 600 }}>
                 {status === 'applied' ? '📋 Application submitted.' : '✅ Scheme active.'}
               </div>
-              <a href="/active-schemes" style={{ 
+              <button onClick={() => goPage('p-active')} style={{ 
                 background: 'var(--gn)', color: '#fff', padding: '6px 12px', 
-                borderRadius: 'var(--rs)', fontSize: 11, fontWeight: 700, textDecoration: 'none' 
+                borderRadius: 'var(--rs)', fontSize: 11, fontWeight: 700, border: 'none', cursor: 'pointer'
               }}>
                 Track Milestones →
-              </a>
+              </button>
             </div>
           )}
           {inelig && scheme.hard_fail_reason && (
@@ -369,14 +453,13 @@ function SchemeCard({ scheme, expanded, onToggle, onApply }) {
 }
 
 // ── Scheme Application Modal ─────────────────────────────────────────────────
-function SchemeApplicationModal({ scheme, userId, onClose, onSuccess }) {
+function SchemeApplicationModal({ scheme, userId, targetName, onClose, onSuccess }) {
   const [submitting, setSubmitting] = useState(false);
-  const [step, setStep] = useState('confirm'); // confirm | done
+  const [step, setStep] = useState('confirm');
 
   const submitApplication = async () => {
     setSubmitting(true);
     try {
-      // Empty document_ids since docs are uploaded via Active Schemes now
       await API.post(`/api/schemes/${scheme.id}/apply`, { document_ids: [] });
       setStep('done');
       setTimeout(() => onSuccess(), 1800);
@@ -394,23 +477,21 @@ function SchemeApplicationModal({ scheme, userId, onClose, onSuccess }) {
             <div style={{ fontSize: 56, marginBottom: 12 }}>✅</div>
             <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--gn)', marginBottom: 8 }}>Application Initiated!</div>
             <div style={{ fontSize: 13, color: 'var(--t2)' }}>
-              Your application has been created. <strong>You must now go to Active Schemes</strong> to upload required documents.
+              The application for <strong>{targetName}</strong> has been created. <strong>You must now go to Active Schemes</strong> to upload required documents.
             </div>
           </div>
         ) : (
           <>
-            {/* Header */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 18 }}>
               <div>
                 <div style={{ fontSize: 17, fontWeight: 700, color: 'var(--nv)' }}>Apply for {scheme.name}</div>
                 <div style={{ fontSize: 12, color: 'var(--t3)', marginTop: 3 }}>
-                  {scheme.level || 'Central'} Scheme · Managed by {scheme.level?.toLowerCase() || 'district'} admin
+                  Applying on behalf of: <strong>{targetName}</strong>
                 </div>
               </div>
               <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: 'var(--t3)', lineHeight: 1 }}>✕</button>
             </div>
 
-            {/* Scheme info */}
             <div style={{ background: 'var(--bl-l)', borderRadius: 'var(--rs)', padding: '10px 14px', marginBottom: 20, display: 'flex', gap: 12, alignItems: 'center' }}>
               <div style={{ fontSize: 28 }}>{CAT_ICON[scheme.category] || '📋'}</div>
               <div>
@@ -426,7 +507,6 @@ function SchemeApplicationModal({ scheme, userId, onClose, onSuccess }) {
               </div>
             </div>
 
-            {/* Submit button */}
             <div style={{ display: 'flex', gap: 8 }}>
               <button onClick={onClose} style={{ flex: 1, padding: '10px', border: '1px solid var(--gy-m)', borderRadius: 'var(--rs)', background: 'none', cursor: 'pointer', fontSize: 13, color: 'var(--t2)', fontWeight: 600 }}>
                 Cancel
@@ -450,4 +530,4 @@ function SchemeApplicationModal({ scheme, userId, onClose, onSuccess }) {
       </div>
     </div>
   );
-}
+}

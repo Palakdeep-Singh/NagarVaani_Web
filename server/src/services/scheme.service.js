@@ -5,6 +5,13 @@ import { supabase } from '../config/supabase.js';
 import { decryptUserFields } from '../utils/crypto.js';
 import { matchAllSchemes } from './scheme.matcher.js';
 
+// ── Family helper ─────────────────────────────────────────────────────────────
+const getFamilyMembers = async (userId) => {
+  const { data } = await supabase.from('family_members')
+    .select('*').eq('user_id', userId);
+  return data || [];
+};
+
 const getUser = async (userId) => {
   const { data, error } = await supabase.from('users').select('*').eq('id', userId).single();
   if (error) throw new Error('User not found: ' + error.message);
@@ -12,10 +19,43 @@ const getUser = async (userId) => {
 };
 
 const getSchemes = async () => {
-  const { data, error } = await supabase.from('schemes').select('*')
+  // Fetch schemes
+  const { data: schemes, error: schErr } = await supabase.from('schemes').select('*')
     .eq('is_active', true).order('match_score_base', { ascending: false });
-  if (error) throw new Error(error.message);
-  return data || [];
+  if (schErr) throw new Error(schErr.message);
+
+  // Fetch enrollment counts using status filter
+  const { data: enrollments, error: enrErr } = await supabase
+    .from('user_scheme_matches')
+    .select('scheme_id, status');
+  
+  if (enrErr) return schemes; // Fallback to raw schemes if enrollment fetch fails
+
+  // Aggregate counts
+  const counts = (enrollments || []).reduce((acc, curr) => {
+    if (['applied', 'active', 'completed'].includes(curr.status)) {
+      acc[curr.scheme_id] = (acc[curr.scheme_id] || 0) + 1;
+    }
+    return acc;
+  }, {});
+
+  const now = new Date();
+
+  // Append count, calculate vacancies, and mark auto-offline
+  return (schemes || []).map(s => {
+    const enrolled = counts[s.id] || 0;
+    const max = s.max_seats || 100;
+    const vacancies = Math.max(0, max - enrolled);
+    const isExpired = s.deadline && new Date(s.deadline) < now;
+
+    return {
+      ...s,
+      enrolled_count: enrolled,
+      vacancies,
+      is_auto_offline: vacancies <= 0 || isExpired,
+    };
+  });
+  // NOTE: We no longer filter here — filtering happens in getMatchedSchemes/getAllSchemesWithScores
 };
 
 const getAppMap = async (userId) => {
@@ -41,19 +81,57 @@ const mergeResults = (results, appMap, includeUnmatched) =>
       applied_at: appMap[r.scheme.id]?.applied_at || null,
     }));
 
+/**
+ * Persistence logic: keep schemes the user already applied to,
+ * even if seats are full or deadline passed. Hide offline schemes
+ * only from users who haven't applied.
+ */
+const applyPersistence = (schemes, appMap) => {
+  return schemes.filter(s => {
+    if (!s.is_auto_offline) return true;                        // still live → show
+    const app = appMap[s.id];
+    return app && ['applied', 'active', 'completed'].includes(app.status); // already enrolled → keep
+  });
+};
+
 export const getMatchedSchemes = async (userId) => {
-  const [user, schemes, appMap] = await Promise.all([
-    getUser(userId), getSchemes(), getAppMap(userId)
+  const [user, allSchemes, appMap, family] = await Promise.all([
+    getUser(userId), getSchemes(), getAppMap(userId), getFamilyMembers(userId)
   ]);
-  const results = matchAllSchemes(user, schemes, false);
+  const schemes = applyPersistence(allSchemes, appMap);
+  const results = matchAllSchemes(user, schemes, false, family);
+  return mergeResults(results, appMap, false);
+};
+
+export const getMatchedSchemesForFamilyMember = async (userId, memberId) => {
+  const [user, allSchemes, appMap, family] = await Promise.all([
+    getUser(userId), getSchemes(), getAppMap(userId), getFamilyMembers(userId)
+  ]);
+  
+  const familyMember = family.find(f => f.id === memberId);
+  if (!familyMember) throw new Error('Family member not found');
+
+  const blendedUser = {
+    ...user,
+    full_name: familyMember.full_name,
+    gender: familyMember.gender,
+    date_of_birth: familyMember.date_of_birth,
+    occupation: familyMember.occupation,
+    disability: familyMember.is_disabled ? 'yes' : 'no',
+    relation: familyMember.relation,
+  };
+
+  const schemes = applyPersistence(allSchemes, appMap);
+  const results = matchAllSchemes(blendedUser, schemes, false, family);
   return mergeResults(results, appMap, false);
 };
 
 export const getAllSchemesWithScores = async (userId) => {
-  const [user, schemes, appMap] = await Promise.all([
-    getUser(userId), getSchemes(), getAppMap(userId)
+  const [user, allSchemes, appMap, family] = await Promise.all([
+    getUser(userId), getSchemes(), getAppMap(userId), getFamilyMembers(userId)
   ]);
-  const results = matchAllSchemes(user, schemes, true);
+  const schemes = applyPersistence(allSchemes, appMap);
+  const results = matchAllSchemes(user, schemes, true, family);
   return mergeResults(results, appMap, true);
 };
 
@@ -118,42 +196,69 @@ export const applyToScheme = async (userId, schemeId, document_ids = []) => {
       { scheme_id: schemeId, step_number: 3, title: 'Approval & Disbursement',
         description: 'Final approval and benefit transfer.', amount: scheme.benefit_amount || 0, expected_days: 15 },
     ];
-    const { data: seeded } = await supabase.from('scheme_milestones').insert(defaultMs).select();
+    const { data: seeded, error: seedErr } = await supabase.from('scheme_milestones').insert(defaultMs).select();
+    if (seedErr) {
+      console.error('[applyToScheme] Milestone seeding failed:', seedErr.message);
+      throw new Error(`Failed to initialize milestones: ${seedErr.message}`);
+    }
     milestones = seeded || [];
   }
 
   if (milestones?.length) {
     // Create progress records for each milestone
     const progressRows = milestones.map((m, idx) => ({
-      user_id: userId,
-      scheme_id: schemeId,
+      user_id:      userId,
+      scheme_id:    schemeId,
       milestone_id: m.id,
-      status: idx === 0 ? 'pending' : 'locked',   // first milestone = upload docs, rest locked
-      document_ids: idx === 0 ? document_ids : [],
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
+      status:       idx === 0 ? 'pending' : 'locked',
+      error_count:  0,
+      updated_at:   new Date().toISOString(),
     }));
 
-    await supabase.from('user_milestone_progress')
-      .upsert(progressRows, { onConflict: 'user_id,milestone_id' });
+    console.log(`[applyToScheme] Inserting ${progressRows.length} milestones for scheme ${schemeId}`);
+    
+    // Fetch existing milestones for this user and scheme to avoid ON CONFLICT constraint errors
+    const { data: existing } = await supabase
+      .from('user_milestone_progress')
+      .select('milestone_id')
+      .eq('user_id', userId)
+      .eq('scheme_id', schemeId);
+      
+    const existingIds = new Set((existing || []).map(e => e.milestone_id));
+    const newRows = progressRows.filter(r => !existingIds.has(r.milestone_id));
+    
+    if (newRows.length > 0) {
+      const { error: progErr } = await supabase
+        .from('user_milestone_progress')
+        .insert(newRows);
+      
+      if (progErr) {
+        console.error('[applyToScheme] CRITICAL Milestone progress error:', progErr);
+        // Fallback: try inserting one by one
+        for (const row of newRows) {
+          const { error: insErr } = await supabase.from('user_milestone_progress').insert(row);
+          if (insErr) console.error('[applyToScheme] Individual insert failed:', insErr);
+        }
+      }
+    }
   }
 
-  // Link uploaded documents to this scheme's application
-  if (document_ids.length > 0) {
-    // Determine target admin level for document routing
-    const adminLevel = scheme.level?.toLowerCase() === 'state' ? 'state' :
-      scheme.level?.toLowerCase() === 'central' ? 'central' : 'district';
+    // Link uploaded documents to this scheme's application (TEMPLATE-BASED LINKING)
+    if (document_ids.length > 0) {
+      // Find the template ID of the first milestone (step_number 1)
+      const firstMs = milestones.find(m => m.step_number === 1 || m.step_number === '1');
+      const templateMilestoneId = firstMs?.id;
 
-    await supabase.from('documents')
-      .update({
-        scheme_id: schemeId,
-        doc_scope: adminLevel,          // routes to correct admin level
-        status: 'pending_review',
-        updated_at: new Date().toISOString(),
-      })
-      .in('id', document_ids)
-      .eq('user_id', userId);
-  }
+      await supabase.from('documents')
+        .update({
+          scheme_id: schemeId,
+          milestone_id: templateMilestoneId || null, // Link to TEMPLATE ID as per DB convention
+          status: 'pending_review',
+          updated_at: new Date().toISOString(),
+        })
+        .in('id', document_ids)
+        .eq('user_id', userId);
+    }
 
   // Send notification
   await supabase.from('notifications').insert({
@@ -172,33 +277,86 @@ export const applyToScheme = async (userId, schemeId, document_ids = []) => {
   };
 };
 
-export const getSchemeStats = async (district, state, role) => {
-  let query = supabase
+export const withdrawFromScheme = async (userId, schemeId) => {
+  // 1. Delete milestone progress
+  const { error: progErr } = await supabase
+    .from('user_milestone_progress')
+    .delete()
+    .eq('user_id', userId)
+    .eq('scheme_id', schemeId);
+  if (progErr) throw new Error(progErr.message);
+
+  // 2. Delete match/application record (so they can re-apply via scheme finder)
+  const { error: matchErr } = await supabase
     .from('user_scheme_matches')
-    .select('scheme_id, status, score, users!inner(state, district), schemes(name, category, benefit_amount)');
+    .delete()
+    .eq('user_id', userId)
+    .eq('scheme_id', schemeId);
+  if (matchErr) throw new Error(matchErr.message);
 
-  if (role === 'district') query = query.eq('users.district', district);
-  else if (role === 'state') query = query.eq('users.state', state);
+  // 3. Unlink documents from this scheme
+  const { error: docErr } = await supabase
+    .from('documents')
+    .update({ scheme_id: null, milestone_id: null, status: 'verified' })
+    .eq('user_id', userId)
+    .eq('scheme_id', schemeId);
+  if (docErr) throw new Error(docErr.message);
 
-  const { data: enrollments } = await query;
+  return { success: true };
+};
+
+// Helper: paginate through a supabase query to bypass the 1000-row default limit
+const fetchAllPages = async (buildQuery) => {
+  const PAGE = 1000;
+  let page = 0;
+  const all = [];
+  while (true) {
+    const { data, error } = await buildQuery(page * PAGE, page * PAGE + PAGE - 1);
+    if (error || !data || data.length === 0) break;
+    all.push(...data);
+    if (data.length < PAGE) break;
+    page++;
+  }
+  return all;
+};
+
+export const getSchemeStats = async (district, state, role) => {
+  // Get ALL active schemes
+  const { data: allSchemes } = await supabase
+    .from('schemes')
+    .select('id, name, category, benefit_amount, max_seats, enrolled_count')
+    .eq('is_active', true);
 
   const byScheme = {};
-  (enrollments || []).forEach(e => {
-    const s = e.schemes;
-    if (!s) return;
+  (allSchemes || []).forEach(s => {
+    byScheme[s.id] = {
+      id: s.id,
+      name: s.name,
+      category: s.category,
+      benefit_amount: s.benefit_amount || 0,
+      max_seats: s.max_seats || 1000,
+      enrolled_count: s.enrolled_count || 0,
+      total_matched: 0,
+      total_applied: 0,
+      total_completed: 0,
+      scores: [],
+    };
+  });
+
+  // Paginate through user_scheme_matches — scoped to admin's jurisdiction
+  const enrollments = await fetchAllPages((from, to) => {
+    let q = supabase
+      .from('user_scheme_matches')
+      .select('scheme_id, status, score, users:user_id!inner(id, district, state)')
+      .range(from, to);
+    if (role === 'district') q = q.eq('users.district', district);
+    else if (role === 'state') q = q.eq('users.state', state);
+    return q;
+  });
+
+  enrollments.forEach(e => {
     const sid = e.scheme_id;
-    if (!byScheme[sid]) {
-      byScheme[sid] = {
-        id: sid,
-        name: s.name,
-        category: s.category,
-        benefit_amount: s.benefit_amount || 0,
-        total_matched: 0,
-        total_applied: 0,
-        total_completed: 0,
-        scores: [],
-      };
-    }
+    if (!byScheme[sid]) return;
     const m = byScheme[sid];
     m.total_matched++;
     if (['applied', 'active', 'completed'].includes(e.status)) m.total_applied++;
@@ -206,9 +364,25 @@ export const getSchemeStats = async (district, state, role) => {
     if (e.score) m.scores.push(e.score);
   });
 
+  // Paginate through benefit_transactions — scoped to admin's jurisdiction
+  const txs = await fetchAllPages((from, to) => {
+    let q = supabase
+      .from('benefit_transactions')
+      .select('scheme_id, amount, users:user_id!inner(district, state)')
+      .range(from, to);
+    if (role === 'district') q = q.eq('users.district', district);
+    else if (role === 'state') q = q.eq('users.state', state);
+    return q;
+  });
+
+  const txByScheme = {};
+  txs.forEach(tx => {
+    txByScheme[tx.scheme_id] = (txByScheme[tx.scheme_id] || 0) + Number(tx.amount || 0);
+  });
+
   return Object.values(byScheme).map(m => {
     const avg = m.scores.length > 0 ? Math.round(m.scores.reduce((a, b) => a + b, 0) / m.scores.length) : 0;
-    return { ...m, avg_score: avg, scores: undefined };
+    return { ...m, avg_score: avg, total_disbursed: txByScheme[m.id] || 0, scores: undefined };
   }).sort((a, b) => b.total_matched - a.total_matched);
 };
 

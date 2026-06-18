@@ -5,6 +5,7 @@
 import { useState, useContext } from 'react';
 import API from '../api/api.js';
 import { AuthContext } from '../context/AuthContext.jsx';
+import Logo from '../components/Logo.jsx';
 
 const ROLE_HINTS = [
   {
@@ -71,9 +72,11 @@ export default function LoginAdmin() {
 
         {/* Header */}
         <div className="login-logo">
-          <div className="login-logo-ic" style={{ background: 'var(--nv)' }}></div>
+          <div className="login-logo-ic">
+            <Logo size={40} color="var(--nv)" />
+          </div>
           <div className="login-brand">
-            NagarikConnect Admin
+            NagarVaani Admin
             <span>Official Government Portal · Restricted Access</span>
           </div>
         </div>
@@ -211,8 +214,8 @@ export default function LoginAdmin() {
       </div>
 
       <div className="login-footer">
-         Restricted Access · For Authorised Officials Only · NagarikConnect v2.0
+          Restricted Access · For Authorised Officials Only · NagarVaani v2.0
       </div>
     </div>
   );
-}
+}

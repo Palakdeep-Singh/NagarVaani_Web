@@ -7,8 +7,10 @@ import {
   getMatchedSchemes,
   getAllSchemesWithScores,
   applyToScheme,
+  withdrawFromScheme,
   runMatchingForUser,
   getSchemeStats,
+  getMatchedSchemesForFamilyMember,
 } from '../services/scheme.service.js';
 import { supabase } from '../config/supabase.js';
 
@@ -18,6 +20,14 @@ const router = express.Router();
 router.get('/matched', protect, async (req, res) => {
   try {
     const schemes = await getMatchedSchemes(req.user.userId);
+    res.json(schemes);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// GET /api/schemes/family/:memberId/matched
+router.get('/family/:memberId/matched', protect, async (req, res) => {
+  try {
+    const schemes = await getMatchedSchemesForFamilyMember(req.user.userId, req.params.memberId);
     res.json(schemes);
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
@@ -68,6 +78,14 @@ router.post('/:id/apply', protect, async (req, res) => {
   try {
     const { document_ids } = req.body; // array of doc IDs already uploaded
     const result = await applyToScheme(req.user.userId, req.params.id, document_ids || []);
+    res.json(result);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// POST /api/schemes/:id/withdraw — Citizen withdraws their application completely
+router.post('/:id/withdraw', protect, async (req, res) => {
+  try {
+    const result = await withdrawFromScheme(req.user.userId, req.params.id);
     res.json(result);
   } catch (err) { res.status(500).json({ error: err.message }); }
 });

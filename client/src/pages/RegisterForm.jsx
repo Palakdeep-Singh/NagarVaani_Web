@@ -1,9 +1,6 @@
-/**
- * RegisterForm.jsx — Complete registration with all profile fields
- * Place: client/src/pages/RegisterForm.jsx
- */
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import API from "../api/api.js";
+import Logo from "../components/Logo.jsx";
 
 const STATES = [
   "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", "Goa",
@@ -71,8 +68,11 @@ export default function RegisterForm({ phone, onSuccess }) {
       if (!form.category) e.category = "Required";
     }
     if (s === 3) {
-      if (form.aadhaar_number && !/^\d{12}$/.test(form.aadhaar_number))
+      if (!form.aadhaar_number?.trim()) {
+        e.aadhaar_number = "Aadhaar is mandatory for government identity verification";
+      } else if (!/^\d{12}$/.test(form.aadhaar_number)) {
         e.aadhaar_number = "Must be 12 digits";
+      }
     }
     setErrors(e);
     return Object.keys(e).length === 0;
@@ -108,8 +108,10 @@ export default function RegisterForm({ phone, onSuccess }) {
 
         {/* Header */}
         <div className="login-logo">
-          <div className="login-logo-ic">🇮🇳</div>
-          <div className="login-brand">NagarikConnect <span>New Citizen Registration</span></div>
+          <div className="login-logo-ic">
+            <Logo size={36} color="var(--nv)" />
+          </div>
+          <div className="login-brand">NagarVaani <span>New Citizen Registration</span></div>
         </div>
         <div className="login-title">Complete Your Profile</div>
         <div className="login-sub" style={{ marginBottom: 16 }}>
@@ -317,7 +319,7 @@ export default function RegisterForm({ phone, onSuccess }) {
               Your Aadhaar number is never stored in plain text.
             </div>
             <div className="form-group">
-              <label className="form-label">Aadhaar Number</label>
+              <label className="form-label">Aadhaar Number *</label>
               <input className="form-input" placeholder="12-digit Aadhaar number"
                 value={form.aadhaar_number} onChange={setNum("aadhaar_number")}
                 maxLength={12} style={inputStyle("aadhaar_number")} />

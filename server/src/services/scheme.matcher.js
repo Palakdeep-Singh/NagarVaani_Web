@@ -134,7 +134,7 @@ export const scoreToGrade = (score) => {
 };
 
 // ── CORE MATCHER ──────────────────────────────────────────────────────────────
-export const matchSchemeToUser = (user, scheme) => {
+export const matchSchemeToUser = (user, scheme, family = []) => {
   const rules = scheme.rules || {};
   const reasons = [];
   const gaps = [];
@@ -328,11 +328,67 @@ export const matchSchemeToUser = (user, scheme) => {
   const fs = Math.min(100, Math.max(0, Math.round(score)));
   const matched = fs >= 35;
   if (matched && reasons.length === 0) reasons.push('General eligibility criteria met');
-  return { matched, score: fs, grade: scoreToGrade(fs), reasons, mismatches: gaps, hard_fail_reason: null };
+
+  // ── 17. FAMILY RULES ──────────────────────────────────────────────────────
+  const fr = scheme.family_rules || {};
+  if (Object.keys(fr).length > 0 && family.length > 0) {
+    // has_daughter: scheme needs at least one daughter
+    if (fr.has_daughter) {
+      const hasDaughter = family.some(m => ['daughter'].includes((m.relation || '').toLowerCase()));
+      if (hasDaughter) { score += 10; reasons.push('Has daughter — qualifies for family benefit'); }
+    }
+    // has_children_under: scheme needs children under certain age
+    if (fr.has_children_under) {
+      const childRelations = ['son', 'daughter', 'child'];
+      const hasYoungChild = family.some(m => {
+        if (!childRelations.includes((m.relation || '').toLowerCase())) return false;
+        const childAge = getAge(m.date_of_birth);
+        return childAge !== null && childAge < fr.has_children_under;
+      });
+      if (hasYoungChild) { score += 8; reasons.push(`Has child under ${fr.has_children_under} yrs`); }
+    }
+    // disabled_member: scheme for families with disabled member
+    if (fr.disabled_member) {
+      const hasDisabled = family.some(m => m.is_disabled);
+      if (hasDisabled) { score += 12; reasons.push('Family has disabled member — qualifies'); }
+    }
+    // spouse_occupation: scheme targets spouse's occupation
+    if (fr.spouse_occupation?.length) {
+      const spouse = family.find(m => (m.relation || '').toLowerCase() === 'spouse');
+      if (spouse) {
+        const spouseOcc = normaliseOccupation(spouse.occupation || '');
+        const ro = fr.spouse_occupation.map(o => o.toLowerCase());
+        if (ro.some(o => spouseOcc.includes(o))) {
+          score += 8; reasons.push(`Spouse occupation qualifies`);
+        }
+      }
+    }
+    // min_family_size
+    if (fr.min_family_size && family.length + 1 >= fr.min_family_size) {
+      score += 5; reasons.push(`Family size ${family.length + 1} meets minimum ${fr.min_family_size}`);
+    }
+    // has_senior_member: at least one member > 60
+    if (fr.has_senior_member) {
+      const hasSenior = family.some(m => {
+        const a = getAge(m.date_of_birth);
+        return a !== null && a >= 60;
+      });
+      if (hasSenior) { score += 10; reasons.push('Family has senior citizen(s) — qualifies for elderly support benefits'); }
+    }
+    // Specific relation check: has_grandparent
+    if (fr.has_grandparent) {
+      const hasGP = family.some(m => ['grandfather', 'grandmother'].includes((m.relation || '').toLowerCase()));
+      if (hasGP) { score += 8; reasons.push('Grandparents presence in household qualifies for specific multi-generational schemes'); }
+    }
+  }
+
+  const fs2 = Math.min(100, Math.max(0, Math.round(score)));
+  const matched2 = fs2 >= 35;
+  return { matched: matched2, score: fs2, grade: scoreToGrade(fs2), reasons, mismatches: gaps, hard_fail_reason: null };
 };
 
-export const matchAllSchemes = (user, schemes, includeAll = false) => {
-  const results = schemes.map(s => ({ scheme: s, ...matchSchemeToUser(user, s) }));
+export const matchAllSchemes = (user, schemes, includeAll = false, family = []) => {
+  const results = schemes.map(s => ({ scheme: s, ...matchSchemeToUser(user, s, family) }));
   if (includeAll) return results.sort((a, b) => b.score - a.score);
   return results.filter(r => r.matched).sort((a, b) => b.score - a.score);
 };

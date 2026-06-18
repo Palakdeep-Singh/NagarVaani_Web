@@ -10,6 +10,10 @@ import helmet from 'helmet';
 import multer from 'multer';
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 
@@ -47,6 +51,16 @@ app.use('/api/complaints', complaintsRoutes);
 app.use('/api/documents', documentsRoutes);
 app.use('/api/milestones', milestonesRoutes);
 app.use('/api/schemes', schemeRoutes);
+
+// ── Static Files (Production) ────────────────────────────────────────────────
+const clientDist = path.resolve(__dirname, '../../client/dist');
+if (fs.existsSync(clientDist)) {
+  app.use(express.static(clientDist));
+  app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api')) return next();
+    res.sendFile(path.join(clientDist, 'index.html'));
+  });
+}
 
 // ── 404 ───────────────────────────────────────────────────────────────────────
 app.use((req, res) => res.status(404).json({ error: `Route not found: ${req.method} ${req.path}` }));

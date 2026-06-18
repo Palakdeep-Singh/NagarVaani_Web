@@ -10,10 +10,17 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { supabase } from '../config/supabase.js';
-import { encryptUserFields, decryptUserFields } from '../utils/crypto.js';
+import { encryptUserFields, decryptUserFields, blindIndex } from '../utils/crypto.js';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'nagarikconnect_dev_secret';
 const JWT_EXPIRES = process.env.JWT_EXPIRES_IN || '7d';
+
+// ── Service Mode Toggle ──
+let otpServiceMode = process.env.OTP_SERVICE_MODE || 'dev';
+export const getOTPMode = () => otpServiceMode;
+export const setOTPMode = (mode) => { otpServiceMode = mode; };
+
+import { sendSMS } from './twilio.service.js';
 
 const signJWT = (payload) => jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES });
 
@@ -32,10 +39,20 @@ export const sendOTPService = async (phone) => {
     throw new Error('Failed to store OTP: ' + error.message);
   }
 
-  console.log(`[OTP] ${phone} → ${otp}`);
+  console.log(`[OTP] ${phone} → ${otp} [Mode: ${otpServiceMode}]`);
 
-  // Return OTP in dev mode only — REMOVE IN PRODUCTION
-  return process.env.NODE_ENV !== 'production' ? otp : null;
+  // If in 'twilio' mode, send real SMS
+  if (otpServiceMode === 'twilio' && phone !== '9999999999') {
+    try {
+      await sendSMS(phone, `Your NagarVaani verification code is: ${otp}. Valid for 10 minutes. Do not share.`);
+    } catch (err) {
+      console.warn(`[OTP Twilio Failover] Delivery failed to ${phone}: ${err.message}. Returning fallback.`);
+      return { otp, is_fallback: true, error: err.message };
+    }
+  }
+
+  // Return OTP in dev mode only — allows UI to show "🔐 Dev OTP: 123456"
+  return otpServiceMode === 'dev' ? otp : null;
 };
 
 // ── OTP Verify ────────────────────────────────────────────────────────────────
@@ -99,11 +116,11 @@ export const adminLoginService = async (email, password) => {
   const ok = await bcrypt.compare(password, admin.password_hash);
   if (!ok) throw new Error('Invalid admin credentials');
 
-  // Update last_login (fire and forget)
+  // Update last_login (fire and forget safely)
   supabase.from('admins')
     .update({ last_login: new Date().toISOString() })
     .eq('id', admin.id)
-    .then(() => { }).catch(() => { });
+    .then(() => { }); // Removed .catch as PostgrestBuilder does not always support it
 
   const token = signJWT({
     adminId: admin.id,
@@ -126,7 +143,7 @@ export const adminLoginService = async (email, password) => {
 export const registerUserService = async (phone, data) => {
   const {
     full_name, gender, date_of_birth, state, district, ward, village, pincode,
-    category, occupation, annual_income, land_acres, voter_id,
+    category, occupation, annual_income, land_acres, voter_id, aadhaar_number,
     religion, marital_status, disability, area_type, bpl_card,
   } = data;
 
@@ -136,6 +153,13 @@ export const registerUserService = async (phone, data) => {
   const { data: existing } = await supabase
     .from('users').select('id').eq('phone', phone).single();
   if (existing) throw new Error('Phone number already registered. Please login with OTP.');
+
+  // Aadhaar uniqueness check
+  if (!aadhaar_number?.trim()) throw new Error('Aadhaar number is mandatory for identity verification.');
+  const aadhaarIdx = blindIndex(aadhaar_number);
+  const { data: aadhaarCheck } = await supabase
+    .from('users').select('id').eq('aadhaar_number_index', aadhaarIdx).single();
+  if (aadhaarCheck) throw new Error('This Aadhaar identifier is already registered. Please login with your original phone number.');
 
   // Double-check: also block if phone is an admin account
   const { data: adminCheck } = await supabase
@@ -162,11 +186,15 @@ export const registerUserService = async (phone, data) => {
   // Encrypt sensitive fields
   const raw = {
     full_name: full_name.trim(),
-    gender, date_of_birth, state, district, ward, village, pincode,
+    gender, date_of_birth, 
+    state: state?.trim().toUpperCase(),
+    district: district?.trim().toUpperCase(), 
+    ward, village, pincode,
     category, occupation,
     annual_income: annual_income ? Number(annual_income) : null,
     land_acres: land_acres ? Number(land_acres) : null,
     voter_id: voter_id ? voter_id.trim().toUpperCase() : null,
+    aadhaar_number: aadhaar_number ? String(aadhaar_number).trim() : null,
     religion, marital_status, disability, area_type, bpl_card,
   };
   const encrypted = encryptUserFields(raw);

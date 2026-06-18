@@ -10,7 +10,10 @@ import ComplaintsPage from "./ComplaintsPage.jsx";
 import DocumentLocker from "./DocumentLocker.jsx";
 import ActiveSchemes from "./ActiveSchemes.jsx";
 import EditProfile from "./EditProfile.jsx";
+import FamilySection from "./FamilySection.jsx";
 import { subscribeToNotifications } from "../services/realtime.js";
+
+import Logo from "../components/Logo.jsx";
 
 const initials = (name) => name ? name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase() : "?";
 const maskAadhaar = (a) => a ? "XXXX-XXXX-" + String(a).slice(-4) : "Not provided";
@@ -55,6 +58,10 @@ export default function UserApp() {
         if (typeof Notification !== "undefined" && Notification.permission === "granted") {
           new Notification(payload.new.title, { body: payload.new.message });
         }
+        
+        // Live update the dashboard statistics when a new notification arrives
+        API.get("/api/user/dashboard").then(r => setDashboard(r.data)).catch(() => { });
+        API.get("/api/user/profile").then(r => login({ user: r.data, token: localStorage.getItem("nc_token") })).catch(() => { });
       }
     });
     return unsub;
@@ -94,16 +101,17 @@ export default function UserApp() {
   };
 
   const u = user || {};
-  const msCount = dashboard?.milestones?.length || 0;
+  const activeSchemes = dashboard?.schemes?.filter(s => s.status !== "completed" && s.status !== "matched") || [];
+  const activeCount = activeSchemes.length;
   const complaints = dashboard?.complaints || [];
-  const appliedCount = dashboard?.schemes?.length || 0;
 
   const SIDEBAR_ITEMS = [
     { id: "p-home", icon: "🏠", label: "My Dashboard", section: "Dashboard" },
     { id: "p-schemes", icon: "🏛️", label: "Apply for Schemes", section: "Schemes" },
-    { id: "p-active", icon: "📋", label: "Active Tracking", count: msCount || 0 },
+    { id: "p-active", icon: "📋", label: "Active Tracking", count: activeCount },
     { id: "p-past", icon: "📁", label: "Completed", section: null },
     { id: "p-docs", icon: "🔐", label: "Document Locker", section: "Tools" },
+    { id: "p-family", icon: "👨‍👩‍👧", label: "Family Section" },
     { id: "p-complaints", icon: "📢", label: "Complaints", count: complaints.filter(c => c.status !== 'resolved').length || 0 },
     { id: "p-edit", icon: "✏️", label: "Edit Profile", section: null },
   ];
@@ -122,8 +130,10 @@ export default function UserApp() {
           >
             {sidebarOpen ? "✕" : "☰"}
           </button>
-          <div className="nav-logo">🇮🇳</div>
-          <div className="nav-brand-txt">NagarikConnect <span>Citizen Portal</span></div>
+          <div className="nav-logo">
+            <Logo size={28} color="#fff" />
+          </div>
+          <div className="nav-brand-txt">NagarVaani <span>Citizen Portal</span></div>
         </div>
         <div className="nav-r">
           {/* Notification bell */}
@@ -248,11 +258,12 @@ export default function UserApp() {
 
         {/* ── MAIN CONTENT ── */}
         <main className="main" onClick={() => { if (sidebarOpen) setSidebar(false); }}>
-          {page === "p-home" && <HomeDash user={u} d={dashboard} maskAadhaar={maskAadhaar} fmtIncome={fmtIncome} goPage={goPage} appliedCount={appliedCount} />}
-          {page === "p-schemes" && <SchemesPage user={u} />}
-          {page === "p-active" && <ActiveSchemes user={u} />}
-          {page === "p-past" && <PastSchemes />}
+          {page === "p-home" && <HomeDash user={dashboard?.user || u} d={dashboard} maskAadhaar={maskAadhaar} fmtIncome={fmtIncome} goPage={goPage} appliedCount={activeCount} />}
+          {page === "p-schemes" && <SchemesPage user={u} goPage={goPage} />}
+          {page === "p-active" && <ActiveSchemes user={u} filterState="active" />}
+          {page === "p-past" && <ActiveSchemes user={u} filterState="completed" />}
           {page === "p-docs" && <DocumentLocker user={u} />}
+          {page === "p-family" && <FamilySection user={u} />}
           {page === "p-complaints" && <ComplaintsPage user={u} />}
           {page === "p-edit" && (
             <EditProfile
@@ -275,7 +286,7 @@ export default function UserApp() {
           <div className="chat-hdr">
             <div className="chat-hdr-av">🤖</div>
             <div className="chat-hdr-info">
-              <div className="chat-hdr-name">NagarikConnect AI</div>
+              <div className="chat-hdr-name">NagarVaani AI</div>
               <div className="chat-hdr-sub">Scheme assistant · Hindi/English</div>
             </div>
             <button className="chat-close" onClick={() => setChatOpen(false)}>✕</button>
@@ -396,7 +407,7 @@ function HomeDash({ user: u, d, maskAadhaar, fmtIncome, goPage, appliedCount }) 
               ["Date of Birth", u.date_of_birth || "—"],
               ["Gender", u.gender || "—"],
               ["Aadhaar", maskAadhaar(u.aadhaar_number)],
-              ["Mobile", u.phone || "—"],
+              ["Mobile", u.phone ? `XXXXXX${String(u.phone).slice(-4)}` : "—"],
               ["Occupation", u.occupation || "—"],
               ["Annual Income", fmtIncome(u.annual_income)],
               ["Caste Category", u.category || "—"],
@@ -487,23 +498,4 @@ function HomeDash({ user: u, d, maskAadhaar, fmtIncome, goPage, appliedCount }) 
       </div>
     </div>
   );
-}
-
-// ── COMPLETED SCHEMES ──────────────────────────────────────────────────────────
-function PastSchemes() {
-  return (
-    <div className="page on">
-      <div className="bc">Dashboard › <span>Completed</span></div>
-      <div className="ph"><h1>📁 Completed Schemes</h1></div>
-      <div style={{ textAlign: "center", padding: "52px 0", color: "var(--t3)" }}>
-        <div style={{ fontSize: 40, marginBottom: 10 }}>📁</div>
-        <div style={{ fontSize: 14, fontWeight: 600, color: "var(--tx)", marginBottom: 6 }}>
-          No completed schemes yet
-        </div>
-        <div style={{ fontSize: 12 }}>
-          Applied schemes appear here once all milestones are completed
-        </div>
-      </div>
-    </div>
-  );
-}
+}

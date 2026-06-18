@@ -222,7 +222,7 @@ router.get('/for-scheme', protect, async (req, res) => {
 router.get('/admin/all', protect, async (req, res) => {
   try {
     let query = supabase.from('documents')
-      .select('id,doc_type,doc_name,file_size,mime_type,status,created_at,user_id,users!inner(full_name,phone,district,state)')
+      .select('id,doc_type,doc_name,file_size,mime_type,status,created_at,user_id,users:user_id!inner(id, full_name, phone, district, state)')
       .order('created_at', { ascending: false }).limit(200);
 
     // Role-based scoping
@@ -266,7 +266,7 @@ router.patch('/admin/:id/flag', protect, async (req, res) => {
 router.get('/admin/view/:id', protect, async (req, res) => {
   try {
     const { data: doc, error } = await supabase.from('documents')
-      .select('*, users!inner(district,state)')
+      .select('*, users:user_id!inner(district,state)')
       .eq('id', req.params.id).single();
 
     if (error || !doc) return res.status(404).json({ error: 'Document not found' });

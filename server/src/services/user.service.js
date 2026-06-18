@@ -9,13 +9,14 @@ export const getDashboardService = async (userId) => {
     .single();
 
   const { data: schemes } = await supabase
-    .from('user_schemes')
+    .from('user_scheme_matches')
     .select(`*, schemes (*)`)
-    .eq('user_id', userId);
+    .eq('user_id', userId)
+    .neq('status', 'matched'); // Only count applied/completed schemes
 
   const { data: milestones } = await supabase
-    .from('user_milestones')
-    .select(`*, milestones (*)`)
+    .from('user_milestone_progress')
+    .select(`*, scheme_milestones (*), schemes (*)`)
     .eq('user_id', userId);
 
   const { data: documents } = await supabase
@@ -29,8 +30,20 @@ export const getDashboardService = async (userId) => {
     .eq('user_id', userId)
     .order('created_at', { ascending: false });
 
+  const { data: transactions } = await supabase
+    .from('benefit_transactions')
+    .select('amount')
+    .eq('user_id', userId);
+
+  const calculatedTotalBenefits = (transactions || []).reduce((total, t) => total + Number(t.amount || 0), 0);
+
+  const decryptedUser = decryptUserFields(user);
+  if (decryptedUser) {
+    decryptedUser.total_benefits = calculatedTotalBenefits;
+  }
+
   return {
-    user: decryptUserFields(user), // decrypt PII before sending to client
+    user: decryptedUser, // decrypt PII and inject dynamically calculated benefits
     schemes,
     milestones,
     documents,

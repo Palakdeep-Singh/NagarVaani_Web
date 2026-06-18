@@ -69,6 +69,13 @@ export const subscribeToDistrictComplaints = (_district, onChange) => {
  * Watches complaints + milestones + documents for any change.
  * Used by AdminApp to trigger re-fetches across all sections.
  */
+export const subscribeToSchemes = (onChange) => {
+  const ch = supabase.channel('schemes_global')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'user_scheme_matches' }, onChange)
+    .subscribe();
+  return () => supabase.removeChannel(ch);
+};
+
 export const subscribeToAdminAll = (onChange) => {
   const ch = supabase.channel('admin_global')
     .on('postgres_changes', { event: '*', schema: 'public', table: 'complaints' },

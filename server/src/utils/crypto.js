@@ -162,6 +162,17 @@ export const encryptUserFields = (data) => {
     }
   }
 
+  // ─── Analytics Metadata (Unencrypted for High-Scale Aggregation) ───────────
+  if (data.date_of_birth) {
+    const dob = new Date(data.date_of_birth);
+    if (!isNaN(dob.getTime())) {
+      const age = Math.floor((new Date() - dob) / (365.25 * 86400000));
+      out.age_bracket = age < 18 ? 'Under 18' : age <= 25 ? 'Youth' : age <= 59 ? 'Working' : 'Senior';
+    }
+  }
+  if (data.category) out.flat_category = data.category;
+  if (data.occupation) out.flat_occupation = data.occupation;
+
   return out;
 };
 

@@ -7,10 +7,11 @@
  * FIX 2: After OTP verify succeeds, if server returns role=district/state/central
  *         that means an admin's phone was used. Block them and redirect to Admin Login.
  */
-import { useState, useContext } from 'react';
+import { useState, useContext, useEffect } from 'react';
 import API from '../api/api.js';
 import { AuthContext } from '../context/AuthContext.jsx';
 import RegisterForm from './RegisterForm.jsx';
+import Logo from '../components/Logo.jsx';
 
 export default function LoginUser() {
   const { loginCitizen, switchToAdmin } = useContext(AuthContext); // FIX: loginCitizen not login
@@ -21,6 +22,31 @@ export default function LoginUser() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [devOtp, setDevOtp] = useState('');  // show OTP in dev mode without alert()
+  const [twilioError, setTwilioError] = useState(''); // show fallback warning
+  const [otpMode, setOtpMode] = useState('dev'); // 'dev' | 'twilio'
+  const [resendTimer, setResendTimer] = useState(0);
+
+  useEffect(() => {
+    // Fetch initial mode from server
+    API.get('/api/auth/otp/mode').then(res => setOtpMode(res.data.mode)).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    let t;
+    if (resendTimer > 0) t = setTimeout(() => setResendTimer(resendTimer - 1), 1000);
+    return () => clearTimeout(t);
+  }, [resendTimer]);
+
+  const toggleOtpMode = async () => {
+    const next = otpMode === 'dev' ? 'twilio' : 'dev';
+    try {
+      await API.post('/api/auth/otp/mode', { mode: next });
+      setOtpMode(next);
+      setError('');
+    } catch (e) {
+      setError('Failed to switch OTP mode');
+    }
+  };
 
   const sendOTP = async () => {
     setError('');
@@ -32,9 +58,16 @@ export default function LoginUser() {
     setLoading(true);
     try {
       const res = await API.post('/api/auth/otp/send', { phone });
-      // Dev mode: server returns OTP in response — show inline, no alert()
-      if (res.data.otp) setDevOtp(res.data.otp);
+      // If server returns is_fallback: true (Twilio failed), show warning + OTP
+      if (res.data.is_fallback) {
+        setTwilioError(res.data.error || 'Trial account restricted');
+        setDevOtp(res.data.otp);
+      } else if (res.data.otp) {
+        // Dev mode
+        setDevOtp(res.data.otp);
+      }
       setStep('otp');
+      setResendTimer(30); // 30s cooldown
     } catch (e) {
       setError(e.response?.data?.error || 'Failed to send OTP');
     } finally {
@@ -91,10 +124,12 @@ export default function LoginUser() {
     <div className="login-screen on">
       <div className="login-box">
         <div className="login-logo">
-          <div className="login-logo-ic">🇮🇳</div>
+          <div className="login-logo-ic">
+            <Logo size={40} color="var(--nv)" />
+          </div>
           <div className="login-brand">
-            NagarikConnect
-            <span>Smart Governance Platform</span>
+            NagarVaani
+            <span>People's Voice, Get Heard</span>
           </div>
         </div>
 
@@ -102,8 +137,40 @@ export default function LoginUser() {
           💬 Came from WhatsApp? Your profile is already ready!
         </div>
 
-        <div className="login-title">Citizen Login</div>
         <div className="login-sub">Track your schemes, milestones and complaints</div>
+
+        {/* OTP Service Mode Toggle */}
+        <div style={{
+          margin: '18px 0', padding: '10px 14px', borderRadius: 12,
+          background: otpMode === 'twilio' ? 'linear-gradient(135deg, #EEF2FF 0%, #E0E7FF 100%)' : '#F8FAFC',
+          border: `.5px solid ${otpMode === 'twilio' ? '#C7D2FE' : '#E2E8F0'}`,
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          transition: 'all .3s ease'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span style={{ fontSize: 18 }}>{otpMode === 'twilio' ? '📲' : '🛠️'}</span>
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 800, color: otpMode === 'twilio' ? '#4338CA' : '#64748B', textTransform: 'uppercase', letterSpacing: '.05em' }}>
+                Service: {otpMode === 'twilio' ? 'Live Twilio' : 'Local Dev'}
+              </div>
+              <div style={{ fontSize: 10, color: '#94A3B8', marginTop: 1 }}>
+                {otpMode === 'twilio' ? 'Real SMS delivery active' : 'Virtual OTP for testing'}
+              </div>
+            </div>
+          </div>
+          <div 
+            onClick={toggleOtpMode}
+            style={{
+              width: 36, height: 20, borderRadius: 20, background: otpMode === 'twilio' ? '#4F46E5' : '#CBD5E1',
+              position: 'relative', cursor: 'pointer', transition: 'background .3s'
+            }}>
+            <div style={{
+              width: 14, height: 14, borderRadius: '50%', background: '#fff',
+              position: 'absolute', top: 3, left: otpMode === 'twilio' ? 19 : 3,
+              transition: 'left .3s ease', boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+            }} />
+          </div>
+        </div>
 
         {/* Error banner */}
         {error && (
@@ -153,29 +220,36 @@ export default function LoginUser() {
               <input className="form-input" value={'+91 ' + phone} disabled />
             </div>
 
-            {/* Dev mode OTP display — inline, no alert() popup */}
+            {/* Fallback / Dev mode OTP display */}
             {devOtp && (
               <div style={{
-                background: 'var(--gn-l)', border: '.5px solid var(--gn)',
-                borderRadius: 'var(--rs)', padding: '8px 12px',
+                background: twilioError ? '#FFFBEB' : 'var(--gn-l)', 
+                border: `.5px solid ${twilioError ? '#F59E0B' : 'var(--gn)'}`,
+                borderRadius: 'var(--rs)', padding: '10px 14px',
                 marginBottom: 10, fontSize: 12,
-                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
               }}>
-                <span style={{ color: 'var(--t2)' }}>
-                  🔐 Dev OTP:&nbsp;
-                  <strong style={{ fontFamily: 'var(--font-mono)', fontSize: 14, color: 'var(--gn)', letterSpacing: 2 }}>
-                    {devOtp}
-                  </strong>
-                </span>
-                <button
-                  onClick={() => { setOtp(devOtp); setDevOtp(''); }}
-                  style={{
-                    fontSize: 10, padding: '2px 8px', border: '.5px solid var(--gn)',
-                    borderRadius: 4, background: 'transparent', color: 'var(--gn)',
-                    cursor: 'pointer', fontWeight: 700
-                  }}>
-                  Fill
-                </button>
+                {twilioError && (
+                  <div style={{ color: '#92400E', fontWeight: 800, fontSize: 10, marginBottom: 5 }}>
+                    ⚠️ Twilio Restricted: {twilioError.includes('unverified') ? 'Unverified Number' : 'Provider Lag'}
+                  </div>
+                )}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ color: 'var(--t2)' }}>
+                    {twilioError ? 'Fallback Code:' : '🔐 Dev OTP:'}&nbsp;
+                    <strong style={{ fontFamily: 'var(--font-mono)', fontSize: 14, color: twilioError ? '#B45309' : 'var(--gn)', letterSpacing: 2 }}>
+                      {devOtp}
+                    </strong>
+                  </span>
+                  <button
+                    onClick={() => { setOtp(devOtp); setDevOtp(''); }}
+                    style={{
+                      fontSize: 10, padding: '2px 8px', border: `.5px solid ${twilioError ? '#F59E0B' : 'var(--gn)'}`,
+                      borderRadius: 4, background: 'transparent', color: twilioError ? '#B45309' : 'var(--gn)',
+                      cursor: 'pointer', fontWeight: 700
+                    }}>
+                    Fill
+                  </button>
+                </div>
               </div>
             )}
 
@@ -197,10 +271,25 @@ export default function LoginUser() {
             <button className="login-btn sf" onClick={verifyOTP} disabled={loading}>
               {loading ? 'Verifying...' : 'Verify & Login →'}
             </button>
+
+            <div style={{ textAlign: 'center', marginTop: 12 }}>
+              {resendTimer > 0 ? (
+                <div style={{ fontSize: 11, color: 'var(--t3)' }}>
+                  Didn't receive? Resend OTP in <strong>{resendTimer}s</strong>
+                </div>
+              ) : (
+                <button 
+                  onClick={sendOTP} 
+                  style={{ background: 'transparent', border: 'none', color: 'var(--nv)', fontWeight: 700, fontSize: 12, cursor: 'pointer', textDecoration: 'underline' }}>
+                  Resend OTP Now
+                </button>
+              )}
+            </div>
+
             <button
               className="login-btn"
-              onClick={() => { setStep('phone'); setOtp(''); setError(''); setDevOtp(''); }}
-              style={{ background: '#888', marginTop: 8 }}>
+              onClick={() => { setStep('phone'); setOtp(''); setError(''); setDevOtp(''); setTwilioError(''); }}
+              style={{ background: '#888', marginTop: 12 }}>
               ← Change Number
             </button>
           </>
