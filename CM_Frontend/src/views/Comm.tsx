@@ -5,7 +5,7 @@ import { MessageSquare, Send } from 'lucide-react';
 export const Comm: React.FC = () => {
   const { messages, addMessage, activeRole, activeDistrict, activeDepartment } = useStore();
 
-  // Chat state
+  
   const [chatInput, setChatInput] = useState('');
   const [selectedContact, setSelectedContact] = useState<string>('Chief Minister');
 
@@ -17,7 +17,7 @@ export const Comm: React.FC = () => {
     setChatInput('');
   };
 
-  // Filter messages for current user perspective
+  
   let userRoleLabel = activeRole as string;
   if (activeRole === 'District Magistrate') userRoleLabel = `${activeDistrict} DM`;
   if (activeRole === 'Department Head') userRoleLabel = activeDepartment === 'Education & Schools' ? 'Director of Education' : 'Director Health Services';
@@ -30,7 +30,7 @@ export const Comm: React.FC = () => {
     { role: 'Director Health Services', name: 'Dr. Shalini Gupta' }
   ].filter(c => c.role !== userRoleLabel);
 
-  // Group messages
+  
   const threadMessages = messages.filter(
     m => (m.senderRole === userRoleLabel && m.receiverRole === selectedContact) ||
          (m.senderRole === selectedContact && m.receiverRole === userRoleLabel)
@@ -39,8 +39,7 @@ export const Comm: React.FC = () => {
   return (
     <div className="space-y-6">
       
-      {/* View Header */}
-      <div>
+            <div>
         <h2 className="text-xl font-extrabold text-slate-800 tracking-tight flex items-center gap-2">
           <MessageSquare className="h-5 w-5 text-indigo-600" />
           NagarVaani Internal Messenger
@@ -50,11 +49,9 @@ export const Comm: React.FC = () => {
         </p>
       </div>
 
-      {/* INTERNAL MESSAGING VIEW */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-in fade-in duration-300">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-in fade-in duration-300">
         
-        {/* Contacts Directory */}
-        <div className="bg-white border border-slate-200/80 shadow-sm rounded-2xl p-4 flex flex-col h-[280px] md:h-[560px]">
+                <div className="bg-white border border-slate-200/80 shadow-sm rounded-2xl p-4 flex flex-col h-[280px] md:h-[560px]">
           <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4 px-2">
             Directory Roster
           </h3>
@@ -87,11 +84,9 @@ export const Comm: React.FC = () => {
           </div>
         </div>
 
-        {/* Chat Window */}
-        <div className="md:col-span-2 bg-white border border-slate-200/80 shadow-sm rounded-2xl flex flex-col h-[400px] md:h-[560px] overflow-hidden">
+                <div className="md:col-span-2 bg-white border border-slate-200/80 shadow-sm rounded-2xl flex flex-col h-[400px] md:h-[560px] overflow-hidden">
           
-          {/* Header info */}
-          <div className="px-5 py-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
+                    <div className="px-5 py-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
             <div className="flex items-center gap-3">
               <div className="h-9 w-9 bg-indigo-100 rounded-lg flex items-center justify-center font-bold text-xs text-indigo-700 border border-indigo-200">
                 {selectedContact[0]}
@@ -105,8 +100,7 @@ export const Comm: React.FC = () => {
             </div>
           </div>
 
-          {/* Message Thread */}
-          <div className="flex-1 p-5 overflow-y-auto space-y-4 bg-slate-50/20">
+                    <div className="flex-1 p-5 overflow-y-auto space-y-4 bg-slate-50/20">
             {threadMessages.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center text-slate-400 text-xs">
                 No chat logs recorded in this thread yet. Send a message to start conversation.
@@ -137,8 +131,7 @@ export const Comm: React.FC = () => {
             )}
           </div>
 
-          {/* Input Send Bar */}
-          <form onSubmit={handleSendChat} className="p-3 bg-slate-50 border-t border-slate-200 flex items-center gap-2">
+                    <form onSubmit={handleSendChat} className="p-3 bg-slate-50 border-t border-slate-200 flex items-center gap-2">
             <input
               type="text"
               value={chatInput}

@@ -12,7 +12,7 @@ export const Files: React.FC = () => {
   const [showAddForm, setShowAddForm] = useState(false);
   const [approvalRemark, setApprovalRemark] = useState<Record<string, string>>({});
 
-  // Filter files based on who is logged in and owns the file
+  
   const inboxFiles = files.filter(f => {
     if (activeRole === 'Chief Minister') {
       return f.currentOwner === 'Chief Minister' && f.status === 'Pending Approval';
@@ -28,17 +28,15 @@ export const Files: React.FC = () => {
     return false;
   });
   
-  // All other files (Archived, Approved, owned by others)
+  
   const otherFiles = files.filter(f => !inboxFiles.includes(f));
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       
-      {/* LEFT COLUMN: Actions & Create Proposal */}
-      <div className="space-y-6">
+            <div className="space-y-6">
         
-        {/* Quick Folder Status */}
-        <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm border-l-4 border-indigo-500">
+                <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm border-l-4 border-indigo-500">
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 bg-indigo-50 rounded-xl flex items-center justify-center border border-indigo-100">
               <FolderLock className="h-5.5 w-5.5 text-indigo-600" />
@@ -61,8 +59,7 @@ export const Files: React.FC = () => {
           </div>
         </div>
 
-        {/* Create File Form */}
-        <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm space-y-4">
+                <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm space-y-4">
           <div className="flex justify-between items-center">
             <h3 className="text-sm font-bold text-slate-800">Initiate Official File</h3>
             <button
@@ -92,11 +89,9 @@ export const Files: React.FC = () => {
 
       </div>
 
-      {/* RIGHT COLUMN: File Inbox & Archives */}
-      <div className="lg:col-span-2 space-y-6">
+            <div className="lg:col-span-2 space-y-6">
         
-        {/* INBOX SECTION */}
-        <div className="space-y-4">
+                <div className="space-y-4">
           <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
             <CheckSquare className="h-4.5 w-4.5 text-indigo-600" />
             File Action Inbox (Pending Signature)
@@ -112,8 +107,7 @@ export const Files: React.FC = () => {
                 key={file.id}
                 className="bg-white p-5 rounded-2xl border border-slate-200/80 space-y-4 relative overflow-hidden shadow-sm"
               >
-                {/* Glowing border indicator */}
-                <div className="absolute left-0 top-0 bottom-0 w-1 bg-indigo-500" />
+                                <div className="absolute left-0 top-0 bottom-0 w-1 bg-indigo-500" />
 
                 <div className="flex flex-wrap justify-between items-start gap-2">
                   <div className="space-y-0.5">
@@ -130,8 +124,7 @@ export const Files: React.FC = () => {
                   </span>
                 </div>
 
-                {/* Path indicator */}
-                <div className="space-y-2">
+                                <div className="space-y-2">
                   <div className="text-xs font-bold text-slate-400 uppercase tracking-widest">Routing Path:</div>
                   <div className="flex flex-wrap items-center gap-2 bg-slate-50 p-2.5 rounded-xl border border-slate-200/40 text-xs">
                     {file.path.map((node, index) => {
@@ -153,8 +146,7 @@ export const Files: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Remarks history */}
-                <div className="space-y-2">
+                                <div className="space-y-2">
                   <div className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Remarks & Approval Log:</div>
                   <div className="space-y-2">
                     {file.remarks.map((rem, idx) => (
@@ -170,8 +162,7 @@ export const Files: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Action forms */}
-                <div className="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
+                                <div className="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
                   <input
                     type="text"
                     placeholder="Enter approval remark or note..."
@@ -206,8 +197,7 @@ export const Files: React.FC = () => {
           )}
         </div>
 
-        {/* HISTORICAL ARCHIVES */}
-        <div className="space-y-4">
+                <div className="space-y-4">
           <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
             <FolderOpen className="h-4.5 w-4.5 text-indigo-600" />
             File Archives & Approved Logs

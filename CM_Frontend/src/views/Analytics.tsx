@@ -9,7 +9,7 @@ import { BarChart2, Info } from 'lucide-react';
 export const Analytics: React.FC = () => {
   const { complaints } = useStore();
 
-  // Generate Chart Data: Grievance Trends (last 7 days in June)
+  
   const trendsData = [
     { date: '12 Jun', Intake: 8, Resolved: 6 },
     { date: '13 Jun', Intake: 12, Resolved: 9 },
@@ -20,7 +20,7 @@ export const Analytics: React.FC = () => {
     { date: '18 Jun', Intake: complaints.filter(c => c.dateFiled === '2026-06-18').length + 12, Resolved: 14 }
   ];
 
-  // Generate Department distribution counts
+  
   const deptCounts = complaints.reduce((acc: Record<string, number>, curr) => {
     acc[curr.department] = (acc[curr.department] || 0) + 1;
     return acc;
@@ -35,8 +35,7 @@ export const Analytics: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Title Header */}
-      <div>
+            <div>
         <h2 className="text-xl font-extrabold text-slate-800 tracking-tight flex items-center gap-2">
           <BarChart2 className="h-5 w-5 text-indigo-600" />
           Intake & Trends Analytics
@@ -46,11 +45,9 @@ export const Analytics: React.FC = () => {
         </p>
       </div>
 
-      {/* Grid: Trends + Department Bar Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-in fade-in duration-200">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-in fade-in duration-200">
         
-        {/* Chart 1: Grievance Trends */}
-        <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm">
+                <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm">
           <div className="mb-4">
             <h3 className="text-sm font-bold text-slate-800">Daily Grievance Trends</h3>
             <p className="text-sm text-slate-500 mt-0.5">Comparison of daily registered complaints vs resolved cases.</p>
@@ -83,8 +80,7 @@ export const Analytics: React.FC = () => {
           </div>
         </div>
 
-        {/* Chart 2: Department Distribution */}
-        <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm">
+                <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm">
           <div className="mb-4">
             <h3 className="text-sm font-bold text-slate-800">Grievances by Nodal Department</h3>
             <p className="text-sm text-slate-500 mt-0.5">Total volume distribution across administrative heads.</p>
@@ -113,8 +109,7 @@ export const Analytics: React.FC = () => {
 
       </div>
 
-      {/* Advisory Info */}
-      <div className="bg-indigo-50 border border-indigo-100 rounded-2xl p-4 flex items-start gap-3 text-xs text-indigo-800">
+            <div className="bg-indigo-50 border border-indigo-100 rounded-2xl p-4 flex items-start gap-3 text-xs text-indigo-800">
         <Info className="h-4.5 w-4.5 text-indigo-600 shrink-0 mt-0.5" />
         <div className="leading-relaxed">
           <span className="font-bold">Operational Note:</span> Trends are generated using automated server aggregation over secure pipelines. If a specific department spikes (e.g. DJB Water grievances exceeding thresholds), the system raises flags in the CM Alerts drawer.

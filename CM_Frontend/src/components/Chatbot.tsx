@@ -15,7 +15,7 @@ export const Chatbot: React.FC = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
-  // Resizable sidebar panel width (default 384px, constrained between 300px and 600px)
+  
   const [width, setWidth] = useState<number>(384);
   const [isDragging, setIsDragging] = useState<boolean>(false);
 
@@ -47,7 +47,7 @@ export const Chatbot: React.FC = () => {
     };
   }, [isDragging]);
 
-  // Initialize chatbot messages
+  
   useEffect(() => {
     if (messages.length === 0) {
       setMessages([
@@ -60,7 +60,7 @@ export const Chatbot: React.FC = () => {
     }
   }, [messages]);
 
-  // Scroll to bottom on message updates
+  
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, showAIPanel]);
@@ -75,7 +75,7 @@ export const Chatbot: React.FC = () => {
     setMessages((prev) => [...prev, userMsg]);
     setInput('');
 
-    // Process Response (AI simulated intelligence reading the state store context)
+    
     setTimeout(() => {
       let aiText = '';
       const lowerQuery = query.toLowerCase();
@@ -148,7 +148,7 @@ export const Chatbot: React.FC = () => {
       const isBullet = line.startsWith('* ');
       const rawContent = isBullet ? line.substring(2) : line;
 
-      // Split by bold patterns **text**
+      
       const parts = rawContent.split(/(\*\*.*?\*\*)/g);
       const elements = parts.map((part, pIdx) => {
         if (part.startsWith('**') && part.endsWith('**')) {
@@ -176,16 +176,14 @@ export const Chatbot: React.FC = () => {
     });
   };  return (
     <>
-      {/* Backdrop for click outside (mobile drawer overlay only) */}
-      {showAIPanel && (
+            {showAIPanel && (
         <div
           className="fixed inset-0 bg-slate-900/35 z-35 md:hidden"
           onClick={() => setShowAIPanel(false)}
         />
       )}
 
-      {/* Chat Container as Side Panel */}
-      <aside
+            <aside
         className={`bg-white flex flex-col z-40 shrink-0 h-full overflow-hidden fixed md:relative inset-y-0 right-0 border-l border-slate-200 ${
           isDragging ? 'transition-none' : 'transition-all duration-300'
         } ${
@@ -199,21 +197,18 @@ export const Chatbot: React.FC = () => {
             : { width: typeof window !== 'undefined' && window.innerWidth >= 768 ? '0px' : undefined }
         }
       >
-        {/* Resize Handle (Desktop Only) */}
-        {showAIPanel && (
+                {showAIPanel && (
           <div
             onMouseDown={startResizing}
             onDoubleClick={() => setWidth(384)}
             className="absolute left-0 top-0 bottom-0 w-1.5 cursor-col-resize hover:bg-indigo-500/20 active:bg-indigo-500/30 transition-colors group z-50 flex items-center justify-center"
             title="Drag to resize panel (Double click to reset)"
           >
-            {/* Visual drag indicator inside the handle */}
-            <div className="w-0.5 h-8 bg-slate-300 rounded group-hover:bg-indigo-500 group-active:bg-indigo-600 transition-colors" />
+                        <div className="w-0.5 h-8 bg-slate-300 rounded group-hover:bg-indigo-500 group-active:bg-indigo-600 transition-colors" />
           </div>
         )}
         
-        {/* Header */}
-        <div className="px-5 py-4 flex items-center justify-between border-b border-slate-200 bg-white shrink-0 pl-7">
+                <div className="px-5 py-4 flex items-center justify-between border-b border-slate-200 bg-white shrink-0 pl-7">
           <div className="flex items-center gap-3">
             <div className="h-9 w-9 rounded-xl bg-indigo-50 flex items-center justify-center border border-indigo-100 text-indigo-600">
               <Bot className="h-5 w-5" />
@@ -236,8 +231,7 @@ export const Chatbot: React.FC = () => {
           </button>
         </div>
 
-        {/* Messages */}
-        <div className="flex-1 p-4 overflow-y-auto space-y-4 bg-slate-50/50 scrollbar-thin">
+                <div className="flex-1 p-4 overflow-y-auto space-y-4 bg-slate-50/50 scrollbar-thin">
           {messages.map((msg, index) => (
             <div
               key={index}
@@ -258,8 +252,7 @@ export const Chatbot: React.FC = () => {
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Suggestions */}
-        <div className="px-4 py-3 bg-slate-50 border-t border-slate-200 flex flex-wrap gap-1.5 max-h-[120px] overflow-y-auto shrink-0">
+                <div className="px-4 py-3 bg-slate-50 border-t border-slate-200 flex flex-wrap gap-1.5 max-h-[120px] overflow-y-auto shrink-0">
           {suggestionPrompts.map((p, idx) => (
             <button
               key={idx}
@@ -271,8 +264,7 @@ export const Chatbot: React.FC = () => {
           ))}
         </div>
 
-        {/* Input Panel */}
-        <div className="p-3 bg-white border-t border-slate-200 flex items-center gap-2 shrink-0">
+                <div className="p-3 bg-white border-t border-slate-200 flex items-center gap-2 shrink-0">
           <input
             type="text"
             value={input}

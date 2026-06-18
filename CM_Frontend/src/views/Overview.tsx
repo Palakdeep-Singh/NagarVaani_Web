@@ -10,7 +10,7 @@ export const Overview: React.FC = () => {
   const isDM = activeRole === 'District Magistrate';
   const isDept = activeRole === 'Department Head';
 
-  // Calculations for top KPI cards
+  
   const filteredComplaints = complaints.filter(c => {
     if (isDM) return c.district === activeDistrict;
     if (isDept) return c.department === activeDepartment;
@@ -30,8 +30,7 @@ export const Overview: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Title Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h2 className="text-xl font-extrabold text-slate-800 tracking-tight">
             {activeRole === 'Chief Minister' ? 'CM Executive' : activeRole === 'District Magistrate' ? `${activeDistrict} DM` : 'Nodal Officer'} Grievance Overview
@@ -51,8 +50,7 @@ export const Overview: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Total Case Intake */}
-        <div className="bg-white p-5 rounded-2xl border-l-4 border-indigo-500 flex items-center justify-between shadow-sm border border-slate-200/60">
+                <div className="bg-white p-5 rounded-2xl border-l-4 border-indigo-500 flex items-center justify-between shadow-sm border border-slate-200/60">
           <div className="space-y-1">
             <span className="text-xs uppercase font-bold text-slate-500 tracking-wider">Total Intake Cases</span>
             <h3 className="text-2xl font-extrabold text-slate-800">{totalCount}</h3>
@@ -65,8 +63,7 @@ export const Overview: React.FC = () => {
           </div>
         </div>
  
-        {/* Resolution Rate */}
-        <div className="bg-white p-5 rounded-2xl border-l-4 border-emerald-500 flex items-center justify-between shadow-sm border border-slate-200/60">
+                <div className="bg-white p-5 rounded-2xl border-l-4 border-emerald-500 flex items-center justify-between shadow-sm border border-slate-200/60">
           <div className="space-y-1">
             <span className="text-xs uppercase font-bold text-slate-500 tracking-wider">Resolution SLA</span>
             <h3 className="text-2xl font-extrabold text-slate-800">{resolutionPercentage}%</h3>
@@ -79,8 +76,7 @@ export const Overview: React.FC = () => {
           </div>
         </div>
  
-        {/* Emergency Escalls */}
-        <div className="bg-white p-5 rounded-2xl border-l-4 border-rose-500 flex items-center justify-between shadow-sm border border-slate-200/60">
+                <div className="bg-white p-5 rounded-2xl border-l-4 border-rose-500 flex items-center justify-between shadow-sm border border-slate-200/60">
           <div className="space-y-1">
             <span className="text-xs uppercase font-bold text-slate-500 tracking-wider">Emergency Cases</span>
             <h3 className="text-2xl font-extrabold text-rose-600">{emergencyCount}</h3>
@@ -93,8 +89,7 @@ export const Overview: React.FC = () => {
           </div>
         </div>
  
-        {/* E-File Approvals */}
-        <div className="bg-white p-5 rounded-2xl border-l-4 border-amber-500 flex items-center justify-between shadow-sm border border-slate-200/60">
+                <div className="bg-white p-5 rounded-2xl border-l-4 border-amber-500 flex items-center justify-between shadow-sm border border-slate-200/60">
           <div className="space-y-1">
             <span className="text-xs uppercase font-bold text-slate-500 tracking-wider">E-File Approvals</span>
             <h3 className="text-2xl font-extrabold text-slate-800">{pendingFilesCount}</h3>
@@ -108,8 +103,7 @@ export const Overview: React.FC = () => {
         </div>
       </div>
 
-      {/* Grid: Delhi state map Heatmap */}
-      <div className="w-full">
+            <div className="w-full">
         <Heatmap />
       </div>
     </div>

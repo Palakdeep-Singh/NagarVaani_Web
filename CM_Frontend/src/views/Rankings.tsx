@@ -5,9 +5,9 @@ import { Award, Info, AlertTriangle, ShieldCheck } from 'lucide-react';
 export const Rankings: React.FC = () => {
   const { complaints, officers } = useStore();
 
-  // District Ranking Calculation
+  
   const districtRankings = officers
-    .filter(o => o.district) // Filter to DMs
+    .filter(o => o.district) 
     .map(dm => {
       const distComplaints = complaints.filter(c => c.district === dm.district);
       const total = distComplaints.length;
@@ -21,12 +21,11 @@ export const Rankings: React.FC = () => {
         officer: dm.name
       };
     })
-    .sort((a, b) => b.score - a.score); // Highest score first
+    .sort((a, b) => b.score - a.score); 
 
   return (
     <div className="space-y-6">
-      {/* Title Header */}
-      <div>
+            <div>
         <h2 className="text-xl font-extrabold text-slate-800 tracking-tight flex items-center gap-2">
           <Award className="h-5 w-5 text-indigo-600" />
           District Performance Leaderboard

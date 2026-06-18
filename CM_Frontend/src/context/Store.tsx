@@ -62,7 +62,7 @@ const DEPARTMENTS = {
 };
 
 export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Authentication States
+  
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(() => {
     const savedUser = localStorage.getItem('nagarvaani_user');
     return savedUser ? JSON.parse(savedUser) : null;
@@ -74,7 +74,7 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     const savedList = localStorage.getItem('nagarvaani_users');
     if (savedList) return JSON.parse(savedList);
 
-    // Pre-seed default accounts
+    
     const initialAccounts = {
       cm: {
         password: 'cm123',
@@ -93,7 +93,7 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     return initialAccounts;
   });
 
-  // Navigation States (initialized from active user session)
+  
   const [activeRole, setActiveRole] = useState<'Chief Minister' | 'District Magistrate' | 'Department Head'>(() => {
     const savedUser = localStorage.getItem('nagarvaani_user');
     if (savedUser) {
@@ -133,16 +133,16 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     return 'Overview';
   });
 
-  // Core Data States
+  
   const [complaints, setComplaints] = useState<Complaint[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [officers, setOfficers] = useState<Officer[]>([]);
   const [files, setFiles] = useState<DigitalFile[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
 
-  // Seed Data on Mount
+  
   useEffect(() => {
-    // 1. Initial Complaints Seeding (25 complaints)
+    
     const initialComplaints: Complaint[] = [
       {
         id: 'GRV-2026-001',
@@ -355,7 +355,7 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       }
     ];
 
-    // Seed remaining districts with random complaints (to have a robust dataset of around 35 items)
+    
     const extraTitles = [
       { t: 'Potholes near metro pillar 102', c: 'Transport & Roads' as ComplaintCategory },
       { t: 'Drain overflow in block E housing block', c: 'Water & Sewage' as ComplaintCategory },
@@ -370,7 +370,7 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     let startIdNum = 13;
     const districtList = INITIAL_DISTRICTS;
     
-    // Seed at least 15 more random complaints
+    
     for (let i = 0; i < 20; i++) {
       const titleObj = extraTitles[i % extraTitles.length];
       const dist = districtList[i % districtList.length];
@@ -405,14 +405,14 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
     setComplaints(initialComplaints);
 
-    // 2. Initial Projects Seeding (5 projects)
+    
     const initialProjects: Project[] = [
       {
         id: 'PRJ-DEL-101',
         title: 'Barapullah Phase-III Extension Flyover',
         department: 'PWD & Infrastructure',
-        budgetAllocated: 1260000000, // 126 Crores
-        budgetSpent: 980000000, // 98 Crores
+        budgetAllocated: 1260000000, 
+        budgetSpent: 980000000, 
         physicalProgress: 82,
         startDate: '2023-01-15',
         endDate: '2026-09-30',
@@ -424,8 +424,8 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         id: 'PRJ-DEL-102',
         title: 'Mohalla Clinics Digital Upgrade (Phase 4)',
         department: 'Health & Family Welfare',
-        budgetAllocated: 450000000, // 45 Crores
-        budgetSpent: 410000000, // 41 Crores
+        budgetAllocated: 450000000, 
+        budgetSpent: 410000000, 
         physicalProgress: 91,
         startDate: '2024-05-10',
         endDate: '2026-07-15',
@@ -437,8 +437,8 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         id: 'PRJ-DEL-103',
         title: '100 Model Smart Schools Infrastructure Project',
         department: 'Education Department',
-        budgetAllocated: 1850000000, // 185 Crores
-        budgetSpent: 920000000, // 92 Crores
+        budgetAllocated: 1850000000, 
+        budgetSpent: 920000000, 
         physicalProgress: 49,
         startDate: '2025-02-01',
         endDate: '2026-12-31',
@@ -450,8 +450,8 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         id: 'PRJ-DEL-104',
         title: 'Signature Bridge Heritage Tourist Hub',
         department: 'PWD & Infrastructure',
-        budgetAllocated: 320000000, // 32 Crores
-        budgetSpent: 310000000, // 31 Crores
+        budgetAllocated: 320000000, 
+        budgetSpent: 310000000, 
         physicalProgress: 98,
         startDate: '2024-08-20',
         endDate: '2026-06-25',
@@ -463,8 +463,8 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         id: 'PRJ-DEL-105',
         title: 'Yamuna Interceptor Sewer Project (Sonia Vihar)',
         department: 'Delhi Jal Board',
-        budgetAllocated: 2400000000, // 240 Crores
-        budgetSpent: 1650000000, // 165 Crores
+        budgetAllocated: 2400000000, 
+        budgetSpent: 1650000000, 
         physicalProgress: 68,
         startDate: '2024-01-10',
         endDate: '2026-11-20',
@@ -475,7 +475,7 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     ];
     setProjects(initialProjects);
 
-    // 3. Officers Seeding (11 officers - representing DMs and critical Dept heads)
+    
     const initialOfficers: Officer[] = [
       {
         id: 'OFF-001',
@@ -609,7 +609,7 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     ];
     setOfficers(initialOfficers);
 
-    // 4. E-Files Seeding (4 digital files)
+    
     const initialFiles: DigitalFile[] = [
       {
         id: 'DF-2026-302',
@@ -681,7 +681,7 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     ];
     setFiles(initialFiles);
 
-    // 5. Chat Messages Seeding
+    
     const initialMessages: Message[] = [
       { id: 'MSG-001', senderName: 'Alice Vaz', senderRole: 'New Delhi DM', receiverRole: 'Chief Minister', content: 'Sir, the Connaught Place restoration project is 95% complete. The streetlights and pedestrian zones are now operational. Ready for site visit.', timestamp: '2026-06-18 10:15 AM' },
       { id: 'MSG-002', senderName: 'Chief Minister', senderRole: 'Chief Minister', receiverRole: 'New Delhi DM', content: 'Excellent work, Alice. Let\'s schedule the inauguration for next Monday. Meanwhile, ensure the open manhole complaint near the school is fixed by tonight.', timestamp: '2026-06-18 10:20 AM' },
@@ -691,9 +691,9 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     setMessages(initialMessages);
   }, []);
 
-  // Store Functions
+  
 
-  // 1. Add Complaint
+  
   const addComplaint = (newGrip: Omit<Complaint, 'id' | 'dateFiled' | 'timeline'>) => {
     const formattedId = `GRV-2026-0${complaints.length + 13}`;
     const todayStr = new Date().toISOString().split('T')[0];
@@ -707,14 +707,14 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     };
     setComplaints((prev) => [item, ...prev]);
 
-    // Update corresponding officer's active complaints count
+    
     setOfficers((prevOffs) =>
       prevOffs.map((off) => {
-        // If DM of the district
+        
         if (off.district === newGrip.district) {
           return { ...off, activeComplaints: off.activeComplaints + 1 };
         }
-        // If department head
+        
         if (off.department === newGrip.department && !off.district) {
           return { ...off, activeComplaints: off.activeComplaints + 1 };
         }
@@ -723,7 +723,7 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     );
   };
 
-  // 2. Update Complaint Status (Pending, Active, Resolved, Escalated)
+  
   const updateComplaintStatus = (id: string, status: ComplaintStatus, remarkText?: string, actor?: string) => {
     const todayStr = new Date().toISOString().split('T')[0];
     setComplaints((prevComplaints) =>
@@ -737,7 +737,7 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
             notes: remarkText
           };
 
-          // If resolved, update officer accountability stats
+          
           if (status === 'Resolved' && originalStatus !== 'Resolved') {
             setOfficers((prevOffs) =>
               prevOffs.map((off) => {
@@ -781,7 +781,7 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     );
   };
 
-  // 3. Add Message
+  
   const addMessage = (content: string, receiverRole: string) => {
     const today = new Date();
     const timeStr = today.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' ' + (today.getHours() >= 12 ? 'PM' : 'AM');
@@ -811,7 +811,7 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     setMessages((prev) => [...prev, newMessage]);
   };
 
-  // 4. File Operations (Approvals / Signatures / Remarks routing)
+  
   const approveFile = (fileId: string, remarkText: string) => {
     const todayStr = new Date().toISOString().split('T')[0];
     
@@ -867,7 +867,7 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     );
   };
 
-  // 5. Projects Operations
+  
   const updateProjectProgress = (
     projectId: string,
     progress: number,

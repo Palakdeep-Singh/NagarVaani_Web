@@ -7,7 +7,7 @@ export const Projects: React.FC = () => {
   const { projects, updateProjectProgress, addNewProject } = useStore();
   const [showAddForm, setShowAddForm] = useState(false);
 
-  // Form states for new project
+  
   const [title, setTitle] = useState('');
   const [department, setDepartment] = useState('PWD & Infrastructure');
   const [budgetAllocated, setBudgetAllocated] = useState('');
@@ -23,7 +23,7 @@ export const Projects: React.FC = () => {
     addNewProject({
       title,
       department,
-      budgetAllocated: Number(budgetAllocated) * 10000000, // convert Cr to Rupees
+      budgetAllocated: Number(budgetAllocated) * 10000000, 
       startDate,
       endDate,
       status: 'On Track',
@@ -31,7 +31,7 @@ export const Projects: React.FC = () => {
       description
     });
 
-    // Reset Form
+    
     setTitle('');
     setBudgetAllocated('');
     setStartDate('');
@@ -54,8 +54,7 @@ export const Projects: React.FC = () => {
   return (
     <div className="space-y-6">
       
-      {/* Title Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h2 className="text-xl font-extrabold text-slate-800 tracking-tight flex items-center gap-2">
             <ListTodo className="h-5 w-5 text-indigo-600" />
@@ -73,8 +72,7 @@ export const Projects: React.FC = () => {
         </button>
       </div>
 
-      {/* Conditional Project Form */}
-      {showAddForm && (
+            {showAddForm && (
         <form onSubmit={handleCreateProject} className="bg-white p-6 rounded-2xl border border-indigo-100 shadow-sm space-y-4 animate-in fade-in duration-200">
           <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider">Declare New Capital Infrastructure Project</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -171,8 +169,7 @@ export const Projects: React.FC = () => {
         </form>
       )}
 
-      {/* Gantt Cards Roster */}
-      <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm space-y-4 animate-in fade-in duration-200">
+            <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm space-y-4 animate-in fade-in duration-200">
         <div className="space-y-6">
           {projects.map((proj) => {
             const isOverspent = proj.budgetSpent > proj.budgetAllocated;
@@ -196,8 +193,7 @@ export const Projects: React.FC = () => {
 
                 <p className="text-xs text-slate-500 leading-relaxed">{proj.description}</p>
 
-                {/* Progress bar */}
-                <div className="space-y-1">
+                                <div className="space-y-1">
                   <div className="flex justify-between items-center text-xs font-semibold text-slate-500">
                     <span>Physical Milestone Progress</span>
                     <span className="text-slate-855 font-bold">{proj.physicalProgress}%</span>
@@ -214,8 +210,7 @@ export const Projects: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Financial stats */}
-                <div className="flex flex-wrap justify-between items-center text-xs text-slate-400 pt-2 border-t border-slate-200/50">
+                                <div className="flex flex-wrap justify-between items-center text-xs text-slate-400 pt-2 border-t border-slate-200/50">
                   <div className="flex gap-4">
                     <div>
                       Budget: <strong className="text-slate-700">{formatINR(proj.budgetAllocated)}</strong>
@@ -229,8 +224,7 @@ export const Projects: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Simulation progress slider */}
-                {proj.status !== 'Completed' && (
+                                {proj.status !== 'Completed' && (
                   <div className="pt-2 flex items-center gap-3 bg-white px-3 py-1.5 rounded-lg border border-slate-200/50">
                     <span className="text-xs text-indigo-600 font-bold uppercase shrink-0">Simulate Progress:</span>
                     <input

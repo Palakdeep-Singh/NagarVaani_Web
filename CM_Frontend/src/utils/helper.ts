@@ -1,6 +1,6 @@
 import type { ComplaintStatus, ComplaintPriority } from '../types';
 
-// Format currency into Indian Rupees (Crores and Lakhs)
+
 export const formatINR = (value: number): string => {
   if (value >= 10000000) {
     return `₹${(value / 10000000).toFixed(2)} Cr`;
@@ -15,7 +15,7 @@ export const formatINR = (value: number): string => {
   }).format(value);
 };
 
-// Format date string for citizen eyes
+
 export const formatDate = (dateStr: string): string => {
   const date = new Date(dateStr);
   return date.toLocaleDateString('en-IN', {
@@ -24,7 +24,7 @@ export const formatDate = (dateStr: string): string => {
     year: 'numeric'
   });
 };
-// Get badge style for Complaint Status
+
 export const getStatusBadgeStyle = (status: ComplaintStatus): string => {
   switch (status) {
     case 'Pending':
@@ -40,7 +40,7 @@ export const getStatusBadgeStyle = (status: ComplaintStatus): string => {
   }
 };
 
-// Get badge style for Priority levels
+
 export const getPriorityBadgeStyle = (priority: ComplaintPriority): string => {
   switch (priority) {
     case 'Low':
@@ -56,7 +56,7 @@ export const getPriorityBadgeStyle = (priority: ComplaintPriority): string => {
   }
 };
 
-// Get badge style for File Priorities
+
 export const getFilePriorityStyle = (priority: 'Routine' | 'Urgent' | 'Immediate'): string => {
   switch (priority) {
     case 'Routine':

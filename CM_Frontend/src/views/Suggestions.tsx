@@ -2,7 +2,7 @@ import React from 'react';
 import { BrainCircuit, Sparkles, ArrowUpRight, Info } from 'lucide-react';
 
 export const Suggestions: React.FC = () => {
-  // AI Suggestion Insights seeder data
+  
   const aiInsights = [
     {
       topic: 'Monsoon Waterlogging Hotspots Identified',
@@ -29,8 +29,7 @@ export const Suggestions: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Title Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h2 className="text-xl font-extrabold text-slate-800 tracking-tight flex items-center gap-2">
             <BrainCircuit className="h-5 w-5 text-indigo-600 animate-pulse" />
@@ -45,8 +44,7 @@ export const Suggestions: React.FC = () => {
         </span>
       </div>
 
-      {/* Roster Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-in fade-in duration-200">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-in fade-in duration-200">
         {aiInsights.map((insight, idx) => (
           <div
             key={idx}
@@ -83,8 +81,7 @@ export const Suggestions: React.FC = () => {
         ))}
       </div>
 
-      {/* Advisory Info */}
-      <div className="bg-indigo-50 border border-indigo-100 rounded-2xl p-4 flex items-start gap-3 text-xs text-indigo-800">
+            <div className="bg-indigo-50 border border-indigo-100 rounded-2xl p-4 flex items-start gap-3 text-xs text-indigo-800">
         <Info className="h-4.5 w-4.5 text-indigo-600 shrink-0 mt-0.5" />
         <div className="leading-relaxed">
           <span className="font-bold">AI System Overview:</span> NagarVaani crawls text data fields from SMS, web intakes, and mobile DM registers hourly, mapping semantic links to flag emerging infrastructure hot-spots.

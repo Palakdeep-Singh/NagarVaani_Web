@@ -7,7 +7,7 @@ export const HealthDept: React.FC = () => {
   const { complaints, updateComplaintStatus } = useStore();
   const [remarkInput, setRemarkInput] = useState<Record<string, string>>({});
 
-  // Filter complaints
+  
   const healthComplaints = complaints.filter(c => c.department === 'Health & Family Welfare');
 
   const handleStatusChange = (id: string, newStatus: any, text: string) => {
@@ -15,7 +15,7 @@ export const HealthDept: React.FC = () => {
     setRemarkInput(prev => ({ ...prev, [id]: '' }));
   };
 
-  // Mock data for ICU bed audits in major hospitals
+  
   const icuBeds = [
     { hospital: 'Lok Nayak Hospital (LNJP)', total: 150, occupied: 122, status: 'Stable' },
     { hospital: 'GTB Hospital, Shahdara', total: 100, occupied: 88, status: 'Critical' },
@@ -24,7 +24,7 @@ export const HealthDept: React.FC = () => {
     { hospital: 'Dr. BSA Hospital, Rohini', total: 75, occupied: 61, status: 'Stable' }
   ];
 
-  // Mock data for Mohalla Clinics pharmaceutical inventory alerts
+  
   const medicineStocks = [
     { item: 'Paracetamol 650mg', status: 'Safe', stockLevel: '88%', demand: 'High' },
     { item: 'Amoxicillin Antibiotic', status: 'Restocking', stockLevel: '42%', demand: 'High' },
@@ -34,8 +34,7 @@ export const HealthDept: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Title Header */}
-      <div>
+            <div>
         <h2 className="text-xl font-extrabold text-slate-800 tracking-tight flex items-center gap-2">
           <Stethoscope className="h-5 w-5 text-indigo-600" />
           Health & Family Welfare Command
@@ -45,8 +44,7 @@ export const HealthDept: React.FC = () => {
         </p>
       </div>
 
-      {/* Quick Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="bg-white p-5 rounded-2xl border-l-4 border-indigo-500 shadow-sm border border-slate-200/60">
           <span className="text-xs uppercase font-bold text-slate-400 tracking-wider">ICU Bed Occupancy</span>
           <div className="flex items-baseline gap-2 mt-1">
@@ -77,11 +75,9 @@ export const HealthDept: React.FC = () => {
         </div>
       </div>
 
-      {/* Bed Audit List & Stock Indicators */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-in fade-in duration-200">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-in fade-in duration-200">
         
-        {/* ICU Beds Audit List */}
-        <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm">
+                <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm">
           <h3 className="text-sm font-bold text-slate-800 mb-4 flex items-center gap-2">
             <Hospital className="h-4.5 w-4.5 text-indigo-600" />
             ICU & Emergency Bed Occupancy Audit
@@ -117,8 +113,7 @@ export const HealthDept: React.FC = () => {
           </div>
         </div>
 
-        {/* Pharmacy Inventories */}
-        <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm">
+                <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm">
           <h3 className="text-sm font-bold text-slate-800 mb-4 flex items-center gap-2">
             <AlertOctagon className="h-4.5 w-4.5 text-amber-600" />
             Monsoon Medical Supplies Inventory Status
@@ -157,8 +152,7 @@ export const HealthDept: React.FC = () => {
 
       </div>
 
-      {/* Health Grievances Queue */}
-      <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm">
+            <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm">
         <h3 className="text-sm font-bold text-slate-800 mb-4">Active Public Health Grievances</h3>
         <div className="space-y-4">
           {healthComplaints.length === 0 ? (

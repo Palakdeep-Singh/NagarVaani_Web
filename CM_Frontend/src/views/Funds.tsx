@@ -7,23 +7,22 @@ import { DollarSign, TrendingUp, Info } from 'lucide-react';
 export const Funds: React.FC = () => {
   const { projects } = useStore();
 
-  // Derive global budget figures
+  
   const totalAllocated = projects.reduce((acc, curr) => acc + curr.budgetAllocated, 0);
   const totalSpent = projects.reduce((acc, curr) => acc + curr.budgetSpent, 0);
   const totalBalance = totalAllocated - totalSpent;
 
-  // Chart data (convert values to Crores for clean visualization)
+  
   const chartData = projects.map(p => ({
     name: p.title.substring(0, 15) + '...',
-    Allocated: Math.round(p.budgetAllocated / 10000000), // in Crores
-    Spent: Math.round(p.budgetSpent / 10000000) // in Crores
+    Allocated: Math.round(p.budgetAllocated / 10000000), 
+    Spent: Math.round(p.budgetSpent / 10000000) 
   }));
 
   return (
     <div className="space-y-6">
       
-      {/* Title Header */}
-      <div>
+            <div>
         <h2 className="text-xl font-extrabold text-slate-800 tracking-tight flex items-center gap-2">
           <DollarSign className="h-5 w-5 text-indigo-600" />
           Capital Fund Allocation & Utilization
@@ -33,8 +32,7 @@ export const Funds: React.FC = () => {
         </p>
       </div>
 
-      {/* Fund Utilization Header Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="bg-white p-5 rounded-2xl border-l-4 border-indigo-500 shadow-sm border border-slate-200/60">
           <div className="flex justify-between items-center">
             <span className="text-xs uppercase font-bold text-slate-500 tracking-wider">Total Fund Allocation</span>
@@ -66,8 +64,7 @@ export const Funds: React.FC = () => {
         </div>
       </div>
 
-      {/* Recharts Budget comparisons */}
-      <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col justify-between h-96 animate-in fade-in duration-200">
+            <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col justify-between h-96 animate-in fade-in duration-200">
         <div>
           <h3 className="text-sm font-bold text-slate-800 mb-1 flex items-center gap-2">
             Project-wise Budget Status
@@ -93,8 +90,7 @@ export const Funds: React.FC = () => {
         </div>
       </div>
 
-      {/* Advisory Info */}
-      <div className="bg-indigo-50 border border-indigo-100 rounded-2xl p-4 flex items-start gap-3 text-xs text-indigo-800">
+            <div className="bg-indigo-50 border border-indigo-100 rounded-2xl p-4 flex items-start gap-3 text-xs text-indigo-800">
         <Info className="h-4.5 w-4.5 text-indigo-600 shrink-0 mt-0.5" />
         <div className="leading-relaxed">
           <span className="font-bold">Fiscal Audit:</span> Projects exceeding planned budget benchmarks are automatically marked as *Overspent* and require physical audits. Tenders and payment milestones are managed via the e-Procurement portal.

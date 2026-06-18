@@ -10,36 +10,35 @@ export const Officers: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<'score' | 'time' | 'backlog'>('score');
 
-  // Filter officers
+  
   const filteredOfficers = officers.filter(off => {
-    // Search query filter
+    
     const matchesSearch = off.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           off.department.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           (off.district && off.district.toLowerCase().includes(searchQuery.toLowerCase()));
     
-    // Type filter
+    
     if (!matchesSearch) return false;
     if (filterType === 'All') return true;
     if (filterType === 'DM') return !!off.district;
-    return !off.district; // Department Heads
+    return !off.district; 
   });
 
-  // Sort officers
+  
   const sortedOfficers = [...filteredOfficers].sort((a, b) => {
     if (sortBy === 'score') {
       return b.resolutionRate - a.resolutionRate;
     }
     if (sortBy === 'time') {
-      return a.avgResolutionTime - b.avgResolutionTime; // shorter time is better
+      return a.avgResolutionTime - b.avgResolutionTime; 
     }
-    return b.activeComplaints - a.activeComplaints; // higher backlog first
+    return b.activeComplaints - a.activeComplaints; 
   });
 
   return (
     <div className="space-y-6">
       
-      {/* Title Header */}
-      <div>
+            <div>
         <h2 className="text-xl font-extrabold text-slate-800 tracking-tight flex items-center gap-2">
           Officer Accountability Directory
         </h2>
@@ -48,11 +47,9 @@ export const Officers: React.FC = () => {
         </p>
       </div>
 
-      {/* Directory Filter / Sort Toolbar */}
-      <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex flex-wrap items-center justify-between gap-4">
+            <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex flex-wrap items-center justify-between gap-4">
         
-        {/* Search & Filter pills */}
-        <div className="flex flex-wrap items-center gap-3">
+                <div className="flex flex-wrap items-center gap-3">
           <div className="relative">
             <input
               type="text"
@@ -92,8 +89,7 @@ export const Officers: React.FC = () => {
           </div>
         </div>
 
-        {/* Sort selector */}
-        <div className="flex items-center gap-2 text-xs font-semibold">
+                <div className="flex items-center gap-2 text-xs font-semibold">
           <span className="text-slate-400">Sort by:</span>
           <select
             value={sortBy}
@@ -108,8 +104,7 @@ export const Officers: React.FC = () => {
 
       </div>
 
-      {/* Officers Profile Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in duration-200">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in duration-200">
         {sortedOfficers.length === 0 ? (
           <div className="lg:col-span-3 bg-white p-8 text-center rounded-2xl border border-slate-200/80 text-slate-500 text-xs">
             No matching administrative officer found.
@@ -124,8 +119,7 @@ export const Officers: React.FC = () => {
               >
                 <div>
                   
-                  {/* Badge Row */}
-                  <div className="flex justify-between items-start mb-4">
+                                    <div className="flex justify-between items-start mb-4">
                     <span className="text-xs text-slate-400 font-bold">{off.id}</span>
                     <span className={`px-2 py-0.5 rounded text-xs font-bold border uppercase tracking-wider flex items-center gap-1 ${
                       hasGoodScore ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-rose-50 text-rose-700 border-rose-100'
@@ -135,8 +129,7 @@ export const Officers: React.FC = () => {
                     </span>
                   </div>
 
-                  {/* Profile Detail */}
-                  <div className="flex items-center gap-3 mb-5">
+                                    <div className="flex items-center gap-3 mb-5">
                     <div className="h-11 w-11 rounded-full bg-slate-100 flex items-center justify-center font-bold text-indigo-600 border border-slate-200 text-sm">
                       {off.name.split(' ').map(n => n[0]).join('')}
                     </div>
@@ -150,8 +143,7 @@ export const Officers: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Stats list */}
-                  <div className="space-y-2.5 bg-slate-50 p-3.5 rounded-xl border border-slate-200/50 text-xs leading-tight">
+                                    <div className="space-y-2.5 bg-slate-50 p-3.5 rounded-xl border border-slate-200/50 text-xs leading-tight">
                     <div className="flex justify-between">
                       <span className="text-slate-450">Nodal Division:</span>
                       <span className="text-slate-700 font-semibold truncate max-w-[150px]">{off.department}</span>
@@ -172,8 +164,7 @@ export const Officers: React.FC = () => {
 
                 </div>
 
-                {/* Score section */}
-                <div className="mt-5 pt-4 border-t border-slate-100 flex justify-between items-center">
+                                <div className="mt-5 pt-4 border-t border-slate-100 flex justify-between items-center">
                   <div className="leading-tight">
                     <div className="text-xs text-slate-400 font-bold uppercase tracking-wider">Accountability Score</div>
                     <div className="text-md font-extrabold text-slate-800 mt-0.5">{off.resolutionRate}%</div>

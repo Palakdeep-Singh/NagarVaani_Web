@@ -16,7 +16,7 @@ import { Comm } from './views/Comm';
 import { VideoCall } from './views/VideoCall';
 import { Login } from './views/Login';
 
-// Subcomponent to access store context
+
 const DashboardContent: React.FC = () => {
   const { activeTab, currentUser } = useStore();
 

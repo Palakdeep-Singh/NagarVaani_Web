@@ -54,7 +54,7 @@ export interface Project {
   department: string;
   budgetAllocated: number;
   budgetSpent: number;
-  physicalProgress: number; // Percentage 0 - 100
+  physicalProgress: number; 
   startDate: string;
   endDate: string;
   status: 'On Track' | 'Delayed' | 'Critical' | 'Completed';
@@ -68,11 +68,11 @@ export interface Officer {
   designation: string;
   department: string;
   district?: DistrictName;
-  resolutionRate: number; // Percentage 0 - 100
-  avgResolutionTime: number; // in days
+  resolutionRate: number; 
+  avgResolutionTime: number; 
   activeComplaints: number;
   completedComplaints: number;
-  rating: number; // 0 - 5
+  rating: number; 
 }
 
 export interface FileRemark {
@@ -90,8 +90,8 @@ export interface DigitalFile {
   initiator: string;
   currentOwner: string;
   department: string;
-  path: string[]; // List of names, e.g. ["Under Secretary", "Director Education", "Minister Health", "Chief Minister"]
-  currentStep: number; // Index of the path array
+  path: string[]; 
+  currentStep: number; 
   totalSteps: number;
   status: 'Pending Approval' | 'Approved' | 'Rejected';
   remarks: FileRemark[];
@@ -100,7 +100,7 @@ export interface DigitalFile {
 export interface Message {
   id: string;
   senderName: string;
-  senderRole: string; // e.g. "West Delhi DM", "Chief Minister", "Director Education"
+  senderRole: string; 
   receiverRole: string;
   content: string;
   timestamp: string;
@@ -110,7 +110,7 @@ export interface DistrictMetric {
   name: DistrictName;
   activeGrievances: number;
   resolvedGrievances: number;
-  score: number; // 0 - 100 performance score
+  score: number; 
 }
 
 export interface UserProfile {

@@ -5,7 +5,7 @@ import {
 } from 'lucide-react';
 
 export const VideoCall: React.FC = () => {
-  // Video call simulator states
+  
   const [inCall, setInCall] = useState<boolean>(true);
   const [isMuted, setIsMuted] = useState<boolean>(false);
   const [isVideoOff, setIsVideoOff] = useState<boolean>(false);
@@ -17,8 +17,7 @@ export const VideoCall: React.FC = () => {
   return (
     <div className="space-y-6">
       
-      {/* View Header */}
-      <div>
+            <div>
         <h2 className="text-xl font-extrabold text-slate-800 tracking-tight flex items-center gap-2">
           <Video className="h-5 w-5 text-indigo-600" />
           Video Conference Room
@@ -30,17 +29,14 @@ export const VideoCall: React.FC = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in fade-in duration-300">
         
-        {/* Main Video Stream Frame (2 cols) */}
-        <div className="lg:col-span-2 space-y-4">
+                <div className="lg:col-span-2 space-y-4">
           
           {inCall ? (
             <div className="relative rounded-2xl bg-slate-50 border border-slate-200 p-4 shadow-sm h-[320px] sm:h-[440px] flex items-center justify-center">
               
-              {/* Simulated Camera Video feed grid */}
-              <div className="absolute inset-0 grid grid-cols-2 p-4 gap-4">
+                            <div className="absolute inset-0 grid grid-cols-2 p-4 gap-4">
                 
-                {/* Participant 1: CM */}
-                <div className="relative bg-slate-900 border border-slate-800 rounded-xl overflow-hidden flex flex-col items-center justify-center shadow-inner">
+                                <div className="relative bg-slate-900 border border-slate-800 rounded-xl overflow-hidden flex flex-col items-center justify-center shadow-inner">
                   {isVideoOff ? (
                     <div className="h-16 w-16 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center font-bold text-slate-400">
                       CM
@@ -60,8 +56,7 @@ export const VideoCall: React.FC = () => {
                   </span>
                 </div>
 
-                {/* Participant 2: New Delhi DM */}
-                <div className="relative bg-slate-900 border border-slate-800 rounded-xl overflow-hidden flex flex-col items-center justify-center shadow-inner">
+                                <div className="relative bg-slate-900 border border-slate-800 rounded-xl overflow-hidden flex flex-col items-center justify-center shadow-inner">
                   <div className="text-center">
                     <div className="text-xs text-slate-400 font-bold mb-2">Alice Vaz (New Delhi DM)</div>
                     <div className="h-2 w-2 bg-indigo-400 rounded-full animate-pulse mx-auto" />
@@ -71,8 +66,7 @@ export const VideoCall: React.FC = () => {
                   </span>
                 </div>
 
-                {/* Participant 3: West Delhi DM */}
-                <div className="relative bg-slate-900 border border-slate-800 rounded-xl overflow-hidden flex flex-col items-center justify-center shadow-inner">
+                                <div className="relative bg-slate-900 border border-slate-800 rounded-xl overflow-hidden flex flex-col items-center justify-center shadow-inner">
                   <div className="text-center">
                     <div className="text-xs text-slate-400 font-bold mb-2">Amit Kumar (West Delhi DM)</div>
                     <div className="text-xs text-rose-400 font-semibold mt-1">Microphone Muted</div>
@@ -83,8 +77,7 @@ export const VideoCall: React.FC = () => {
                   </span>
                 </div>
 
-                {/* Participant 4: Director Education */}
-                <div className="relative bg-slate-900 border border-slate-800 rounded-xl overflow-hidden flex flex-col items-center justify-center shadow-inner">
+                                <div className="relative bg-slate-900 border border-slate-800 rounded-xl overflow-hidden flex flex-col items-center justify-center shadow-inner">
                   {isSharingScreen ? (
                     <div className="absolute inset-0 bg-slate-950 flex flex-col items-center justify-center p-4">
                       <span className="text-xs text-teal-400 font-bold flex items-center gap-1.5 mb-2">
@@ -108,8 +101,7 @@ export const VideoCall: React.FC = () => {
 
               </div>
 
-              {/* Call Status Header */}
-              <div className="absolute top-6 left-6 bg-slate-950/90 border border-slate-800 px-3 py-1 rounded-full text-xs text-indigo-400 font-bold flex items-center gap-1.5 select-none">
+                            <div className="absolute top-6 left-6 bg-slate-950/90 border border-slate-800 px-3 py-1 rounded-full text-xs text-indigo-400 font-bold flex items-center gap-1.5 select-none">
                 <span className="h-1.5 w-1.5 rounded-full bg-indigo-500 animate-ping"></span>
                 Cabinet Briefing Call Room #802
               </div>
@@ -130,8 +122,7 @@ export const VideoCall: React.FC = () => {
             </div>
           )}
 
-          {/* Video Controls Panel */}
-          {inCall && (
+                    {inCall && (
             <div className="bg-white border border-slate-200 shadow-sm p-4 rounded-2xl flex justify-between items-center">
               <div className="flex gap-2">
                 <button
@@ -174,8 +165,7 @@ export const VideoCall: React.FC = () => {
 
         </div>
 
-        {/* Meeting Notes / Scribe Sidebar (1 col) */}
-        <div className="bg-white border border-slate-200 shadow-sm p-5 rounded-2xl flex flex-col justify-between h-[350px] lg:h-[508px]">
+                <div className="bg-white border border-slate-200 shadow-sm p-5 rounded-2xl flex flex-col justify-between h-[350px] lg:h-[508px]">
           <div className="flex flex-col flex-1">
             <h3 className="text-sm font-bold text-slate-800 mb-1 flex items-center gap-2">
               <FileText className="h-4.5 w-4.5 text-indigo-600" />

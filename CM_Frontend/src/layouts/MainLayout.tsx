@@ -29,7 +29,7 @@ interface SidebarItem {
   roles: ('Chief Minister' | 'District Magistrate' | 'Department Head')[];
 }
 
-// Grouped navigation layout to de-clutter the interface
+
 const NAV_GROUPS = [
   {
     title: 'Dashboard',
@@ -89,7 +89,7 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }
   const [showNotificationMenu, setShowNotificationMenu] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
-  // Derive notifications count for light badge
+  
   const pendingFilesCount = files.filter(
     f => f.currentOwner === (activeRole === 'Chief Minister' ? 'Chief Minister' : activeDepartment) && 
     f.status === 'Pending Approval'
@@ -108,23 +108,20 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }
 
   return (
     <div className="h-screen overflow-hidden flex bg-slate-50 text-slate-800 relative w-screen font-sans">
-      {/* Backdrop overlay for mobile drawer */}
-      {sidebarOpen && (
+            {sidebarOpen && (
         <div
           className="fixed inset-0 bg-slate-900/35 z-35 md:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
-      {/* SIDEBAR */}
-      <aside
+            <aside
         className={`bg-white border-r border-slate-200 flex flex-col transition-all duration-300 z-40 shrink-0 h-full overflow-hidden fixed md:relative inset-y-0 left-0 md:translate-x-0 ${
           sidebarOpen
             ? 'translate-x-0 w-64 shadow-xl md:shadow-none'
             : '-translate-x-full md:translate-x-0 md:w-20'
         }`}
       >
-        {/* Brand Header */}
-        <div className="h-16 flex items-center px-5 border-b border-slate-200 gap-3 bg-white">
+                <div className="h-16 flex items-center px-5 border-b border-slate-200 gap-3 bg-white">
           <div className="h-9 w-9 rounded-xl bg-indigo-600 flex items-center justify-center shadow-md shadow-indigo-600/10 text-white font-extrabold text-lg">
             N
           </div>
@@ -140,12 +137,11 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }
           )}
         </div>
 
-        {/* Navigation Categories */}
-        <nav className="flex-1 py-4 px-3 space-y-5 overflow-y-auto bg-white">
+                <nav className="flex-1 py-4 px-3 space-y-5 overflow-y-auto bg-white">
           {NAV_GROUPS.map((group, gIdx) => {
             const visibleItems = group.items.filter(item => {
               if (!item.roles.includes(activeRole)) return false;
-              // Lock Department Head portfolio command centers
+              
               if (currentUser?.role === 'Department Head') {
                 if (item.id === 'Health' && currentUser.department !== 'Public Health') return false;
                 if (item.id === 'Education' && currentUser.department !== 'Education & Schools') return false;
@@ -184,8 +180,7 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }
           })}
         </nav>
 
-        {/* User profile section */}
-        <div className="p-4 border-t border-slate-200 bg-slate-50/50">
+                <div className="p-4 border-t border-slate-200 bg-slate-50/50">
           <div className="flex items-center gap-3">
             <div className="h-9 w-9 rounded-full bg-slate-200 border border-slate-300 flex items-center justify-center font-bold text-xs text-indigo-600 uppercase">
               {activeRole[0]}
@@ -204,11 +199,9 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }
         </div>
       </aside>
 
-      {/* MAIN LAYOUT WRAPPER */}
-      <div className="flex-1 flex flex-col h-full overflow-hidden">
+            <div className="flex-1 flex flex-col h-full overflow-hidden">
         
-        {/* NAVBAR */}
-        <header className="h-16 border-b border-slate-200 flex items-center justify-between px-6 bg-white/90 backdrop-blur-md sticky top-0 z-20">
+                <header className="h-16 border-b border-slate-200 flex items-center justify-between px-6 bg-white/90 backdrop-blur-md sticky top-0 z-20">
           <div className="flex items-center gap-4">
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -224,10 +217,8 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }
             </div>
           </div>
 
-          {/* Right Menu Controls */}
-          <div className="flex items-center gap-2.5">
-            {/* NagarVaani AI Side Panel Toggle */}
-            <button
+                    <div className="flex items-center gap-2.5">
+                        <button
               onClick={() => setShowAIPanel(!showAIPanel)}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 hover:border-indigo-400 bg-slate-50 text-xs font-bold text-slate-700 hover:bg-slate-100/50 transition-all cursor-pointer shadow-sm"
               title="Open NagarVaani AI"
@@ -236,24 +227,21 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }
               <span className="hidden sm:inline">NagarVaani AI</span>
             </button>
 
-            {/* DM Context Selector - LOCKED */}
-            {activeRole === 'District Magistrate' && (
+                        {activeRole === 'District Magistrate' && (
               <div className="bg-slate-50 border border-slate-200 text-xs text-slate-700 px-3 py-1.5 rounded-xl font-bold flex items-center gap-1.5 shadow-sm">
                 <MapPin className="h-3.5 w-3.5 text-indigo-600 shrink-0" />
                 <span>Zone: {activeDistrict}</span>
               </div>
             )}
 
-            {/* Department Head Context Selector - LOCKED */}
-            {activeRole === 'Department Head' && (
+                        {activeRole === 'Department Head' && (
               <div className="bg-slate-50 border border-slate-200 text-xs text-slate-700 px-3 py-1.5 rounded-xl font-bold flex items-center gap-1.5 shadow-sm">
                 <Building className="h-3.5 w-3.5 text-amber-600 shrink-0" />
                 <span>Dept: {activeDepartment === 'Public Health' ? 'Health' : activeDepartment === 'Education & Schools' ? 'Education' : 'PWD'}</span>
               </div>
             )}
 
-            {/* Notifications Alert Center */}
-            <div className="relative">
+                        <div className="relative">
               <button
                 onClick={() => {
                   setShowNotificationMenu(!showNotificationMenu);
@@ -268,8 +256,7 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }
 
               {showNotificationMenu && (
                 <>
-                  {/* Transparent backdrop for click-outside dismissal */}
-                  <div
+                                    <div
                     className="fixed inset-0 z-30 cursor-default"
                     onClick={() => setShowNotificationMenu(false)}
                   />
@@ -289,8 +276,7 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }
               )}
             </div>
 
-            {/* Logout Trigger Button */}
-            <button
+                        <button
               onClick={() => logoutUser()}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 hover:border-rose-400 bg-slate-50 hover:bg-rose-50 text-xs font-bold text-slate-700 hover:text-rose-600 transition-all cursor-pointer shadow-sm"
               title="Log Out Session"
@@ -301,8 +287,7 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }
           </div>
         </header>
 
-        {/* CONTAINER SCROLL SPACE */}
-        <main className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6 scrollbar-thin">
+                <main className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6 scrollbar-thin">
           {children}
         </main>
       </div>

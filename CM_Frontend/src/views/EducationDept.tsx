@@ -7,7 +7,7 @@ export const EducationDept: React.FC = () => {
   const { complaints, updateComplaintStatus } = useStore();
   const [remarkInput, setRemarkInput] = useState<Record<string, string>>({});
 
-  // Filter complaints
+  
   const educationComplaints = complaints.filter(c => c.department === 'Education Department');
 
   const handleStatusChange = (id: string, newStatus: any, text: string) => {
@@ -15,7 +15,7 @@ export const EducationDept: React.FC = () => {
     setRemarkInput(prev => ({ ...prev, [id]: '' }));
   };
 
-  // Mock data for School Smart Boards & Upgrades
+  
   const schoolUpgrades = [
     { school: 'SKV School, Shahdara', zone: 'Shahdara', boards: '15/15', progress: 100, status: 'Completed' },
     { school: 'GGSSS, Vikas Puri', zone: 'West Delhi', boards: '12/20', progress: 60, status: 'Active' },
@@ -25,8 +25,7 @@ export const EducationDept: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Title Header */}
-      <div>
+            <div>
         <h2 className="text-xl font-extrabold text-slate-800 tracking-tight flex items-center gap-2">
           <BookOpen className="h-5 w-5 text-indigo-600" />
           Education Department Command
@@ -36,8 +35,7 @@ export const EducationDept: React.FC = () => {
         </p>
       </div>
 
-      {/* Quick Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="bg-white p-5 rounded-2xl border-l-4 border-indigo-500 shadow-sm border border-slate-200/60">
           <span className="text-xs uppercase font-bold text-slate-400 tracking-wider">Model Smart Schools</span>
           <div className="flex items-baseline gap-2 mt-1">
@@ -68,8 +66,7 @@ export const EducationDept: React.FC = () => {
         </div>
       </div>
 
-      {/* Smart board deployments */}
-      <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm animate-in fade-in duration-200">
+            <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm animate-in fade-in duration-200">
         <h3 className="text-sm font-bold text-slate-800 mb-4 flex items-center gap-2">
           <GraduationCap className="h-4.5 w-4.5 text-indigo-600" />
           Model Smart Board Deployments
@@ -102,8 +99,7 @@ export const EducationDept: React.FC = () => {
         </div>
       </div>
 
-      {/* Education Grievances Queue */}
-      <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm">
+            <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm">
         <h3 className="text-sm font-bold text-slate-800 mb-4">Active Public Education Grievances</h3>
         <div className="space-y-4">
           {educationComplaints.length === 0 ? (

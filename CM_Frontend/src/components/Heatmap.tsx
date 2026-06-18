@@ -5,12 +5,12 @@ import { ShieldAlert, TrendingUp, Activity } from 'lucide-react';
 
 interface DistrictCardInfo {
   name: DistrictName;
-  gridArea: string; // CSS Grid location
+  gridArea: string; 
   x: number;
   y: number;
 }
 
-// Map layout corresponding to actual geography of Delhi
+
 const DELHI_DISTRICTS_MAP: DistrictCardInfo[] = [
   { name: 'North West Delhi', gridArea: 'row-1 col-1', x: 1, y: 1 },
   { name: 'North Delhi', gridArea: 'row-1 col-2', x: 2, y: 1 },
@@ -32,30 +32,30 @@ export const Heatmap: React.FC = () => {
   const { complaints, setActiveDistrict, setActiveTab, setActiveRole } = useStore();
   const [metric, setMetric] = useState<'volume' | 'score'>('volume');
 
-  // Compute metrics for each district dynamically
+  
   const getDistrictStats = (districtName: DistrictName) => {
     const distComplaints = complaints.filter(c => c.district === districtName);
     const active = distComplaints.filter(c => c.status !== 'Resolved').length;
     const resolved = distComplaints.filter(c => c.status === 'Resolved').length;
     const total = distComplaints.length;
     
-    // Performance Score formula: 100 - (active ratio + pending weight)
+    
     const activeRatio = total > 0 ? (active / total) * 100 : 0;
     const score = total > 0 ? Math.max(30, Math.round(100 - activeRatio * 0.8)) : 100;
 
     return { active, resolved, total, score };
   };
 
-  // Get intensity color based on metric for premium light theme
+  
   const getColorStyle = (districtName: DistrictName) => {
     const stats = getDistrictStats(districtName);
     if (metric === 'volume') {
-      // High volume -> Redder, Low volume -> Greener
+      
       if (stats.active > 8) return 'bg-rose-50/70 border-rose-200 hover:bg-rose-100 text-rose-800';
       if (stats.active > 4) return 'bg-amber-50/70 border-amber-200 hover:bg-amber-100 text-amber-800';
       return 'bg-emerald-50/70 border-emerald-200 hover:bg-emerald-100 text-emerald-800';
     } else {
-      // High Score -> Green, Low Score -> Red
+      
       if (stats.score >= 85) return 'bg-emerald-50/70 border-emerald-200 hover:bg-emerald-100 text-emerald-800';
       if (stats.score >= 70) return 'bg-amber-50/70 border-amber-200 hover:bg-amber-100 text-amber-800';
       return 'bg-rose-50/70 border-rose-200 hover:bg-rose-100 text-rose-800';

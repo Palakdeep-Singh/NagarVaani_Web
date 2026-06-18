@@ -6,11 +6,11 @@
   --font-sans: 'Inter', sans-serif;
   --font-heading: 'Outfit', sans-serif;
   
-  --color-brand-primary: #1e40af; /* Royal Navy Blue */
-  --color-brand-secondary: #0f766e; /* Teal */
-  --color-brand-accent: #d97706; /* Amber */
-  --color-brand-success: #059669; /* Green */
-  --color-brand-danger: #dc2626; /* Red */
+  --color-brand-primary: #1e40af; 
+  --color-brand-secondary: #0f766e; 
+  --color-brand-accent: #d97706; 
+  --color-brand-success: #059669; 
+  --color-brand-danger: #dc2626; 
   
   --animate-pulse-slow: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   --animate-float: float 6s ease-in-out infinite;
@@ -20,45 +20,45 @@
   :root {
     color-scheme: light;
     
-    /* Layout & Page Colors */
-    --color-ui-bg: #f8fafc;      /* Slate-50 Light Background */
-    --color-ui-text: #1e293b;    /* Slate-800 Primary Text */
-    --color-heading-text: #0f172a; /* Slate-900 Headings Text */
-    --color-border-main: #e2e8f0;  /* Slate-200 Main Border */
     
-    /* Grievance & File Status Badge States */
-    --color-pending-bg: #f1f5f9;      /* Slate-100 */
-    --color-pending-text: #475569;    /* Slate-600 */
-    --color-pending-border: #cbd5e1;  /* Slate-300 */
+    --color-ui-bg: #f8fafc;      
+    --color-ui-text: #1e293b;    
+    --color-heading-text: #0f172a; 
+    --color-border-main: #e2e8f0;  
     
-    --color-active-bg: #eff6ff;       /* Blue-50 */
-    --color-active-text: #1d4ed8;     /* Blue-700 */
-    --color-active-border: #bfdbfe;   /* Blue-200 */
     
-    --color-resolved-bg: #ecfdf5;     /* Emerald-50 */
-    --color-resolved-text: #047857;   /* Emerald-700 */
-    --color-resolved-border: #a7f3d0; /* Emerald-200 */
+    --color-pending-bg: #f1f5f9;      
+    --color-pending-text: #475569;    
+    --color-pending-border: #cbd5e1;  
     
-    --color-escalated-bg: #fdf2f8;    /* Pink-50 */
-    --color-escalated-text: #be185d;  /* Pink-700 */
-    --color-escalated-border: #fbcfe8;/* Pink-200 */
+    --color-active-bg: #eff6ff;       
+    --color-active-text: #1d4ed8;     
+    --color-active-border: #bfdbfe;   
     
-    /* Grievance Priority Levels */
-    --color-priority-low-bg: #f8fafc;       /* Slate-50 */
-    --color-priority-low-text: #64748b;      /* Slate-500 */
-    --color-priority-low-border: #e2e8f0;    /* Slate-200 */
+    --color-resolved-bg: #ecfdf5;     
+    --color-resolved-text: #047857;   
+    --color-resolved-border: #a7f3d0; 
     
-    --color-priority-medium-bg: #f0fdfa;    /* Teal-50 */
-    --color-priority-medium-text: #0f766e;   /* Teal-700 */
-    --color-priority-medium-border: #ccfbf1; /* Teal-200 */
+    --color-escalated-bg: #fdf2f8;    
+    --color-escalated-text: #be185d;  
+    --color-escalated-border: #fbcfe8;
     
-    --color-priority-high-bg: #fffbeb;      /* Amber-50 */
-    --color-priority-high-text: #b45309;     /* Amber-700 */
-    --color-priority-high-border: #fde68a;   /* Amber-200 */
     
-    --color-priority-emergency-bg: #fef2f2;     /* Red-50 */
-    --color-priority-emergency-text: #b91c1c;    /* Red-700 */
-    --color-priority-emergency-border: #fecaca;  /* Red-200 */
+    --color-priority-low-bg: #f8fafc;       
+    --color-priority-low-text: #64748b;      
+    --color-priority-low-border: #e2e8f0;    
+    
+    --color-priority-medium-bg: #f0fdfa;    
+    --color-priority-medium-text: #0f766e;   
+    --color-priority-medium-border: #ccfbf1; 
+    
+    --color-priority-high-bg: #fffbeb;      
+    --color-priority-high-text: #b45309;     
+    --color-priority-high-border: #fde68a;   
+    
+    --color-priority-emergency-bg: #fef2f2;     
+    --color-priority-emergency-text: #b91c1c;    
+    --color-priority-emergency-border: #fecaca;  
   }
 
   html {
@@ -92,7 +92,7 @@
   50% { transform: translateY(-10px); }
 }
 
-/* Light Mode Glassmorphism Panels */
+
 .glass-panel {
   background: rgba(255, 255, 255, 0.8);
   backdrop-filter: blur(12px);
@@ -112,7 +112,7 @@
   transform: translateY(-2px);
 }
 
-/* Scrollbar Customization */
+
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -131,7 +131,7 @@
   background: rgba(99, 102, 241, 0.5);
 }
 
-/* Active glowing effects adapted for light mode */
+
 .glow-text-teal {
   text-shadow: 0 0 10px rgba(13, 148, 136, 0.2);
 }

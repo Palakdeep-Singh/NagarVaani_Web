@@ -13,17 +13,17 @@ export const DMView: React.FC = () => {
     addComplaint
   } = useStore();
 
-  // Filter complaints for this specific district
+  
   const districtComplaints = complaints.filter(c => c.district === activeDistrict);
 
-  // Find DM profile from officers list
+  
   const dmProfile = officers.find(o => o.district === activeDistrict);
 
-  // Filter selection state
+  
   const [statusFilter, setStatusFilter] = useState<string>('All');
   const [remarkText, setRemarkText] = useState<Record<string, string>>({});
 
-  // Form states for new field intake grievance
+  
   const [newTitle, setNewTitle] = useState('');
   const [newDesc, setNewDesc] = useState('');
   const [newCategory, setNewCategory] = useState<ComplaintCategory>('Civic Infrastructure');
@@ -62,7 +62,7 @@ export const DMView: React.FC = () => {
       status: 'Pending'
     });
 
-    // Reset Form
+    
     setNewTitle('');
     setNewDesc('');
     setCitizenName('');
@@ -70,7 +70,7 @@ export const DMView: React.FC = () => {
     setShowForm(false);
   };
 
-  // Filtered grievances
+  
   const filteredComplaints = districtComplaints.filter(c => {
     if (statusFilter === 'All') return true;
     return c.status === statusFilter;
@@ -84,11 +84,9 @@ export const DMView: React.FC = () => {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       
-      {/* LEFT COLUMN: District Info & New Intake form */}
-      <div className="space-y-6">
+            <div className="space-y-6">
         
-        {/* DM Profile Card */}
-        <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm border-l-4 border-teal-600">
+                <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm border-l-4 border-teal-600">
           <div className="flex items-center gap-4">
             <div className="h-14 w-14 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center font-bold text-teal-600">
               <User className="h-7 w-7" />
@@ -116,8 +114,7 @@ export const DMView: React.FC = () => {
           </div>
         </div>
 
-        {/* Field Intake Form Trigger */}
-        <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm space-y-4">
+                <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm space-y-4">
           <div className="flex justify-between items-center">
             <h3 className="text-sm font-bold text-slate-800">DM Field Inspections</h3>
             <button
@@ -228,11 +225,9 @@ export const DMView: React.FC = () => {
 
       </div>
 
-      {/* RIGHT COLUMN: Grievances Queue & Administrative Actions */}
-      <div className="lg:col-span-2 space-y-6">
+            <div className="lg:col-span-2 space-y-6">
         
-        {/* Filter Toolbar */}
-        <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex flex-wrap items-center justify-between gap-3">
+                <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex flex-wrap items-center justify-between gap-3">
           <div className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
             <FileSpreadsheet className="h-4.5 w-4.5 text-indigo-600" />
             Grievance Intake (Total: {districtComplaints.length})
@@ -253,8 +248,7 @@ export const DMView: React.FC = () => {
           </div>
         </div>
 
-        {/* Complaints List */}
-        <div className="space-y-4">
+                <div className="space-y-4">
           {filteredComplaints.length === 0 ? (
             <div className="bg-white p-8 text-center rounded-2xl border border-slate-200/80 text-slate-500 text-xs">
               No matching complaints registered in {activeDistrict} for this filter.
@@ -289,8 +283,7 @@ export const DMView: React.FC = () => {
                   {comp.description}
                 </p>
 
-                {/* Timeline display */}
-                <div className="space-y-2">
+                                <div className="space-y-2">
                   <div className="text-xs font-bold text-slate-400 uppercase tracking-widest">Resolution Timeline:</div>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-slate-50 p-2.5 rounded-xl border border-slate-200/50">
                     {comp.timeline.map((step, idx) => (
@@ -303,8 +296,7 @@ export const DMView: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Action forms for DM */}
-                {comp.status !== 'Resolved' && (
+                                {comp.status !== 'Resolved' && (
                   <div className="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
                     <div className="flex-1 flex gap-2 min-w-[200px]">
                       <input
