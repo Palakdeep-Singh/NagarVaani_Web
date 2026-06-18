@@ -24,20 +24,19 @@ export const formatDate = (dateStr: string): string => {
     year: 'numeric'
   });
 };
-
 // Get badge style for Complaint Status
 export const getStatusBadgeStyle = (status: ComplaintStatus): string => {
   switch (status) {
     case 'Pending':
-      return 'bg-slate-800 text-slate-300 border border-slate-700';
+      return 'bg-[var(--color-pending-bg)] text-[var(--color-pending-text)] border border-[var(--color-pending-border)]';
     case 'Active':
-      return 'bg-blue-900/40 text-blue-300 border border-blue-700/50 animate-pulse';
+      return 'bg-[var(--color-active-bg)] text-[var(--color-active-text)] border border-[var(--color-active-border)]';
     case 'Resolved':
-      return 'bg-emerald-950/60 text-emerald-400 border border-emerald-500/30';
+      return 'bg-[var(--color-resolved-bg)] text-[var(--color-resolved-text)] border border-[var(--color-resolved-border)]';
     case 'Escalated':
-      return 'bg-rose-950/60 text-rose-400 border border-rose-500/30 font-bold';
+      return 'bg-[var(--color-escalated-bg)] text-[var(--color-escalated-text)] border border-[var(--color-escalated-border)] font-bold';
     default:
-      return 'bg-slate-800 text-slate-300 border border-slate-700';
+      return 'bg-[var(--color-pending-bg)] text-[var(--color-pending-text)] border border-[var(--color-pending-border)]';
   }
 };
 
@@ -45,15 +44,15 @@ export const getStatusBadgeStyle = (status: ComplaintStatus): string => {
 export const getPriorityBadgeStyle = (priority: ComplaintPriority): string => {
   switch (priority) {
     case 'Low':
-      return 'bg-slate-800 text-slate-400 border border-slate-700';
+      return 'bg-[var(--color-priority-low-bg)] text-[var(--color-priority-low-text)] border border-[var(--color-priority-low-border)]';
     case 'Medium':
-      return 'bg-teal-950/40 text-teal-400 border border-teal-500/20';
+      return 'bg-[var(--color-priority-medium-bg)] text-[var(--color-priority-medium-text)] border border-[var(--color-priority-medium-border)]';
     case 'High':
-      return 'bg-amber-950/40 text-amber-400 border border-amber-500/25';
+      return 'bg-[var(--color-priority-high-bg)] text-[var(--color-priority-high-text)] border border-[var(--color-priority-high-border)]';
     case 'Emergency':
-      return 'bg-rose-950/50 text-rose-400 border border-rose-500/30 font-extrabold animate-bounce';
+      return 'bg-[var(--color-priority-emergency-bg)] text-[var(--color-priority-emergency-text)] border border-[var(--color-priority-emergency-border)] font-bold';
     default:
-      return 'bg-slate-800 text-slate-400 border border-slate-700';
+      return 'bg-[var(--color-priority-low-bg)] text-[var(--color-priority-low-text)] border border-[var(--color-priority-low-border)]';
   }
 };
 
@@ -61,10 +60,10 @@ export const getPriorityBadgeStyle = (priority: ComplaintPriority): string => {
 export const getFilePriorityStyle = (priority: 'Routine' | 'Urgent' | 'Immediate'): string => {
   switch (priority) {
     case 'Routine':
-      return 'bg-slate-800 text-slate-300 border border-slate-700';
+      return 'bg-[var(--color-pending-bg)] text-[var(--color-pending-text)] border border-[var(--color-pending-border)]';
     case 'Urgent':
-      return 'bg-amber-950/40 text-amber-400 border border-amber-500/20';
+      return 'bg-[var(--color-priority-high-bg)] text-[var(--color-priority-high-text)] border border-[var(--color-priority-high-border)]';
     case 'Immediate':
-      return 'bg-rose-950/60 text-rose-400 border border-rose-500/30 font-bold';
+      return 'bg-[var(--color-priority-emergency-bg)] text-[var(--color-priority-emergency-text)] border border-[var(--color-priority-emergency-border)] font-bold';
   }
 };

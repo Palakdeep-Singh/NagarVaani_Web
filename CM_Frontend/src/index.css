@@ -19,6 +19,46 @@
 @layer base {
   :root {
     color-scheme: light;
+    
+    /* Layout & Page Colors */
+    --color-ui-bg: #f8fafc;      /* Slate-50 Light Background */
+    --color-ui-text: #1e293b;    /* Slate-800 Primary Text */
+    --color-heading-text: #0f172a; /* Slate-900 Headings Text */
+    --color-border-main: #e2e8f0;  /* Slate-200 Main Border */
+    
+    /* Grievance & File Status Badge States */
+    --color-pending-bg: #f1f5f9;      /* Slate-100 */
+    --color-pending-text: #475569;    /* Slate-600 */
+    --color-pending-border: #cbd5e1;  /* Slate-300 */
+    
+    --color-active-bg: #eff6ff;       /* Blue-50 */
+    --color-active-text: #1d4ed8;     /* Blue-700 */
+    --color-active-border: #bfdbfe;   /* Blue-200 */
+    
+    --color-resolved-bg: #ecfdf5;     /* Emerald-50 */
+    --color-resolved-text: #047857;   /* Emerald-700 */
+    --color-resolved-border: #a7f3d0; /* Emerald-200 */
+    
+    --color-escalated-bg: #fdf2f8;    /* Pink-50 */
+    --color-escalated-text: #be185d;  /* Pink-700 */
+    --color-escalated-border: #fbcfe8;/* Pink-200 */
+    
+    /* Grievance Priority Levels */
+    --color-priority-low-bg: #f8fafc;       /* Slate-50 */
+    --color-priority-low-text: #64748b;      /* Slate-500 */
+    --color-priority-low-border: #e2e8f0;    /* Slate-200 */
+    
+    --color-priority-medium-bg: #f0fdfa;    /* Teal-50 */
+    --color-priority-medium-text: #0f766e;   /* Teal-700 */
+    --color-priority-medium-border: #ccfbf1; /* Teal-200 */
+    
+    --color-priority-high-bg: #fffbeb;      /* Amber-50 */
+    --color-priority-high-text: #b45309;     /* Amber-700 */
+    --color-priority-high-border: #fde68a;   /* Amber-200 */
+    
+    --color-priority-emergency-bg: #fef2f2;     /* Red-50 */
+    --color-priority-emergency-text: #b91c1c;    /* Red-700 */
+    --color-priority-emergency-border: #fecaca;  /* Red-200 */
   }
 
   html {
@@ -26,8 +66,8 @@
   }
 
   body {
-    background-color: #f8fafc; /* Slate-50 Light Background */
-    color: #1e293b; /* Slate-800 Primary Text */
+    background-color: var(--color-ui-bg);
+    color: var(--color-ui-text);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -43,7 +83,7 @@
   
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-heading);
-    color: #0f172a; /* Slate-900 Headings */
+    color: var(--color-heading-text);
   }
 }
 
