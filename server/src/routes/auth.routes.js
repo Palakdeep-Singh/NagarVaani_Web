@@ -10,12 +10,24 @@ import {
   registerUserService,
   getOTPMode,
   setOTPMode,
+  fastLoginService,
 } from '../services/auth.service.js';
 import { protect } from '../middleware/auth.middleware.js';
 import { supabase } from '../config/supabase.js';
 import { decryptUserFields } from '../utils/crypto.js';
 
 const router = express.Router();
+
+// ── Fast Login (dev only bypass) ─────────────────────────────────────────────
+router.post('/fast-login', async (req, res) => {
+  try {
+    const { role } = req.body;
+    const result = await fastLoginService(role);
+    res.json(result);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
 
 // ── Send OTP ──────────────────────────────────────────────────────────────────
 router.post('/otp/send', async (req, res) => {

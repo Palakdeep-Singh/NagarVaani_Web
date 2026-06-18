@@ -14,7 +14,7 @@ import RegisterForm from './RegisterForm.jsx';
 import Logo from '../components/Logo.jsx';
 
 export default function LoginUser() {
-  const { loginCitizen, switchToAdmin } = useContext(AuthContext); // FIX: loginCitizen not login
+  const { loginCitizen, loginAdmin, switchToAdmin } = useContext(AuthContext); // FIX: loginCitizen not login
 
   const [step, setStep] = useState('phone');
   const [phone, setPhone] = useState('');
@@ -114,6 +114,23 @@ export default function LoginUser() {
   const handleRegisterSuccess = (data) => {
     // Called by RegisterForm after successful registration
     loginCitizen(data.user || data, data.token);
+  };
+
+  const handleFastLogin = async (role) => {
+    setError('');
+    setLoading(true);
+    try {
+      const res = await API.post('/api/auth/fast-login', { role });
+      if (role === 'citizen') {
+        loginCitizen(res.data.user || res.data, res.data.token);
+      } else {
+        loginAdmin(res.data.admin || res.data, res.data.token);
+      }
+    } catch (e) {
+      setError(e.response?.data?.error || `Fast login failed for ${role}`);
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (step === 'register') {
@@ -302,6 +319,109 @@ export default function LoginUser() {
             style={{ color: 'var(--nv)', fontWeight: 700, cursor: 'pointer', textDecoration: 'underline' }}>
             Admin Login →
           </span>
+        </div>
+
+        {/* Fast Dev Bypass Authorization */}
+        <div style={{
+          marginTop: 20,
+          padding: '12px 14px',
+          borderRadius: 12,
+          background: 'linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%)',
+          border: '1px dashed #F59E0B',
+          textAlign: 'center'
+        }}>
+          <div style={{
+            fontSize: 11,
+            fontWeight: 800,
+            color: '#B45309',
+            textTransform: 'uppercase',
+            letterSpacing: '.06em',
+            marginBottom: 8,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 4
+          }}>
+            ⚡ Fast Authorization Access (Dev Mode)
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
+            <button
+              onClick={() => handleFastLogin('citizen')}
+              style={{
+                padding: '6px 8px',
+                background: '#fff',
+                border: '1.5px solid #F59E0B',
+                borderRadius: 8,
+                color: '#B45309',
+                fontSize: 10.5,
+                fontWeight: 700,
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
+              }}
+              onMouseEnter={e => { e.target.style.background = '#FEF3C7'; }}
+              onMouseLeave={e => { e.target.style.background = '#fff'; }}
+            >
+              👤 Citizen
+            </button>
+            <button
+              onClick={() => handleFastLogin('district')}
+              style={{
+                padding: '6px 8px',
+                background: '#fff',
+                border: '1.5px solid #F59E0B',
+                borderRadius: 8,
+                color: '#B45309',
+                fontSize: 10.5,
+                fontWeight: 700,
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
+              }}
+              onMouseEnter={e => { e.target.style.background = '#FEF3C7'; }}
+              onMouseLeave={e => { e.target.style.background = '#fff'; }}
+            >
+              🏢 District Admin
+            </button>
+            <button
+              onClick={() => handleFastLogin('state')}
+              style={{
+                padding: '6px 8px',
+                background: '#fff',
+                border: '1.5px solid #F59E0B',
+                borderRadius: 8,
+                color: '#B45309',
+                fontSize: 10.5,
+                fontWeight: 700,
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
+              }}
+              onMouseEnter={e => { e.target.style.background = '#FEF3C7'; }}
+              onMouseLeave={e => { e.target.style.background = '#fff'; }}
+            >
+              🏛️ State Admin
+            </button>
+            <button
+              onClick={() => handleFastLogin('central')}
+              style={{
+                padding: '6px 8px',
+                background: '#fff',
+                border: '1.5px solid #F59E0B',
+                borderRadius: 8,
+                color: '#B45309',
+                fontSize: 10.5,
+                fontWeight: 700,
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
+              }}
+              onMouseEnter={e => { e.target.style.background = '#FEF3C7'; }}
+              onMouseLeave={e => { e.target.style.background = '#fff'; }}
+            >
+              👑 Central Admin
+            </button>
+          </div>
         </div>
       </div>
 

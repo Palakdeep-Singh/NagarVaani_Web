@@ -220,3 +220,36 @@ export const registerUserService = async (phone, data) => {
   const token = signJWT({ userId: newUser.id, role: 'citizen' });
   return { success: true, token, user: decryptUserFields(newUser), role: 'citizen' };
 };
+
+// ── Fast Login Service (Dev only bypass) ──────────────────────────────────────
+export const fastLoginService = async (role) => {
+  if (role === 'citizen') {
+    const { data: user, error } = await supabase.from('users').select('*').limit(1);
+    if (error || !user || user.length === 0) {
+      throw new Error('No citizen users found in the database. Please register one first.');
+    }
+    const targetUser = user[0];
+    const decUser = decryptUserFields(targetUser);
+    const token = signJWT({ userId: targetUser.id, role: 'citizen' });
+    return { success: true, token, user: decUser, role: 'citizen' };
+  } else {
+    const { data: admin, error } = await supabase.from('admins').select('*').eq('role', role).limit(1);
+    if (error || !admin || admin.length === 0) {
+      throw new Error(`No admin with role "${role}" found in the database.`);
+    }
+    const targetAdmin = admin[0];
+    const token = signJWT({
+      adminId: targetAdmin.id,
+      role: targetAdmin.role,
+      state: targetAdmin.state || null,
+      district: targetAdmin.district || null,
+    });
+    const { password_hash, ...safeAdmin } = targetAdmin;
+    return {
+      success: true,
+      token,
+      admin: safeAdmin,
+      role: targetAdmin.role,
+    };
+  }
+};
