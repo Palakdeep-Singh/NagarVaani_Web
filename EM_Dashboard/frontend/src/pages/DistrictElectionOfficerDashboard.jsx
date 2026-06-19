@@ -32,6 +32,55 @@ export default function DistrictElectionOfficerDashboard({ user, onLogout }) {
     { sender: 'bot', text: 'AC-Rohania shows the lowest turnout currently at 45.2%. Alert has been sent to the respective Returning Officer.' }
   ]);
 
+  // DEO State Management
+  const [districtBooths, setDistrictBooths] = useState([
+    { id: 1, acName: "Varanasi North", totalBooths: 328, turnout: "52.34%", activeIncidents: 1, status: "Healthy" },
+    { id: 2, acName: "Varanasi South", totalBooths: 295, turnout: "55.12%", activeIncidents: 0, status: "Healthy" },
+    { id: 3, acName: "Varanasi Cantt", totalBooths: 345, turnout: "50.08%", activeIncidents: 2, status: "Warning" },
+    { id: 4, acName: "Rohania", totalBooths: 312, turnout: "45.20%", activeIncidents: 3, status: "Warning" },
+    { id: 5, acName: "Sevapuri", totalBooths: 288, turnout: "48.15%", activeIncidents: 1, status: "Healthy" }
+  ]);
+  const [evmInventory, setEvmInventory] = useState([
+    { id: "EVM-D01", type: "BU (Ballot Unit)", status: "Warehouse", location: "District HQ Warehouse", checked: "Yes" },
+    { id: "EVM-D02", type: "CU (Control Unit)", status: "Deployed", location: "AC-1 Varanasi North", checked: "Yes" },
+    { id: "EVM-D03", type: "VVPAT", status: "In Transit", location: "En-route to AC-4 Rohania", checked: "Yes" },
+    { id: "EVM-D04", type: "BU (Ballot Unit)", status: "Faulty", location: "District Repair Lab", checked: "No" }
+  ]);
+  const [staffTraining, setStaffTraining] = useState([
+    { id: "ST-01", name: "Dr. Alok Nath", role: "Presiding Officer", trained: "Yes", certified: "Yes", checkIn: "Checked In" },
+    { id: "ST-02", name: "Smt. Priya Rao", role: "Polling Officer 1", trained: "Yes", certified: "Yes", checkIn: "Checked In" },
+    { id: "ST-03", name: "Sri. K. Verma", role: "Polling Officer 2", trained: "Yes", certified: "No", checkIn: "Yet to Report" },
+    { id: "ST-04", name: " Sri. M. Khan", role: "Sector Officer", trained: "Yes", certified: "Yes", checkIn: "Checked In" }
+  ]);
+  const [vehicles, setVehicles] = useState([
+    { id: "VEH-01", route: "HQ to Varanasi North", type: "Heavy Truck (EVMs)", status: "Active", gps: "Connected", driver: "Rajesh K." },
+    { id: "VEH-02", route: "HQ to Rohania", type: "Medium Van (Security)", status: "Active", gps: "Connected", driver: "Vijay S." },
+    { id: "VEH-03", route: "HQ to Sevapuri", type: "Jeep (Sector Officer)", status: "Delayed", gps: "Weak Signal", driver: "Anil P." },
+    { id: "VEH-04", route: "HQ to Varanasi Cantt", type: "Heavy Truck (EVMs)", status: "Arrived", gps: "Disconnected", driver: "Satish M." }
+  ]);
+  const [strongRoomLog, setStrongRoomLog] = useState([
+    { time: "11:15 AM", person: " Sri. Amit Singh (Observer)", action: "Seals Verification Check", remarks: "All seals fully intact" },
+    { time: "09:30 AM", person: "Dr. R. K. Mishra (DEO)", action: "Routine CCTV & Guard Inspection", remarks: "CCTV grid OK. 12/12 Guards active." },
+    { time: "06:00 AM", person: "Security Commander", action: "Guard Shift Handover", remarks: "Double locks confirmed" }
+  ]);
+  const [postalBallots, setPostalBallots] = useState([
+    { id: "PB-101", voterName: "Subhas Bose", type: "Service Voter", status: "Accepted", date: "2026-06-18" },
+    { id: "PB-102", voterName: "Karan Johar", type: "Absentee (Senior Citizen)", status: "Pending Verification", date: "2026-06-19" },
+    { id: "PB-103", voterName: "Meena Kumari", type: "Essential Services", status: "Rejected", date: "2026-06-19" }
+  ]);
+  const [complaints, setComplaints] = useState([
+    { id: "COMP-01", ac: "Rohania", boothId: 104, type: "EVM Issue", detail: "Electors alleging delay in VVPAT printout.", status: "Pending", time: "11:20 AM" },
+    { id: "COMP-02", ac: "Varanasi Cantt", boothId: 215, type: "Crowd Gathering", detail: "Campaign workers violating 100m rule.", status: "Investigating", time: "11:10 AM" },
+    { id: "COMP-03", ac: "Varanasi North", boothId: 12, type: "Power Cut", detail: "Power backup failed. Presiding Officer requests generator.", status: "Resolved", time: "09:45 AM" }
+  ]);
+  const [districtSettings, setDistrictSettings] = useState({
+    webcastEnabled: true,
+    autoAlertInterval: 10,
+    forceGPSRequired: true,
+    requireObserverSignoff: true
+  });
+
+
   // Setup Clock
   useEffect(() => {
     const updateTime = () => {
@@ -989,6 +1038,718 @@ export default function DistrictElectionOfficerDashboard({ user, onLogout }) {
 
           </div>
         )}
+
+        {/* DEO WORKSPACE DETAILED VIEWS */}
+        {activeMenu === 'Booth Management' && (
+          <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            <div className="card">
+              <h2 style={{ fontSize: '16px', fontWeight: '800', marginBottom: '16px' }}>District Assembly Constituencies & Booth Telemetries</h2>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
+                <thead>
+                  <tr style={{ borderBottom: '2px solid #cbd5e1', color: '#64748b', textAlign: 'left', fontWeight: 'bold' }}>
+                    <th style={{ padding: '10px' }}>AC Name</th>
+                    <th style={{ padding: '10px' }}>Total Booths</th>
+                    <th style={{ padding: '10px' }}>Voter Turnout</th>
+                    <th style={{ padding: '10px' }}>Active Incidents</th>
+                    <th style={{ padding: '10px' }}>Status</th>
+                    <th style={{ padding: '10px', textAlign: 'center' }}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {districtBooths.map((ac) => (
+                    <tr key={ac.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                      <td style={{ padding: '10px', fontWeight: 'bold' }}>{ac.acName}</td>
+                      <td style={{ padding: '10px' }}>{ac.totalBooths}</td>
+                      <td style={{ padding: '10px', color: '#2563eb', fontWeight: 'bold' }}>{ac.turnout}</td>
+                      <td style={{ padding: '10px', color: ac.activeIncidents > 0 ? '#dc2626' : '#16a34a', fontWeight: 'bold' }}>{ac.activeIncidents}</td>
+                      <td style={{ padding: '10px' }}>
+                        <span style={{
+                          padding: '2px 8px', borderRadius: '12px', fontSize: '10px', fontWeight: 'bold',
+                          backgroundColor: ac.status === 'Healthy' ? '#dcfce7' : '#fef9c3',
+                          color: ac.status === 'Healthy' ? '#15803d' : '#854d0e'
+                        }}>{ac.status}</span>
+                      </td>
+                      <td style={{ padding: '10px', textAlign: 'center' }}>
+                        <button
+                          onClick={() => alert(`Connecting to CCTV Webcast feed for ${ac.acName}... Stream online.`)}
+                          style={{ padding: '4px 8px', backgroundColor: '#0f172a', color: '#fff', border: 'none', borderRadius: '4px', fontSize: '10px', cursor: 'pointer', marginRight: '4px' }}
+                        >Live Webcast</button>
+                        <button
+                          onClick={() => alert(`Launching AC profile for ${ac.acName}...`)}
+                          style={{ padding: '4px 8px', backgroundColor: '#2563eb', color: '#fff', border: 'none', borderRadius: '4px', fontSize: '10px', cursor: 'pointer' }}
+                        >View Details</button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {activeMenu === 'EVM Management' && (
+          <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            <div className="card">
+              <h2 style={{ fontSize: '16px', fontWeight: '800', marginBottom: '16px' }}>District EVM & VVPAT Roster</h2>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
+                <thead>
+                  <tr style={{ borderBottom: '2px solid #cbd5e1', color: '#64748b', textAlign: 'left', fontWeight: 'bold' }}>
+                    <th style={{ padding: '10px' }}>Unit ID</th>
+                    <th style={{ padding: '10px' }}>Type</th>
+                    <th style={{ padding: '10px' }}>Status</th>
+                    <th style={{ padding: '10px' }}>Current Location</th>
+                    <th style={{ padding: '10px' }}>Randomization Check</th>
+                    <th style={{ padding: '10px', textAlign: 'center' }}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {evmInventory.map((evm) => (
+                    <tr key={evm.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                      <td style={{ padding: '10px', fontWeight: 'bold' }}>{evm.id}</td>
+                      <td style={{ padding: '10px' }}>{evm.type}</td>
+                      <td style={{ padding: '10px' }}>
+                        <span style={{
+                          padding: '2px 8px', borderRadius: '12px', fontSize: '10px', fontWeight: 'bold',
+                          backgroundColor: evm.status === 'Warehouse' ? '#e2e8f0' : evm.status === 'Deployed' ? '#dcfce7' : evm.status === 'In Transit' ? '#eff6ff' : '#fee2e2',
+                          color: evm.status === 'Warehouse' ? '#475569' : evm.status === 'Deployed' ? '#15803d' : evm.status === 'In Transit' ? '#1e40af' : '#b91c1c'
+                        }}>{evm.status}</span>
+                      </td>
+                      <td style={{ padding: '10px' }}>{evm.location}</td>
+                      <td style={{ padding: '10px', fontWeight: 'bold', color: evm.checked === 'Yes' ? '#16a34a' : '#dc2626' }}>{evm.checked}</td>
+                      <td style={{ padding: '10px', textAlign: 'center' }}>
+                        <button
+                          onClick={() => {
+                            setEvmInventory(prev => prev.map(e => e.id === evm.id ? { ...e, checked: "Yes" } : e));
+                            alert(`EVM ${evm.id} randomized and verified.`);
+                          }}
+                          style={{ padding: '4px 8px', backgroundColor: '#10b981', color: '#fff', border: 'none', borderRadius: '4px', fontSize: '10px', cursor: 'pointer' }}
+                        >Verify Unit</button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <button
+                onClick={() => alert("Initiating second randomization matrix check. Synchronizing with state ECI servers...")}
+                style={{ marginTop: '16px', padding: '10px', backgroundColor: '#0f172a', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', width: '220px' }}
+              >
+                Run 2nd Randomization Matrix
+              </button>
+            </div>
+          </div>
+        )}
+
+        {activeMenu === 'Staff Management' && (
+          <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            <div className="card">
+              <h2 style={{ fontSize: '16px', fontWeight: '800', marginBottom: '16px' }}>District Polling Personnel Registry</h2>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
+                <thead>
+                  <tr style={{ borderBottom: '2px solid #cbd5e1', color: '#64748b', textAlign: 'left', fontWeight: 'bold' }}>
+                    <th style={{ padding: '10px' }}>ID</th>
+                    <th style={{ padding: '10px' }}>Officer Name</th>
+                    <th style={{ padding: '10px' }}>Roster Role</th>
+                    <th style={{ padding: '10px' }}>ECI Training Completed</th>
+                    <th style={{ padding: '10px' }}>Certified</th>
+                    <th style={{ padding: '10px' }}>Check In Status</th>
+                    <th style={{ padding: '10px', textAlign: 'center' }}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {staffTraining.map((staff) => (
+                    <tr key={staff.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                      <td style={{ padding: '10px', fontWeight: 'bold' }}>{staff.id}</td>
+                      <td style={{ padding: '10px', fontWeight: '600' }}>{staff.name}</td>
+                      <td style={{ padding: '10px' }}>{staff.role}</td>
+                      <td style={{ padding: '10px', color: '#16a34a', fontWeight: 'bold' }}>{staff.trained}</td>
+                      <td style={{ padding: '10px', color: staff.certified === 'Yes' ? '#16a34a' : '#ea580c', fontWeight: 'bold' }}>{staff.certified}</td>
+                      <td style={{ padding: '10px' }}>
+                        <span style={{
+                          padding: '2px 8px', borderRadius: '12px', fontSize: '10px', fontWeight: 'bold',
+                          backgroundColor: staff.checkIn === 'Checked In' ? '#dcfce7' : '#fef9c3',
+                          color: staff.checkIn === 'Checked In' ? '#15803d' : '#854d0e'
+                        }}>{staff.checkIn}</span>
+                      </td>
+                      <td style={{ padding: '10px', textAlign: 'center' }}>
+                        <button
+                          onClick={() => {
+                            setStaffTraining(prev => prev.map(s => s.id === staff.id ? { ...s, certified: "Yes" } : s));
+                            alert(`Training certificate issued for ${staff.name}`);
+                          }}
+                          style={{ padding: '4px 8px', backgroundColor: '#0f172a', color: '#fff', border: 'none', borderRadius: '4px', fontSize: '10px', cursor: 'pointer', marginRight: '4px' }}
+                        >Issue Certificate</button>
+                        <button
+                          onClick={() => {
+                            setStaffTraining(prev => prev.map(s => s.id === staff.id ? { ...s, checkIn: "Checked In" } : s));
+                            alert(`Sent check-in reminder alert to ${staff.name}`);
+                          }}
+                          style={{ padding: '4px 8px', backgroundColor: '#2563eb', color: '#fff', border: 'none', borderRadius: '4px', fontSize: '10px', cursor: 'pointer' }}
+                        >Alert Officer</button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {activeMenu === 'Vehicle Management' && (
+          <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            <div className="card">
+              <h2 style={{ fontSize: '16px', fontWeight: '800', marginBottom: '16px' }}>District GPS Vehicle Dispatch Hub</h2>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
+                <thead>
+                  <tr style={{ borderBottom: '2px solid #cbd5e1', color: '#64748b', textAlign: 'left', fontWeight: 'bold' }}>
+                    <th style={{ padding: '10px' }}>Vehicle ID</th>
+                    <th style={{ padding: '10px' }}>Dispatch Route</th>
+                    <th style={{ padding: '10px' }}>Logistics Type</th>
+                    <th style={{ padding: '10px' }}>Status</th>
+                    <th style={{ padding: '10px' }}>GPS Link</th>
+                    <th style={{ padding: '10px' }}>Driver</th>
+                    <th style={{ padding: '10px', textAlign: 'center' }}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {vehicles.map((v) => (
+                    <tr key={v.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                      <td style={{ padding: '10px', fontWeight: 'bold' }}>{v.id}</td>
+                      <td style={{ padding: '10px' }}>{v.route}</td>
+                      <td style={{ padding: '10px' }}>{v.type}</td>
+                      <td style={{ padding: '10px' }}>
+                        <span style={{
+                          padding: '2px 8px', borderRadius: '12px', fontSize: '10px', fontWeight: 'bold',
+                          backgroundColor: v.status === 'Arrived' ? '#dcfce7' : v.status === 'Active' ? '#eff6ff' : '#fee2e2',
+                          color: v.status === 'Arrived' ? '#15803d' : v.status === 'Active' ? '#1e40af' : '#b91c1c'
+                        }}>{v.status}</span>
+                      </td>
+                      <td style={{ padding: '10px', fontWeight: 'bold', color: v.gps === 'Connected' ? '#16a34a' : '#ea580c' }}>{v.gps}</td>
+                      <td style={{ padding: '10px' }}>{v.driver}</td>
+                      <td style={{ padding: '10px', textAlign: 'center' }}>
+                        <button
+                          onClick={() => alert(`Launching live map routing for ${v.id}... Driver: ${v.driver}`)}
+                          style={{ padding: '4px 8px', backgroundColor: '#0f172a', color: '#fff', border: 'none', borderRadius: '4px', fontSize: '10px', cursor: 'pointer', marginRight: '4px' }}
+                        >Trace Vehicle</button>
+                        <button
+                          onClick={() => {
+                            setVehicles(prev => prev.map(item => item.id === v.id ? { ...item, status: "Active", gps: "Connected" } : item));
+                            alert(`GPS link reset commands dispatched to vehicle ${v.id}`);
+                          }}
+                          style={{ padding: '4px 8px', backgroundColor: '#ea580c', color: '#fff', border: 'none', borderRadius: '4px', fontSize: '10px', cursor: 'pointer' }}
+                        >Reset GPS Link</button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {activeMenu === 'Sensitive Booths' && (
+          <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            <div className="card">
+              <h2 style={{ fontSize: '16px', fontWeight: '800', marginBottom: '16px' }}>District Sensitive Booth Security Matrix</h2>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '24px' }}>
+                <div style={{ backgroundColor: '#f8fafc', padding: '16px', borderRadius: '12px', border: '1px solid #cbd5e1' }}>
+                  <div style={{ fontSize: '10px', color: '#64748b', fontWeight: 'bold', textTransform: 'uppercase' }}>Micro-Observers Assigned</div>
+                  <strong style={{ fontSize: '20px', display: 'block', margin: '4px 0' }}>156 Booths</strong>
+                  <span style={{ fontSize: '10px', color: '#16a34a', fontWeight: '700' }}>100% Staff In-Place</span>
+                </div>
+                <div style={{ backgroundColor: '#f8fafc', padding: '16px', borderRadius: '12px', border: '1px solid #cbd5e1' }}>
+                  <div style={{ fontSize: '10px', color: '#64748b', fontWeight: 'bold', textTransform: 'uppercase' }}>CAPF Static Guards</div>
+                  <strong style={{ fontSize: '20px', display: 'block', margin: '4px 0' }}>70 Booths</strong>
+                  <span style={{ fontSize: '10px', color: '#16a34a', fontWeight: '700' }}>Armed Guarding Active</span>
+                </div>
+                <div style={{ backgroundColor: '#f8fafc', padding: '16px', borderRadius: '12px', border: '1px solid #cbd5e1' }}>
+                  <div style={{ fontSize: '10px', color: '#64748b', fontWeight: 'bold', textTransform: 'uppercase' }}>Webcasting Booths</div>
+                  <strong style={{ fontSize: '20px', display: 'block', margin: '4px 0' }}>226 Booths</strong>
+                  <span style={{ fontSize: '10px', color: '#16a34a', fontWeight: '700' }}>Streams Configured</span>
+                </div>
+              </div>
+              <div style={{ backgroundColor: '#fee2e2', padding: '16px', borderRadius: '8px', border: '1px solid #fca5a5', fontSize: '12px', color: '#b91c1c' }}>
+                <strong>Varanasi District Police Liaison Advisory:</strong> CAPF patrols and QRT reserves must remain stationed within 5 mins response radius of Varanasi Cantt (AC-3) and Rohania (AC-4) sensitive areas.
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeMenu === 'Strong Room Monitoring' && (
+          <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            <div className="card">
+              <h2 style={{ fontSize: '16px', fontWeight: '800', marginBottom: '16px' }}>District Strong Room CCTV & Seal Audit Logs</h2>
+              <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '24px' }}>
+                <div>
+                  <h3 style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '12px' }}>Access and Seals Logs</h3>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
+                    <thead>
+                      <tr style={{ borderBottom: '1px solid #cbd5e1', textAlign: 'left', color: '#64748b' }}>
+                        <th style={{ padding: '8px' }}>Time</th>
+                        <th style={{ padding: '8px' }}>Official</th>
+                        <th style={{ padding: '8px' }}>Action</th>
+                        <th style={{ padding: '8px' }}>Remarks</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {strongRoomLog.map((log, idx) => (
+                        <tr key={idx} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                          <td style={{ padding: '8px', color: '#64748b' }}>{log.time}</td>
+                          <td style={{ padding: '8px', fontWeight: 'bold' }}>{log.person}</td>
+                          <td style={{ padding: '8px' }}>{log.action}</td>
+                          <td style={{ padding: '8px', fontStyle: 'italic' }}>{log.remarks}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                <div style={{ backgroundColor: '#f8fafc', padding: '20px', borderRadius: '12px', border: '1px solid #cbd5e1' }}>
+                  <h3 style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '12px' }}>Log New Authorized Access visit</h3>
+                  <form onSubmit={(e) => {
+                    e.preventDefault();
+                    const form = e.target;
+                    const official = form.elements.official.value;
+                    const action = form.elements.action.value;
+                    const remarks = form.elements.remarks.value;
+                    if (!official || !action) return;
+                    const nowStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    setStrongRoomLog(prev => [{ time: nowStr, person: official, action, remarks }, ...prev]);
+                    form.reset();
+                    alert("Strong Room access successfully logged.");
+                  }}>
+                    <div style={{ marginBottom: '10px' }}>
+                      <label style={{ fontSize: '10px', textTransform: 'uppercase', color: '#64748b', display: 'block', marginBottom: '4px' }}>Official Name & Role</label>
+                      <input name="official" type="text" placeholder="e.g. Shri. S. Kumar (Observer)" style={{ width: '100%', padding: '6px', border: '1px solid #cbd5e1', borderRadius: '6px' }} required />
+                    </div>
+                    <div style={{ marginBottom: '10px' }}>
+                      <label style={{ fontSize: '10px', textTransform: 'uppercase', color: '#64748b', display: 'block', marginBottom: '4px' }}>Action Performed</label>
+                      <input name="action" type="text" placeholder="e.g. CCTV Grid Verification" style={{ width: '100%', padding: '6px', border: '1px solid #cbd5e1', borderRadius: '6px' }} required />
+                    </div>
+                    <div style={{ marginBottom: '12px' }}>
+                      <label style={{ fontSize: '10px', textTransform: 'uppercase', color: '#64748b', display: 'block', marginBottom: '4px' }}>Remarks</label>
+                      <input name="remarks" type="text" placeholder="e.g. Double locks verified intact" style={{ width: '100%', padding: '6px', border: '1px solid #cbd5e1', borderRadius: '6px' }} />
+                    </div>
+                    <button type="submit" style={{ width: '100%', padding: '8px', backgroundColor: '#2563eb', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer' }}>
+                      Commit Access Entry
+                    </button>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeMenu === 'Election Material' && (
+          <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            <div className="card">
+              <h2 style={{ fontSize: '16px', fontWeight: '800', marginBottom: '16px' }}>District Statutory Election Material Distribution</h2>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
+                <thead>
+                  <tr style={{ borderBottom: '2px solid #cbd5e1', color: '#64748b', textAlign: 'left', fontWeight: 'bold' }}>
+                    <th style={{ padding: '10px' }}>Material Item</th>
+                    <th style={{ padding: '10px' }}>Unit Type</th>
+                    <th style={{ padding: '10px' }}>Total Allocated</th>
+                    <th style={{ padding: '10px' }}>Distributed</th>
+                    <th style={{ padding: '10px' }}>Reserve Stocks</th>
+                    <th style={{ padding: '10px' }}>Status</th>
+                    <th style={{ padding: '10px', textAlign: 'center' }}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[
+                    { item: "Electoral Roll Copies (Marked)", unit: "Sets", allocated: 2500, dist: 2347, reserve: 153, status: "Completed" },
+                    { item: "Indelible Ink Phials", unit: "Bottles", allocated: 5000, dist: 4694, reserve: 306, status: "Completed" },
+                    { item: "Statutory Green Seals", unit: "Units", allocated: 10000, dist: 9388, reserve: 612, status: "Completed" },
+                    { item: "Form 17A Voter Registers", unit: "Books", allocated: 3000, dist: 2347, reserve: 653, status: "In Progress" }
+                  ].map((row, idx) => (
+                    <tr key={idx} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                      <td style={{ padding: '10px', fontWeight: 'bold' }}>{row.item}</td>
+                      <td style={{ padding: '10px' }}>{row.unit}</td>
+                      <td style={{ padding: '10px', fontWeight: 'bold' }}>{row.allocated}</td>
+                      <td style={{ padding: '10px' }}>{row.dist}</td>
+                      <td style={{ padding: '10px' }}>{row.reserve}</td>
+                      <td style={{ padding: '10px' }}>
+                        <span style={{
+                          padding: '2px 8px', borderRadius: '12px', fontSize: '10px', fontWeight: 'bold',
+                          backgroundColor: row.status === 'Completed' ? '#dcfce7' : '#eff6ff',
+                          color: row.status === 'Completed' ? '#15803d' : '#1e40af'
+                        }}>{row.status}</span>
+                      </td>
+                      <td style={{ padding: '10px', textAlign: 'center' }}>
+                        <button
+                          onClick={() => alert(`Material dispatch order signed for ${row.item}. Dispatching reserves...`)}
+                          style={{ padding: '4px 8px', backgroundColor: '#0f172a', color: '#fff', border: 'none', borderRadius: '4px', fontSize: '10px', cursor: 'pointer' }}
+                        >Dispatch Reserves</button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {activeMenu === 'Postal Ballot Tracking' && (
+          <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            <div className="card">
+              <h2 style={{ fontSize: '16px', fontWeight: '800', marginBottom: '16px' }}>District Postal Ballot Registry</h2>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
+                <thead>
+                  <tr style={{ borderBottom: '2px solid #cbd5e1', color: '#64748b', textAlign: 'left', fontWeight: 'bold' }}>
+                    <th style={{ padding: '10px' }}>Ballot ID</th>
+                    <th style={{ padding: '10px' }}>Voter Name</th>
+                    <th style={{ padding: '10px' }}>Category</th>
+                    <th style={{ padding: '10px' }}>Received Date</th>
+                    <th style={{ padding: '10px' }}>Verification Status</th>
+                    <th style={{ padding: '10px', textAlign: 'center' }}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {postalBallots.map((pb) => (
+                    <tr key={pb.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                      <td style={{ padding: '10px', fontWeight: 'bold' }}>{pb.id}</td>
+                      <td style={{ padding: '10px', fontWeight: '600' }}>{pb.voterName}</td>
+                      <td style={{ padding: '10px' }}>{pb.type}</td>
+                      <td style={{ padding: '10px' }}>{pb.date}</td>
+                      <td style={{ padding: '10px' }}>
+                        <span style={{
+                          padding: '2px 8px', borderRadius: '12px', fontSize: '10px', fontWeight: 'bold',
+                          backgroundColor: pb.status === 'Accepted' ? '#dcfce7' : pb.status === 'Rejected' ? '#fee2e2' : '#fef9c3',
+                          color: pb.status === 'Accepted' ? '#15803d' : pb.status === 'Rejected' ? '#b91c1c' : '#854d0e'
+                        }}>{pb.status}</span>
+                      </td>
+                      <td style={{ padding: '10px', textAlign: 'center' }}>
+                        <button
+                          onClick={() => {
+                            setPostalBallots(prev => prev.map(item => item.id === pb.id ? { ...item, status: "Accepted" } : item));
+                            alert(`Postal ballot ${pb.id} verification completed & ACCEPTED.`);
+                          }}
+                          disabled={pb.status !== 'Pending Verification'}
+                          style={{ padding: '4px 8px', backgroundColor: '#16a34a', color: '#fff', border: 'none', borderRadius: '4px', fontSize: '10px', cursor: pb.status === 'Pending Verification' ? 'pointer' : 'not-allowed', opacity: pb.status === 'Pending Verification' ? 1 : 0.5, marginRight: '4px' }}
+                        >Approve</button>
+                        <button
+                          onClick={() => {
+                            setPostalBallots(prev => prev.map(item => item.id === pb.id ? { ...item, status: "Rejected" } : item));
+                            alert(`Postal ballot ${pb.id} REJECTED.`);
+                          }}
+                          disabled={pb.status !== 'Pending Verification'}
+                          style={{ padding: '4px 8px', backgroundColor: '#dc2626', color: '#fff', border: 'none', borderRadius: '4px', fontSize: '10px', cursor: pb.status === 'Pending Verification' ? 'pointer' : 'not-allowed', opacity: pb.status === 'Pending Verification' ? 1 : 0.5 }}
+                        >Reject</button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {activeMenu === 'Incident Management' && (
+          <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            <div className="card">
+              <h2 style={{ fontSize: '16px', fontWeight: '800', marginBottom: '16px' }}>District Incident Command Desk (Varanasi War Room)</h2>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
+                <thead>
+                  <tr style={{ borderBottom: '2px solid #cbd5e1', color: '#64748b', textAlign: 'left', fontWeight: 'bold' }}>
+                    <th style={{ padding: '10px' }}>ID</th>
+                    <th style={{ padding: '10px' }}>AC Division</th>
+                    <th style={{ padding: '10px' }}>Booth ID</th>
+                    <th style={{ padding: '10px' }}>Category</th>
+                    <th style={{ padding: '10px' }}>Details</th>
+                    <th style={{ padding: '10px' }}>Timestamp</th>
+                    <th style={{ padding: '10px' }}>Status</th>
+                    <th style={{ padding: '10px', textAlign: 'center' }}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {complaints.map((comp) => (
+                    <tr key={comp.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                      <td style={{ padding: '10px', fontWeight: 'bold' }}>{comp.id}</td>
+                      <td style={{ padding: '10px', fontWeight: '600' }}>{comp.ac}</td>
+                      <td style={{ padding: '10px' }}>Booth {comp.boothId}</td>
+                      <td style={{ padding: '10px', color: '#b91c1c', fontWeight: 'bold' }}>{comp.type}</td>
+                      <td style={{ padding: '10px' }}>{comp.detail}</td>
+                      <td style={{ padding: '10px' }}>{comp.time}</td>
+                      <td style={{ padding: '10px' }}>
+                        <span style={{
+                          padding: '2px 8px', borderRadius: '12px', fontSize: '10px', fontWeight: 'bold',
+                          backgroundColor: comp.status === 'Resolved' ? '#dcfce7' : comp.status === 'Investigating' ? '#eff6ff' : '#fee2e2',
+                          color: comp.status === 'Resolved' ? '#15803d' : comp.status === 'Investigating' ? '#1e40af' : '#b91c1c'
+                        }}>{comp.status}</span>
+                      </td>
+                      <td style={{ padding: '10px', textAlign: 'center' }}>
+                        <button
+                          onClick={() => {
+                            setComplaints(prev => prev.map(c => c.id === comp.id ? { ...c, status: "Investigating" } : c));
+                            alert(`Observer / QRT force dispatched to ${comp.ac} Booth ${comp.boothId}`);
+                          }}
+                          style={{ padding: '4px 8px', backgroundColor: '#0f172a', color: '#fff', border: 'none', borderRadius: '4px', fontSize: '10px', cursor: 'pointer', marginRight: '4px' }}
+                        >Dispatch Patrol</button>
+                        <button
+                          onClick={() => {
+                            setComplaints(prev => prev.map(c => c.id === comp.id ? { ...c, status: "Resolved" } : c));
+                            alert(`Incident ${comp.id} marked as resolved.`);
+                          }}
+                          style={{ padding: '4px 8px', backgroundColor: '#16a34a', color: '#fff', border: 'none', borderRadius: '4px', fontSize: '10px', cursor: 'pointer' }}
+                        >Resolve</button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {activeMenu === 'Communication Hub' && (
+          <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            <div className="card">
+              <h2 style={{ fontSize: '16px', fontWeight: '800', marginBottom: '16px' }}>District Broadcast Console</h2>
+              <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '24px' }}>
+                <div>
+                  <h3 style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '12px' }}>Push Broadcast to ROs and Sector Pools</h3>
+                  <form onSubmit={(e) => {
+                    e.preventDefault();
+                    if (!broadcastText.trim()) return;
+                    alert(`District circular broadcasted: "${broadcastText}"`);
+                    setBroadcastText("");
+                  }}>
+                    <textarea
+                      placeholder="Type priority operational guidelines to broadcast to all AC offices..."
+                      value={broadcastText}
+                      onChange={(e) => setBroadcastText(e.target.value)}
+                      style={{ width: '100%', height: '100px', padding: '10px', border: '1px solid #cbd5e1', borderRadius: '8px', fontSize: '12px', outline: 'none', marginBottom: '12px' }}
+                      required
+                    />
+                    <button type="submit" style={{ padding: '10px 20px', backgroundColor: '#2563eb', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer' }}>
+                      Publish Broadcast Directives ⚡
+                    </button>
+                  </form>
+                </div>
+
+                <div style={{ backgroundColor: '#f8fafc', padding: '20px', borderRadius: '12px', border: '1px solid #cbd5e1', fontSize: '12px' }}>
+                  <h3 style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '12px' }}>Hotline Quick Dials</h3>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', borderBottom: '1px solid #e2e8f0' }}>
+                      <span>State CEO Command Desk</span>
+                      <button onClick={() => handleTriggerCall("State CEO Desk", "+91 11-2301-ECI", false)} style={{ padding: '3px 8px', backgroundColor: '#0f172a', color: '#fff', border: 'none', borderRadius: '4px', fontSize: '10px', cursor: 'pointer' }}>Call</button>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', borderBottom: '1px solid #e2e8f0' }}>
+                      <span>AC-1 Returning Officer (Varanasi N)</span>
+                      <button onClick={() => handleTriggerCall("RO Varanasi N", "+91 94530-XXXX", false)} style={{ padding: '3px 8px', backgroundColor: '#0f172a', color: '#fff', border: 'none', borderRadius: '4px', fontSize: '10px', cursor: 'pointer' }}>Call</button>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0' }}>
+                      <span>District SP (Police Coordinator)</span>
+                      <button onClick={() => handleTriggerCall("District SP Varanasi", "+91 94544-XXXX", false)} style={{ padding: '3px 8px', backgroundColor: '#0f172a', color: '#fff', border: 'none', borderRadius: '4px', fontSize: '10px', cursor: 'pointer' }}>Call</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeMenu === 'Turnout Analytics' && (
+          <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            <div className="card">
+              <h2 style={{ fontSize: '16px', fontWeight: '800', marginBottom: '16px' }}>Varanasi Assembly Turnout split</h2>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                {districtBooths.map((ac) => (
+                  <div key={ac.id} style={{ backgroundColor: '#f8fafc', padding: '12px 16px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', fontSize: '12px' }}>
+                      <span style={{ fontWeight: 'bold' }}>{ac.acName} &bull; <span style={{ color: '#64748b' }}>{ac.totalBooths} Polling Booths</span></span>
+                      <span style={{ color: '#2563eb', fontWeight: 'bold' }}>{ac.turnout} Turnout</span>
+                    </div>
+                    <div style={{ height: '8px', width: '100%', backgroundColor: '#e2e8f0', borderRadius: '4px', overflow: 'hidden' }}>
+                      <div style={{
+                        height: '100%',
+                        width: ac.turnout,
+                        backgroundColor: '#2563eb',
+                        transition: 'width 0.5s ease-in-out'
+                      }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeMenu === 'Reports & Analytics' && (
+          <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            <div className="card">
+              <h2 style={{ fontSize: '16px', fontWeight: '800', marginBottom: '16px' }}>District Statutory Forms & Reports Desk</h2>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+                {[
+                  { title: "District Turnout Consolidated", desc: "AC-wise turnout registry & percentages", form: "DEO-Form 17C Summary" },
+                  { title: "Strong Room Seal audit", desc: "Visitor logs & double lock signoff certificates", form: "DEO-Form SR" },
+                  { title: "Randomization verification Log", desc: "First & second randomisation reports", form: "DEO-Form EVMR" },
+                  { title: "Security Dispatch checklist", desc: "CAPF & police personnel assignments", form: "DEO-Form Sec" }
+                ].map((rep, idx) => (
+                  <div key={idx} style={{ backgroundColor: '#f8fafc', padding: '16px', borderRadius: '12px', border: '1px solid #cbd5e1', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: '120px' }}>
+                    <div>
+                      <span style={{ fontSize: '9px', backgroundColor: '#e2e8f0', padding: '2px 6px', borderRadius: '4px', fontWeight: 'bold', color: '#475569' }}>{rep.form}</span>
+                      <strong style={{ display: 'block', fontSize: '13px', marginTop: '6px', color: '#0f172a' }}>{rep.title}</strong>
+                      <p style={{ fontSize: '10px', color: '#64748b', margin: '4px 0 0' }}>{rep.desc}</p>
+                    </div>
+                    <button
+                      onClick={() => alert(`Exporting ${rep.title} file...`)}
+                      style={{ border: '1px solid #cbd5e1', backgroundColor: '#fff', borderRadius: '6px', padding: '4px', fontSize: '10px', fontWeight: 'bold', cursor: 'pointer', color: '#2563eb' }}
+                    >
+                      Export PDF / Excel
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeMenu === 'Checklist & Compliance' && (
+          <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            <div className="card">
+              <h2 style={{ fontSize: '16px', fontWeight: '800', marginBottom: '16px' }}>District Statutory Compliance checklist</h2>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                {[
+                  { check: "Establishment of double-lock strong room guards & CCTV synchronization", status: "Done", date: "2026-06-18" },
+                  { check: "Second EVM Randomisation Commits in presence of party candidate agents", status: "Done", date: "2026-06-19" },
+                  { check: "Distribution of marked copies of electoral rolls and ink phials to ROs", status: "Done", date: "2026-06-19" },
+                  { check: "Verification of GPS transponders in all dispatch trucks and reserve pools", status: "Pending Verification", date: "Today" }
+                ].map((item, idx) => (
+                  <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#f8fafc', padding: '12px 16px', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
+                    <div style={{ fontSize: '12px', fontWeight: 'bold', color: '#1e293b' }}>
+                      {idx + 1}. {item.check}
+                    </div>
+                    <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                      <span style={{ fontSize: '10px', color: '#64748b' }}>Due: {item.date}</span>
+                      <span style={{
+                        padding: '2px 8px', borderRadius: '12px', fontSize: '10px', fontWeight: 'bold',
+                        backgroundColor: item.status === 'Done' ? '#dcfce7' : '#fef9c3',
+                        color: item.status === 'Done' ? '#15803d' : '#854d0e'
+                      }}>{item.status}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeMenu === 'RO Management' && (
+          <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            <div className="card">
+              <h2 style={{ fontSize: '16px', fontWeight: '800', marginBottom: '16px' }}>District Returning Officers Roster</h2>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
+                <thead>
+                  <tr style={{ borderBottom: '2px solid #cbd5e1', color: '#64748b', textAlign: 'left', fontWeight: 'bold' }}>
+                    <th style={{ padding: '10px' }}>AC ID</th>
+                    <th style={{ padding: '10px' }}>Constituency Division</th>
+                    <th style={{ padding: '10px' }}>RO Administrator</th>
+                    <th style={{ padding: '10px' }}>Contact Number</th>
+                    <th style={{ padding: '10px' }}>Sync Connection</th>
+                    <th style={{ padding: '10px', textAlign: 'center' }}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[
+                    { id: "AC-1", name: "Varanasi North", officer: "Shri. Rajesh Kumar", phone: "+91 94530-XXXX", sync: "Online" },
+                    { id: "AC-2", name: "Varanasi South", officer: "Shri. Sunita Devi", phone: "+91 94532-XXXX", sync: "Online" },
+                    { id: "AC-3", name: "Varanasi Cantt", officer: "Shri. Vijay Malhotra", phone: "+91 94534-XXXX", sync: "Online" },
+                    { id: "AC-4", name: "Rohania", officer: "Shri. Anita Sen", phone: "+91 94536-XXXX", sync: "Online" }
+                  ].map((row, idx) => (
+                    <tr key={idx} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                      <td style={{ padding: '10px', fontWeight: 'bold' }}>{row.id}</td>
+                      <td style={{ padding: '10px', fontWeight: '600' }}>{row.name}</td>
+                      <td style={{ padding: '10px' }}>{row.officer}</td>
+                      <td style={{ padding: '10px' }}>{row.phone}</td>
+                      <td style={{ padding: '10px', color: '#16a34a', fontWeight: 'bold' }}>{row.sync}</td>
+                      <td style={{ padding: '10px', textAlign: 'center' }}>
+                        <button
+                          onClick={() => handleTriggerCall(row.officer, row.phone, false)}
+                          style={{ padding: '4px 8px', backgroundColor: '#0f172a', color: '#fff', border: 'none', borderRadius: '4px', fontSize: '10px', cursor: 'pointer' }}
+                        >Connect Hotline</button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {activeMenu === 'System Settings' && (
+          <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            <div className="card">
+              <h2 style={{ fontSize: '16px', fontWeight: '800', marginBottom: '20px' }}>District Operations Configuration</h2>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '24px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <strong style={{ display: 'block', fontSize: '13px' }}>Mandatory Live Webcasting</strong>
+                      <span style={{ fontSize: '11px', color: '#64748b' }}>Force CCTV stream encoding from sensitive booths</span>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={districtSettings.webcastEnabled}
+                      onChange={(e) => setDistrictSettings(prev => ({ ...prev, webcastEnabled: e.target.checked }))}
+                      style={{ width: '20px', height: '20px', cursor: 'pointer' }}
+                    />
+                  </div>
+
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #f1f5f9', paddingTop: '16px' }}>
+                    <div>
+                      <strong style={{ display: 'block', fontSize: '13px' }}>Enforce Truck GPS Sync</strong>
+                      <span style={{ fontSize: '11px', color: '#64748b' }}>Require active GPS transponders in EVM dispatch vehicles</span>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={districtSettings.forceGPSRequired}
+                      onChange={(e) => setDistrictSettings(prev => ({ ...prev, forceGPSRequired: e.target.checked }))}
+                      style={{ width: '20px', height: '20px', cursor: 'pointer' }}
+                    />
+                  </div>
+
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #f1f5f9', paddingTop: '16px' }}>
+                    <div>
+                      <strong style={{ display: 'block', fontSize: '13px' }}>Observer Lock Signoff</strong>
+                      <span style={{ fontSize: '11px', color: '#64748b' }}>Require external observer validation to seals matrix</span>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={districtSettings.requireObserverSignoff}
+                      onChange={(e) => setDistrictSettings(prev => ({ ...prev, requireObserverSignoff: e.target.checked }))}
+                      style={{ width: '20px', height: '20px', cursor: 'pointer' }}
+                    />
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', borderLeft: '1px solid #e2e8f0', paddingLeft: '24px' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', marginBottom: '6px' }}>Auto Telemetry Update Sync rate</label>
+                    <select
+                      value={districtSettings.autoAlertInterval}
+                      onChange={(e) => setDistrictSettings(prev => ({ ...prev, autoAlertInterval: parseInt(e.target.value) }))}
+                      style={{ padding: '8px', width: '100%', borderRadius: '6px', border: '1px solid #cbd5e1' }}
+                    >
+                      <option value="5">Every 5 Seconds</option>
+                      <option value="10">Every 10 Seconds</option>
+                      <option value="30">Every 30 Seconds</option>
+                      <option value="60">Every 60 Seconds</option>
+                    </select>
+                  </div>
+
+                  <button
+                    onClick={() => alert("District operation settings successfully committed local storage.")}
+                    style={{ padding: '12px', backgroundColor: '#2563eb', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', marginTop: '20px' }}
+                  >
+                    Commit Configuration
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
 
         {/* DIALOG PHONE OVERLAY */}
         {callModal.open && (

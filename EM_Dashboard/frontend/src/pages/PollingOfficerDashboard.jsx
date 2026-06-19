@@ -42,6 +42,32 @@ export default function PollingOfficerDashboard({ user, onLogout }) {
     { id: "XXX45", type: "VVPAT Display Issue", citizen: "Citizen ID: XXX45", time: "10:45 AM", status: "Resolved" }
   ]);
 
+  // Voter roll mock database and states
+  const [voterRoll, setVoterRoll] = useState([
+    { epic: "WNV0123456", name: "Rahul Sharma", age: 34, gender: "Male", relativeName: "Madan Sharma", address: "H.No. 45, Sector 4", status: "Not Voted", po1_verified: false, po2_inked: false, po3_voted: false },
+    { epic: "WNV7890123", name: "Priya Patel", age: 29, gender: "Female", relativeName: "Kishore Patel", address: "Flat 202, Shiv Darshan", status: "Voted", po1_verified: true, po2_inked: true, po3_voted: true },
+    { epic: "WNV4567890", name: "Amit Verma", age: 45, gender: "Male", relativeName: "Ramswaroop Verma", address: "H.No. 12, Ward 12", status: "Not Voted", po1_verified: false, po2_inked: false, po3_voted: false },
+    { epic: "WNV3210987", name: "Sunita Deshmukh", age: 62, gender: "Female", relativeName: "Sanjay Deshmukh", address: "H.No. 89-A, Near School", status: "Not Voted", po1_verified: false, po2_inked: false, po3_voted: false },
+    { epic: "WNV6543210", name: "Vikram Singh", age: 22, gender: "Male", relativeName: "Rajendra Singh", address: "Plot 7, Gokuldham", status: "Not Voted", po1_verified: false, po2_inked: false, po3_voted: false },
+    { epic: "WNV9876543", name: "Anjali Gupta", age: 31, gender: "Female", relativeName: "Vijay Gupta", address: "Flat 304, Green Heights", status: "Voted", po1_verified: true, po2_inked: true, po3_voted: true }
+  ]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchFilter, setSearchFilter] = useState('All');
+  const [currentVoter, setCurrentVoter] = useState(null);
+
+  // Accessibility requests list
+  const [accessibilityRequests, setAccessibilityRequests] = useState([
+    { id: 1, voterName: "Ramesh Sen", epic: "WNV1122334", type: "Wheelchair Request", status: "Provided", time: "09:15 AM" },
+    { id: 2, voterName: "Savitri Devi", epic: "WNV5566778", type: "Priority Entry (Senior Citizen)", status: "Pending", time: "11:30 AM" }
+  ]);
+
+  // Messages log
+  const [poMessagesList, setPoMessagesList] = useState([
+    { sender: 'Presiding Officer', text: "Please check the drinking water arrangement outside the booth. Report once verified.", time: "11:20 AM" },
+    { sender: 'You', text: "Acknowledged, checking now.", time: "11:22 AM" }
+  ]);
+  const [messageInputText, setMessageInputText] = useState('');
+
   // Presiding Officer Messages & Actions
   const [poMessage, setPoMessage] = useState({
     sender: "Presiding Officer",
@@ -401,409 +427,1218 @@ export default function PollingOfficerDashboard({ user, onLogout }) {
             </div>
           </div>
         </header>
-
         {/* WORKSPACE CONTENT */}
         <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
           
-          {/* Main Grid Layout: Row 1 */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 1.3fr', gap: '24px' }}>
-            
-            {/* Section 1: Your Role & Status */}
-            <div className="card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-              <div className="panel-header">
-                <h2 style={{ fontSize: '14px', fontWeight: '800' }}>Your Role & Status</h2>
-              </div>
-              
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', margin: '16px 0' }}>
+          {activeMenu === 'Dashboard' && (
+            <>
+              {/* Main Grid Layout: Row 1 */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 1.3fr', gap: '24px' }}>
                 
-                <div style={{ padding: '12px', borderRadius: '10px', backgroundColor: '#eff6ff', border: '1px solid #bfdbfe', textAlign: 'center' }}>
-                  <strong style={{ fontSize: '12px', display: 'block', color: '#1e3a8a' }}>PO-1</strong>
-                  <span style={{ fontSize: '10px', color: '#475569', display: 'block', margin: '4px 0 8px' }}>Verification</span>
-                  <span style={{ fontSize: '9px', fontWeight: 'bold', color: '#16a34a', backgroundColor: '#dcfce7', padding: '2px 6px', borderRadius: '8px' }}>Active</span>
-                </div>
-
-                <div style={{ padding: '12px', borderRadius: '10px', backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0', textAlign: 'center' }}>
-                  <strong style={{ fontSize: '12px', display: 'block', color: '#14532d' }}>PO-2</strong>
-                  <span style={{ fontSize: '10px', color: '#475569', display: 'block', margin: '4px 0 8px' }}>Ink & Entry</span>
-                  <span style={{ fontSize: '9px', fontWeight: 'bold', color: '#15803d', backgroundColor: '#dcfce7', padding: '2px 6px', borderRadius: '8px' }}>Completed</span>
-                </div>
-
-                <div style={{ padding: '12px', borderRadius: '10px', backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', textAlign: 'center' }}>
-                  <strong style={{ fontSize: '12px', display: 'block', color: '#475569' }}>PO-3</strong>
-                  <span style={{ fontSize: '10px', color: '#475569', display: 'block', margin: '4px 0 8px' }}>EVM Operator</span>
-                  <span style={{ fontSize: '9px', fontWeight: 'bold', color: '#64748b', backgroundColor: '#f1f5f9', padding: '2px 6px', borderRadius: '8px' }}>Upcoming</span>
-                </div>
-              </div>
-
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #f1f5f9', paddingTop: '12px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: '#475569' }}>
-                  <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#22c55e' }} />
-                  <span>Status: <strong>Present</strong> (Since 07:00 AM)</span>
-                </div>
-                <button
-                  onClick={() => setBreakStatus(!breakStatus)}
-                  style={{
-                    backgroundColor: breakStatus ? '#ea580c' : '#f1f5f9',
-                    color: breakStatus ? '#fff' : '#475569',
-                    border: 'none',
-                    borderRadius: '8px',
-                    padding: '6px 12px',
-                    fontSize: '11px',
-                    fontWeight: 'bold',
-                    cursor: 'pointer'
-                  }}
-                >
-                  {breakStatus ? 'End Break' : 'Mark Break'}
-                </button>
-              </div>
-            </div>
-
-            {/* Section 2: Progress Overview */}
-            <div className="card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-              <div className="panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <h2 style={{ fontSize: '14px', fontWeight: '800' }}>Today's Progress</h2>
-                <span style={{ fontSize: '11px', color: '#2563eb', cursor: 'pointer', fontWeight: '700' }} onClick={() => alert("Loading full report...")}>View Full Turnout Report &rarr;</span>
-              </div>
-
-              <div style={{ display: 'flex', alignItems: 'center', gap: '20px', margin: '16px 0' }}>
-                {/* 42% progress ring */}
-                <div style={{ position: 'relative', width: '85px', height: '85px', flexShrink: 0 }}>
-                  <svg width="85" height="85" viewBox="0 0 36 36" style={{ transform: 'rotate(-90deg)' }}>
-                    <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="#f1f5f9" strokeWidth="3" />
-                    <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="#22c55e" strokeWidth="3.5" 
-                            strokeDasharray="42 100" strokeDashoffset="0" />
-                  </svg>
-                  <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                    <strong style={{ fontSize: '16px', color: '#0f172a', lineHeight: 1 }}>42%</strong>
-                    <span style={{ fontSize: '8px', color: '#64748b', fontWeight: 'bold' }}>Turnout</span>
+                {/* Section 1: Your Role & Status */}
+                <div className="card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                  <div className="panel-header">
+                    <h2 style={{ fontSize: '14px', fontWeight: '800' }}>Your Role & Status</h2>
                   </div>
-                </div>
+                  
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', margin: '16px 0' }}>
+                    
+                    <div style={{ padding: '12px', borderRadius: '10px', backgroundColor: '#eff6ff', border: '1px solid #bfdbfe', textAlign: 'center' }}>
+                      <strong style={{ fontSize: '12px', display: 'block', color: '#1e3a8a' }}>PO-1</strong>
+                      <span style={{ fontSize: '10px', color: '#475569', display: 'block', margin: '4px 0 8px' }}>Verification</span>
+                      <span style={{ fontSize: '9px', fontWeight: 'bold', color: '#16a34a', backgroundColor: '#dcfce7', padding: '2px 6px', borderRadius: '8px' }}>Active</span>
+                    </div>
 
-                <div style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '11px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#64748b' }}>
-                      <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#22c55e' }} /> Processed
-                    </span>
-                    <strong style={{ color: '#0f172a' }}>{votersProcessed}</strong>
+                    <div style={{ padding: '12px', borderRadius: '10px', backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0', textAlign: 'center' }}>
+                      <strong style={{ fontSize: '12px', display: 'block', color: '#14532d' }}>PO-2</strong>
+                      <span style={{ fontSize: '10px', color: '#475569', display: 'block', margin: '4px 0 8px' }}>Ink & Entry</span>
+                      <span style={{ fontSize: '9px', fontWeight: 'bold', color: '#15803d', backgroundColor: '#dcfce7', padding: '2px 6px', borderRadius: '8px' }}>Active</span>
+                    </div>
+
+                    <div style={{ padding: '12px', borderRadius: '10px', backgroundColor: '#fffbeb', border: '1px solid #fde68a', textAlign: 'center' }}>
+                      <strong style={{ fontSize: '12px', display: 'block', color: '#b45309' }}>PO-3</strong>
+                      <span style={{ fontSize: '10px', color: '#475569', display: 'block', margin: '4px 0 8px' }}>EVM Operator</span>
+                      <span style={{ fontSize: '9px', fontWeight: 'bold', color: '#d97706', backgroundColor: '#fef3c7', padding: '2px 6px', borderRadius: '8px' }}>Active</span>
+                    </div>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#64748b' }}>
-                      <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#3b82f6' }} /> Yet to Process
-                    </span>
-                    <strong style={{ color: '#0f172a' }}>{1287 - votersProcessed}</strong>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #f1f5f9', paddingTop: '4px' }}>
-                    <span style={{ fontWeight: 'bold', color: '#475569' }}>Total Electors</span>
-                    <strong style={{ color: '#0f172a' }}>1,287</strong>
-                  </div>
-                </div>
-              </div>
-            </div>
 
-            {/* Section 3: Hourly Processing */}
-            <div className="card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-              <div className="panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <h2 style={{ fontSize: '14px', fontWeight: '800' }}>Hourly Processing Rate</h2>
-                <span style={{ fontSize: '11px', color: '#2563eb', cursor: 'pointer', fontWeight: '700' }} onClick={() => alert("Loading analytics...")}>View Analytics</span>
-              </div>
-
-              <div style={{ height: '100px', position: 'relative', margin: '12px 0' }}>
-                <svg width="100%" height="100%" viewBox="0 0 300 100" style={{ overflow: 'visible' }}>
-                  <line x1="0" y1="20" x2="300" y2="20" stroke="#f1f5f9" strokeWidth="1" />
-                  <line x1="0" y1="50" x2="300" y2="50" stroke="#f1f5f9" strokeWidth="1" />
-                  <line x1="0" y1="80" x2="300" y2="80" stroke="#f1f5f9" strokeWidth="1" />
-
-                  {/* Voters Processed hourly path */}
-                  <path d="M 10 90 L 50 82 L 90 70 L 130 50 L 170 30" fill="none" stroke="#2563eb" strokeWidth="2.5" />
-                  <circle cx="10" cy="90" r="3" fill="#2563eb" />
-                  <circle cx="50" cy="82" r="3" fill="#2563eb" />
-                  <circle cx="90" cy="70" r="3" fill="#2563eb" />
-                  <circle cx="130" cy="50" r="3" fill="#2563eb" />
-                  <circle cx="170" cy="30" r="4.5" fill="#2563eb" stroke="#fff" strokeWidth="1.5" />
-
-                  <path d="M 170 30 L 210 30 L 250 30 L 290 30" fill="none" stroke="#94a3b8" strokeWidth="1.5" strokeDasharray="3,3" />
-
-                  <rect x="155" y="5" width="30" height="15" rx="3" fill="#1e3a8a" />
-                  <text x="170" y="15" fill="#fff" fontSize="8" fontWeight="bold" textAnchor="middle">82</text>
-                </svg>
-              </div>
-
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '8px', color: '#94a3b8', fontWeight: 'bold' }}>
-                <span>8 AM (12)</span>
-                <span>9 AM (28)</span>
-                <span>10 AM (55)</span>
-                <span>11 AM (82)</span>
-                <span>12 PM</span>
-                <span>1 PM</span>
-                <span>2 PM</span>
-                <span>3 PM</span>
-                <span>4 PM</span>
-                <span>5 PM</span>
-              </div>
-            </div>
-
-          </div>
-
-          {/* Main Grid Layout: Row 2 */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 1.3fr', gap: '24px' }}>
-            
-            {/* Section 4: Assigned Complaints */}
-            <div className="card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-              <div>
-                <div className="panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                  <h2 style={{ fontSize: '14px', fontWeight: '800' }}>Assigned Complaints</h2>
-                  <span style={{ fontSize: '11px', color: '#2563eb', cursor: 'pointer', fontWeight: '700' }} onClick={() => alert("Loading all complaints...")}>View All</span>
-                </div>
-
-                {/* Filter Tabs */}
-                <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
-                  {['All', 'In Progress', 'Resolved'].map(tab => (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #f1f5f9', paddingTop: '12px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: '#475569' }}>
+                      <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#22c55e' }} />
+                      <span>Status: <strong>Present</strong> (Since 07:00 AM)</span>
+                    </div>
                     <button
-                      key={tab}
-                      onClick={() => setComplaintTab(tab)}
+                      onClick={() => setBreakStatus(!breakStatus)}
                       style={{
-                        padding: '4px 10px',
-                        fontSize: '10px',
-                        borderRadius: '6px',
-                        fontWeight: 'bold',
+                        backgroundColor: breakStatus ? '#ea580c' : '#f1f5f9',
+                        color: breakStatus ? '#fff' : '#475569',
                         border: 'none',
-                        cursor: 'pointer',
-                        backgroundColor: complaintTab === tab ? '#eff6ff' : 'transparent',
-                        color: complaintTab === tab ? '#2563eb' : '#64748b'
+                        borderRadius: '8px',
+                        padding: '6px 12px',
+                        fontSize: '11px',
+                        fontWeight: 'bold',
+                        cursor: 'pointer'
                       }}
                     >
-                      {tab} {tab === 'All' ? '(2)' : tab === 'In Progress' ? '(1)' : '(5)'}
+                      {breakStatus ? 'End Break' : 'Mark Break'}
                     </button>
+                  </div>
+                </div>
+
+                {/* Section 2: Progress Overview */}
+                <div className="card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                  <div className="panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <h2 style={{ fontSize: '14px', fontWeight: '800' }}>Today's Progress</h2>
+                    <span style={{ fontSize: '11px', color: '#2563eb', cursor: 'pointer', fontWeight: '700' }} onClick={() => setActiveMenu('Performance')}>View Full Turnout Report &rarr;</span>
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '20px', margin: '16px 0' }}>
+                    {/* 42% progress ring */}
+                    <div style={{ position: 'relative', width: '85px', height: '85px', flexShrink: 0 }}>
+                      <svg width="85" height="85" viewBox="0 0 36 36" style={{ transform: 'rotate(-90deg)' }}>
+                        <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="#f1f5f9" strokeWidth="3" />
+                        <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="#22c55e" strokeWidth="3.5" 
+                                strokeDasharray="42 100" strokeDashoffset="0" />
+                      </svg>
+                      <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                        <strong style={{ fontSize: '16px', color: '#0f172a', lineHeight: 1 }}>42%</strong>
+                        <span style={{ fontSize: '8px', color: '#64748b', fontWeight: 'bold' }}>Turnout</span>
+                      </div>
+                    </div>
+
+                    <div style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '11px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#64748b' }}>
+                          <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#22c55e' }} /> Processed
+                        </span>
+                        <strong style={{ color: '#0f172a' }}>{votersProcessed}</strong>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#64748b' }}>
+                          <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#3b82f6' }} /> Yet to Process
+                        </span>
+                        <strong style={{ color: '#0f172a' }}>{1287 - votersProcessed}</strong>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #f1f5f9', paddingTop: '4px' }}>
+                        <span style={{ fontWeight: 'bold', color: '#475569' }}>Total Electors</span>
+                        <strong style={{ color: '#0f172a' }}>1,287</strong>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Section 3: Hourly Processing */}
+                <div className="card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                  <div className="panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <h2 style={{ fontSize: '14px', fontWeight: '800' }}>Hourly Processing Rate</h2>
+                    <span style={{ fontSize: '11px', color: '#2563eb', cursor: 'pointer', fontWeight: '700' }} onClick={() => setActiveMenu('Performance')}>View Analytics</span>
+                  </div>
+
+                  <div style={{ height: '100px', position: 'relative', margin: '12px 0' }}>
+                    <svg width="100%" height="100%" viewBox="0 0 300 100" style={{ overflow: 'visible' }}>
+                      <line x1="0" y1="20" x2="300" y2="20" stroke="#f1f5f9" strokeWidth="1" />
+                      <line x1="0" y1="50" x2="300" y2="50" stroke="#f1f5f9" strokeWidth="1" />
+                      <line x1="0" y1="80" x2="300" y2="80" stroke="#f1f5f9" strokeWidth="1" />
+
+                      {/* Voters Processed hourly path */}
+                      <path d="M 10 90 L 50 82 L 90 70 L 130 50 L 170 30" fill="none" stroke="#2563eb" strokeWidth="2.5" />
+                      <circle cx="10" cy="90" r="3" fill="#2563eb" />
+                      <circle cx="50" cy="82" r="3" fill="#2563eb" />
+                      <circle cx="90" cy="70" r="3" fill="#2563eb" />
+                      <circle cx="130" cy="50" r="3" fill="#2563eb" />
+                      <circle cx="170" cy="30" r="4.5" fill="#2563eb" stroke="#fff" strokeWidth="1.5" />
+
+                      <path d="M 170 30 L 210 30 L 250 30 L 290 30" fill="none" stroke="#94a3b8" strokeWidth="1.5" strokeDasharray="3,3" />
+
+                      <rect x="155" y="5" width="30" height="15" rx="3" fill="#1e3a8a" />
+                      <text x="170" y="15" fill="#fff" fontSize="8" fontWeight="bold" textAnchor="middle">82</text>
+                    </svg>
+                  </div>
+
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '8px', color: '#94a3b8', fontWeight: 'bold' }}>
+                    <span>8 AM (12)</span>
+                    <span>9 AM (28)</span>
+                    <span>10 AM (55)</span>
+                    <span>11 AM (82)</span>
+                    <span>12 PM</span>
+                    <span>1 PM</span>
+                    <span>2 PM</span>
+                    <span>3 PM</span>
+                    <span>4 PM</span>
+                    <span>5 PM</span>
+                  </div>
+                </div>
+
+              </div>
+
+              {/* Main Grid Layout: Row 2 */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 1.3fr', gap: '24px' }}>
+                
+                {/* Section 4: Assigned Complaints */}
+                <div className="card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                  <div>
+                    <div className="panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                      <h2 style={{ fontSize: '14px', fontWeight: '800' }}>Assigned Complaints</h2>
+                      <span style={{ fontSize: '11px', color: '#2563eb', cursor: 'pointer', fontWeight: '700' }} onClick={() => setActiveMenu('Assigned Complaints')}>View All</span>
+                    </div>
+
+                    {/* Filter Tabs */}
+                    <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+                      {['All', 'In Progress', 'Resolved'].map(tab => (
+                        <button
+                          key={tab}
+                          onClick={() => setComplaintTab(tab)}
+                          style={{
+                            padding: '4px 10px',
+                            fontSize: '10px',
+                            borderRadius: '6px',
+                            fontWeight: 'bold',
+                            border: 'none',
+                            cursor: 'pointer',
+                            backgroundColor: complaintTab === tab ? '#eff6ff' : 'transparent',
+                            color: complaintTab === tab ? '#2563eb' : '#64748b'
+                          }}
+                        >
+                          {tab}
+                        </button>
+                      ))}
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                      {complaints
+                        .filter(c => complaintTab === 'All' || c.status === complaintTab)
+                        .map(item => (
+                          <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px', border: '1px solid #f1f5f9', borderRadius: '8px' }}>
+                            <div>
+                              <strong style={{ fontSize: '12px', display: 'block', color: '#0f172a' }}>{item.type}</strong>
+                              <span style={{ fontSize: '10px', color: '#64748b' }}>{item.citizen} &bull; {item.time}</span>
+                            </div>
+                            <span style={{
+                              fontSize: '9px',
+                              fontWeight: 'bold',
+                              padding: '2px 8px',
+                              borderRadius: '8px',
+                              backgroundColor: item.status === 'Resolved' ? '#dcfce7' : '#ffedd5',
+                              color: item.status === 'Resolved' ? '#15803d' : '#ea580c'
+                            }}>{item.status}</span>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+
+                  <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: '10px', marginTop: '12px' }}>
+                    <span style={{ fontSize: '11px', color: '#2563eb', cursor: 'pointer', fontWeight: 'bold' }} onClick={() => setActiveMenu('Assigned Complaints')}>Go to Complaints &rarr;</span>
+                  </div>
+                </div>
+
+                {/* Section 5: Presiding Officer Communication */}
+                <div className="card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                  <div>
+                    <div className="panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                      <h2 style={{ fontSize: '14px', fontWeight: '800' }}>Message from Presiding Officer</h2>
+                      <span style={{ fontSize: '11px', color: '#2563eb', cursor: 'pointer', fontWeight: '700' }} onClick={() => setActiveMenu('Messages from PO')}>View All</span>
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', padding: '12px', backgroundColor: '#f8fafc', borderRadius: '10px', border: '1px solid #e2e8f0', marginBottom: '12px' }}>
+                      <div style={{ width: '28px', height: '28px', borderRadius: '50%', backgroundColor: '#3b82f6', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '10px' }}>
+                        PO
+                      </div>
+                      <div style={{ flexGrow: 1 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <span style={{ fontSize: '11px', fontWeight: 'bold', color: '#0f172a' }}>{poMessage.sender}</span>
+                          <span style={{ fontSize: '9px', color: '#94a3b8' }}>{poMessage.time}</span>
+                        </div>
+                        <p style={{ fontSize: '11px', color: '#475569', margin: '4px 0 0' }}>{poMessage.text}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {poMessage.status === 'New' && (
+                      <button
+                        onClick={handleAcknowledgePoMessage}
+                        style={{
+                          width: '100%',
+                          backgroundColor: '#2563eb',
+                          color: '#fff',
+                          border: 'none',
+                          borderRadius: '8px',
+                          padding: '10px',
+                          fontSize: '11px',
+                          fontWeight: 'bold',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        Acknowledge & Accept
+                      </button>
+                    )}
+                    {poMessage.status !== 'Completed' && (
+                      <button
+                        onClick={handleCompletePoMessage}
+                        style={{
+                          width: '100%',
+                          backgroundColor: '#fff',
+                          border: '1px solid #22c55e',
+                          color: '#22c55e',
+                          borderRadius: '8px',
+                          padding: '10px',
+                          fontSize: '11px',
+                          fontWeight: 'bold',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        Mark as Completed
+                      </button>
+                    )}
+                    {poMessage.status === 'Completed' && (
+                      <span style={{ textAlign: 'center', fontSize: '11px', color: '#16a34a', fontWeight: 'bold' }}>✓ Task Completed</span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Section 6: Quick Actions */}
+                <div className="card">
+                  <div className="panel-header" style={{ marginBottom: '12px' }}>
+                    <h2 style={{ fontSize: '14px', fontWeight: '800' }}>Quick Actions</h2>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px' }}>
+                    {[
+                      { name: 'Search Voter', icon: <Search size={18} />, color: '#3b82f6', bg: '#eff6ff', tab: 'Voter Search' },
+                      { name: 'Verify Voter', icon: <UserCheck size={18} />, color: '#3b82f6', bg: '#eff6ff', tab: 'PO-1 (Verification)' },
+                      { name: 'Mark Inked', icon: <Droplets size={18} />, color: '#f97316', bg: '#fff7ed', tab: 'PO-2 (Ink & Entry)' },
+                      { name: 'Enable Vote', icon: <CheckSquare size={18} />, color: '#3b82f6', bg: '#eff6ff', tab: 'PO-3 (EVM Operator)' },
+                      { name: 'Accessibility Assistance', icon: <Accessibility size={18} />, color: '#3b82f6', bg: '#eff6ff', tab: 'Accessibility Support' },
+                      { name: 'Report Issue', icon: <AlertTriangle size={18} />, color: '#ef4444', bg: '#fef2f2', tab: 'Assigned Complaints' },
+                      { name: 'Call Presiding Officer', icon: <PhoneCall size={18} />, color: '#10b981', bg: '#ecfdf5', action: 'Call Presiding Officer' },
+                      { name: 'View Checklist', icon: <List size={18} />, color: '#3b82f6', bg: '#eff6ff', tab: 'Dashboard' }
+                    ].map((act, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => {
+                          if (act.tab) setActiveMenu(act.tab);
+                          else if (act.action) handleQuickAction(act.action);
+                        }}
+                        style={{
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '6px',
+                          padding: '10px 4px',
+                          borderRadius: '10px',
+                          border: '1px solid transparent',
+                          backgroundColor: act.bg,
+                          color: act.color,
+                          cursor: 'pointer',
+                          textAlign: 'center'
+                        }}
+                      >
+                        {act.icon}
+                        <span style={{ fontSize: '9px', fontWeight: '700', lineHeight: 1.1, color: '#1e293b' }}>{act.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+              </div>
+
+              {/* Main Grid Layout: Row 3 */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 1.3fr', gap: '24px' }}>
+                
+                {/* Section 7: Performance Summary */}
+                <div className="card">
+                  <div className="panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                    <h2 style={{ fontSize: '14px', fontWeight: '800' }}>Performance Summary</h2>
+                    <span style={{ fontSize: '11px', color: '#2563eb', cursor: 'pointer', fontWeight: '700' }} onClick={() => setActiveMenu('Performance')}>View Details</span>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
+                    {[
+                      { label: "Voters Processed", pct: 91, color: "#22c55e" },
+                      { label: "Verification Speed", pct: 85, color: "#22c55e" },
+                      { label: "Accuracy Rate", pct: 90, color: "#22c55e" },
+                      { label: "Task Completion", pct: 88, color: "#22c55e" }
+                    ].map((perf, idx) => (
+                      <div key={idx} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                        <div style={{ position: 'relative', width: '50px', height: '50px' }}>
+                          <svg width="50" height="50" viewBox="0 0 36 36" style={{ transform: 'rotate(-90deg)' }}>
+                            <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="#f1f5f9" strokeWidth="2.5" />
+                            <circle cx="18" cy="18" r="15.915" fill="transparent" stroke={perf.color} strokeWidth="3" 
+                                    strokeDasharray={`${perf.pct} 100`} strokeDashoffset="0" />
+                          </svg>
+                          <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <strong style={{ fontSize: '10px', color: '#0f172a' }}>{perf.pct}%</strong>
+                          </div>
+                        </div>
+                        <span style={{ fontSize: '8px', color: '#64748b', textAlign: 'center', marginTop: '6px', fontWeight: 'bold', lineHeight: 1.1 }}>{perf.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Section 8: Task Checklist */}
+                <div className="card">
+                  <div className="panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                    <h2 style={{ fontSize: '14px', fontWeight: '800' }}>Task Checklist</h2>
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '11px' }}>
+                    {checklist.map(item => (
+                      <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                          <input
+                            type="checkbox"
+                            checked={item.checked}
+                            onChange={() => handleToggleChecklist(item.id)}
+                            style={{ width: '13px', height: '13px', cursor: 'pointer' }}
+                          />
+                          <span style={{ textDecoration: item.checked ? 'line-through' : 'none', color: item.checked ? '#94a3b8' : '#0f172a', fontWeight: '500' }}>{item.label}</span>
+                        </label>
+                        <span style={{ fontSize: '10px', color: '#94a3b8' }}>{item.time}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Section 9: Notifications */}
+                <div className="card">
+                  <div className="panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                    <h2 style={{ fontSize: '14px', fontWeight: '800' }}>Notifications</h2>
+                    <span style={{ fontSize: '11px', color: '#2563eb', cursor: 'pointer', fontWeight: '700' }} onClick={() => setActiveMenu('Notifications')}>View All</span>
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '11px' }}>
+                    {[
+                      { text: "Complaint assigned to you", time: "11:20 AM", isNew: true },
+                      { text: "EVM Battery Status Normal", time: "11:00 AM", isNew: false },
+                      { text: "Break time 12:30 PM - 12:45 PM", time: "10:30 AM", isNew: false }
+                    ].map((note, idx) => (
+                      <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '6px', borderBottom: '1px solid #f1f5f9' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: note.isNew ? '#dc2626' : '#94a3b8' }} />
+                          <span style={{ color: '#475569', fontWeight: note.isNew ? 'bold' : 'normal' }}>{note.text}</span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <span style={{ fontSize: '9px', color: '#94a3b8' }}>{note.time}</span>
+                          {note.isNew && <span style={{ fontSize: '8px', color: '#fff', backgroundColor: '#dc2626', padding: '1px 4px', borderRadius: '4px', fontWeight: 'bold' }}>New</span>}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+              </div>
+            </>
+          )}
+
+          {activeMenu === 'Voter Search' && (
+            <div className="card" style={{ padding: '24px', textAlign: 'left', minHeight: '400px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                <div>
+                  <h2 style={{ fontSize: '18px', fontWeight: '800', color: '#1e293b', margin: 0 }}>Voter Roll Search</h2>
+                  <p style={{ fontSize: '12px', color: '#64748b', margin: '4px 0 0' }}>Search electors in Electoral Roll database for Booth 147.</p>
+                </div>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <select
+                    value={searchFilter}
+                    onChange={(e) => setSearchFilter(e.target.value)}
+                    style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '12px', fontWeight: '600' }}
+                  >
+                    <option value="All">All Statuses</option>
+                    <option value="Voted">Voted</option>
+                    <option value="Not Voted">Not Voted</option>
+                  </select>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '12px', marginBottom: '20px' }}>
+                <div style={{ flexGrow: 1, position: 'relative' }}>
+                  <input
+                    type="text"
+                    placeholder="Search by EPIC ID, Name or Relative Name..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    style={{ width: '100%', padding: '10px 16px', borderRadius: '10px', border: '1px solid #cbd5e1', outline: 'none', fontSize: '13px' }}
+                  />
+                </div>
+              </div>
+
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+                  <thead>
+                    <tr style={{ backgroundColor: '#f8fafc', borderBottom: '2px solid #e2e8f0' }}>
+                      <th style={{ padding: '12px', textAlign: 'left', fontWeight: '700', color: '#475569' }}>EPIC ID</th>
+                      <th style={{ padding: '12px', textAlign: 'left', fontWeight: '700', color: '#475569' }}>Name</th>
+                      <th style={{ padding: '12px', textAlign: 'left', fontWeight: '700', color: '#475569' }}>Age/Gender</th>
+                      <th style={{ padding: '12px', textAlign: 'left', fontWeight: '700', color: '#475569' }}>Relative Name</th>
+                      <th style={{ padding: '12px', textAlign: 'left', fontWeight: '700', color: '#475569' }}>Address</th>
+                      <th style={{ padding: '12px', textAlign: 'left', fontWeight: '700', color: '#475569' }}>Status</th>
+                      <th style={{ padding: '12px', textAlign: 'center', fontWeight: '700', color: '#475569' }}>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {voterRoll
+                      .filter(v => {
+                        const matchesSearch = v.epic.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          v.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          v.relativeName.toLowerCase().includes(searchQuery.toLowerCase());
+                        const matchesFilter = searchFilter === 'All' || v.status === searchFilter;
+                        return matchesSearch && matchesFilter;
+                      })
+                      .map(v => (
+                        <tr key={v.epic} style={{ borderBottom: '1px solid #e2e8f0', transition: 'background 0.2s' }}>
+                          <td style={{ padding: '12px', fontWeight: '700', color: '#1e3a8a' }}>{v.epic}</td>
+                          <td style={{ padding: '12px', fontWeight: '600', color: '#1e293b' }}>{v.name}</td>
+                          <td style={{ padding: '12px', color: '#475569' }}>{v.age} / {v.gender}</td>
+                          <td style={{ padding: '12px', color: '#475569' }}>{v.relativeName}</td>
+                          <td style={{ padding: '12px', color: '#64748b' }}>{v.address}</td>
+                          <td style={{ padding: '12px' }}>
+                            <span style={{
+                              padding: '4px 8px',
+                              borderRadius: '12px',
+                              fontSize: '10px',
+                              fontWeight: '700',
+                              backgroundColor: v.status === 'Voted' ? '#dcfce7' : '#ffedd5',
+                              color: v.status === 'Voted' ? '#16a34a' : '#d97706'
+                            }}>
+                              {v.status}
+                            </span>
+                          </td>
+                          <td style={{ padding: '12px', textAlign: 'center' }}>
+                            {v.status === 'Not Voted' ? (
+                              <button
+                                onClick={() => {
+                                  setCurrentVoter(v);
+                                  setActiveMenu('PO-1 (Verification)');
+                                }}
+                                style={{
+                                  padding: '6px 12px',
+                                  backgroundColor: '#2563eb',
+                                  color: '#fff',
+                                  border: 'none',
+                                  borderRadius: '6px',
+                                  fontSize: '11px',
+                                  fontWeight: 'bold',
+                                  cursor: 'pointer'
+                                }}
+                              >
+                                Select & Verify
+                              </button>
+                            ) : (
+                              <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '500' }}>Processed</span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {activeMenu === 'PO-1 (Verification)' && (
+            <div className="card" style={{ padding: '24px', textAlign: 'left' }}>
+              <h2 style={{ fontSize: '18px', fontWeight: '800', color: '#1e293b', marginBottom: '6px' }}>PO-1 Elector Verification Panel</h2>
+              <p style={{ fontSize: '12px', color: '#64748b', marginBottom: '20px' }}>Verify the elector's identity using official EPIC card or alternate identity documents approved by ECI.</p>
+
+              {currentVoter ? (
+                <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '24px' }}>
+                  <div style={{ border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px', backgroundColor: '#f8fafc' }}>
+                    <h3 style={{ fontSize: '14px', fontWeight: '800', color: '#0f172a', borderBottom: '1px solid #cbd5e1', paddingBottom: '10px', marginBottom: '16px' }}>Elector Details</h3>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '12px', fontSize: '13px' }}>
+                      <strong style={{ color: '#475569' }}>EPIC Number:</strong>
+                      <span style={{ color: '#1e3a8a', fontWeight: 'bold' }}>{currentVoter.epic}</span>
+                      <strong style={{ color: '#475569' }}>Full Name:</strong>
+                      <span style={{ color: '#1e293b', fontWeight: 'bold' }}>{currentVoter.name}</span>
+                      <strong style={{ color: '#475569' }}>Age / Gender:</strong>
+                      <span>{currentVoter.age} Yrs / {currentVoter.gender}</span>
+                      <strong style={{ color: '#475569' }}>Relative Name:</strong>
+                      <span>{currentVoter.relativeName}</span>
+                      <strong style={{ color: '#475569' }}>Address:</strong>
+                      <span style={{ color: '#64748b' }}>{currentVoter.address}</span>
+                      <strong style={{ color: '#475569' }}>Verification Status:</strong>
+                      <span>
+                        <span style={{
+                          padding: '2px 8px',
+                          borderRadius: '8px',
+                          fontSize: '10px',
+                          fontWeight: 'bold',
+                          backgroundColor: currentVoter.po1_verified ? '#dcfce7' : '#fee2e2',
+                          color: currentVoter.po1_verified ? '#16a34a' : '#ef4444'
+                        }}>
+                          {currentVoter.po1_verified ? 'Verified' : 'Pending Verification'}
+                        </span>
+                      </span>
+                    </div>
+                  </div>
+
+                  <div style={{ border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                    <div>
+                      <h3 style={{ fontSize: '14px', fontWeight: '800', color: '#0f172a', marginBottom: '16px' }}>Identity Verification Steps</h3>
+                      
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '13px' }}>
+                          <input type="checkbox" defaultChecked={currentVoter.po1_verified} style={{ width: '16px', height: '16px' }} id="chkDoc" />
+                          <span>Elector Identity Card (EPIC/Aadhaar) matches entry</span>
+                        </label>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '13px' }}>
+                          <input type="checkbox" defaultChecked={currentVoter.po1_verified} style={{ width: '16px', height: '16px' }} id="chkFace" />
+                          <span>Elector's face matches photo in electoral roll</span>
+                        </label>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '13px' }}>
+                          <input type="checkbox" defaultChecked={currentVoter.po1_verified} style={{ width: '16px', height: '16px' }} id="chkRoll" />
+                          <span>Elector's details match Roll Entry Number</span>
+                        </label>
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '12px', marginTop: '20px' }}>
+                      <button
+                        onClick={() => {
+                          const docChecked = document.getElementById('chkDoc')?.checked;
+                          const faceChecked = document.getElementById('chkFace')?.checked;
+                          const rollChecked = document.getElementById('chkRoll')?.checked;
+                          if (!docChecked || !faceChecked || !rollChecked) {
+                            alert("Please check all verification checklist items first.");
+                            return;
+                          }
+                          setVoterRoll(prev => prev.map(v => v.epic === currentVoter.epic ? { ...v, po1_verified: true } : v));
+                          setCurrentVoter(prev => ({ ...prev, po1_verified: true }));
+                          alert("Elector identity verified. Guided to PO-2 counter for Ink marking.");
+                          setActiveMenu('PO-2 (Ink & Entry)');
+                        }}
+                        style={{
+                          flexGrow: 1,
+                          padding: '12px',
+                          backgroundColor: '#16a34a',
+                          color: '#fff',
+                          border: 'none',
+                          borderRadius: '10px',
+                          fontSize: '13px',
+                          fontWeight: 'bold',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        Approve & Verify Identity
+                      </button>
+                      <button
+                        onClick={() => {
+                          setCurrentVoter(null);
+                          setActiveMenu('Voter Search');
+                        }}
+                        style={{
+                          padding: '12px 18px',
+                          backgroundColor: '#f1f5f9',
+                          color: '#475569',
+                          border: '1px solid #cbd5e1',
+                          borderRadius: '10px',
+                          fontSize: '13px',
+                          fontWeight: 'bold',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div style={{ textAlign: 'center', padding: '40px 0', border: '2px dashed #cbd5e1', borderRadius: '16px' }}>
+                  <User size={48} color="#94a3b8" style={{ marginBottom: '12px' }} />
+                  <h3 style={{ fontSize: '15px', fontWeight: '700', color: '#475569', margin: 0 }}>No Elector Selected</h3>
+                  <p style={{ fontSize: '12px', color: '#64748b', margin: '4px 0 16px' }}>Please search the voter roll to select an elector for processing.</p>
+                  <button
+                    onClick={() => setActiveMenu('Voter Search')}
+                    style={{ padding: '8px 16px', backgroundColor: '#2563eb', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }}
+                  >
+                    Open Voter Roll
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeMenu === 'PO-2 (Ink & Entry)' && (
+            <div className="card" style={{ padding: '24px', textAlign: 'left' }}>
+              <h2 style={{ fontSize: '18px', fontWeight: '800', color: '#1e293b', marginBottom: '6px' }}>PO-2 Indelible Ink & Register Entry</h2>
+              <p style={{ fontSize: '12px', color: '#64748b', marginBottom: '20px' }}>Apply indelible ink on the left forefinger, enter details in Register of Voters (Form 17A), and obtain signature/thumb impression.</p>
+
+              {currentVoter ? (
+                <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '24px' }}>
+                  <div style={{ border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px', backgroundColor: '#f8fafc' }}>
+                    <h3 style={{ fontSize: '14px', fontWeight: '800', color: '#0f172a', borderBottom: '1px solid #cbd5e1', paddingBottom: '10px', marginBottom: '16px' }}>Active Elector</h3>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '12px', fontSize: '13px' }}>
+                      <strong style={{ color: '#475569' }}>EPIC Number:</strong>
+                      <span style={{ color: '#1e3a8a', fontWeight: 'bold' }}>{currentVoter.epic}</span>
+                      <strong style={{ color: '#475569' }}>Full Name:</strong>
+                      <span style={{ color: '#1e293b', fontWeight: 'bold' }}>{currentVoter.name}</span>
+                      <strong style={{ color: '#475569' }}>PO-1 Status:</strong>
+                      <span>
+                        <span style={{ padding: '2px 8px', borderRadius: '8px', fontSize: '10px', fontWeight: 'bold', backgroundColor: '#dcfce7', color: '#16a34a' }}>
+                          Verified
+                        </span>
+                      </span>
+                      <strong style={{ color: '#475569' }}>Ink & Entry Status:</strong>
+                      <span>
+                        <span style={{
+                          padding: '2px 8px',
+                          borderRadius: '8px',
+                          fontSize: '10px',
+                          fontWeight: 'bold',
+                          backgroundColor: currentVoter.po2_inked ? '#dcfce7' : '#fee2e2',
+                          color: currentVoter.po2_inked ? '#16a34a' : '#ef4444'
+                        }}>
+                          {currentVoter.po2_inked ? 'Completed' : 'Pending'}
+                        </span>
+                      </span>
+                    </div>
+                  </div>
+
+                  <div style={{ border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                    <div>
+                      <h3 style={{ fontSize: '14px', fontWeight: '800', color: '#0f172a', marginBottom: '16px' }}>Action Checklist</h3>
+                      
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '13px' }}>
+                          <input type="checkbox" defaultChecked={currentVoter.po2_inked} style={{ width: '16px', height: '16px' }} id="chkInk" />
+                          <span>Apply Indelible Ink on left hand forefinger</span>
+                        </label>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '13px' }}>
+                          <input type="checkbox" defaultChecked={currentVoter.po2_inked} style={{ width: '16px', height: '16px' }} id="chk17A" />
+                          <span>Record Serial Number in Register of Voters (Form 17A)</span>
+                        </label>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '13px' }}>
+                          <input type="checkbox" defaultChecked={currentVoter.po2_inked} style={{ width: '16px', height: '16px' }} id="chkSign" />
+                          <span>Obtain Signature or Thumb Impression of elector</span>
+                        </label>
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '12px', marginTop: '20px' }}>
+                      <button
+                        onClick={() => {
+                          const inkChecked = document.getElementById('chkInk')?.checked;
+                          const regChecked = document.getElementById('chk17A')?.checked;
+                          const signChecked = document.getElementById('chkSign')?.checked;
+                          if (!inkChecked || !regChecked || !signChecked) {
+                            alert("Please check all PO-2 checklist items first.");
+                            return;
+                          }
+                          setVoterRoll(prev => prev.map(v => v.epic === currentVoter.epic ? { ...v, po2_inked: true } : v));
+                          setCurrentVoter(prev => ({ ...prev, po2_inked: true }));
+                          alert("Ink marked & Form 17A entry recorded. Guided to PO-3 EVM Operator counter.");
+                          setActiveMenu('PO-3 (EVM Operator)');
+                        }}
+                        style={{
+                          flexGrow: 1,
+                          padding: '12px',
+                          backgroundColor: '#16a34a',
+                          color: '#fff',
+                          border: 'none',
+                          borderRadius: '10px',
+                          fontSize: '13px',
+                          fontWeight: 'bold',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        Confirm Ink & Register Entry
+                      </button>
+                      <button
+                        onClick={() => {
+                          setCurrentVoter(null);
+                          setActiveMenu('Voter Search');
+                        }}
+                        style={{
+                          padding: '12px 18px',
+                          backgroundColor: '#f1f5f9',
+                          color: '#475569',
+                          border: '1px solid #cbd5e1',
+                          borderRadius: '10px',
+                          fontSize: '13px',
+                          fontWeight: 'bold',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div style={{ textAlign: 'center', padding: '40px 0', border: '2px dashed #cbd5e1', borderRadius: '16px' }}>
+                  <User size={48} color="#94a3b8" style={{ marginBottom: '12px' }} />
+                  <h3 style={{ fontSize: '15px', fontWeight: '700', color: '#475569', margin: 0 }}>No Elector in Process</h3>
+                  <p style={{ fontSize: '12px', color: '#64748b', margin: '4px 0 16px' }}>Select an elector from the Voter Roll or PO-1 panel to continue.</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeMenu === 'PO-3 (EVM Operator)' && (
+            <div className="card" style={{ padding: '24px', textAlign: 'left' }}>
+              <h2 style={{ fontSize: '18px', fontWeight: '800', color: '#1e293b', marginBottom: '6px' }}>PO-3 EVM Ballot Activator Panel</h2>
+              <p style={{ fontSize: '12px', color: '#64748b', marginBottom: '20px' }}>Press the ballot button on the Control Unit to activate the Balloting Unit inside the voting compartment.</p>
+
+              {currentVoter ? (
+                <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '24px' }}>
+                  <div style={{ border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px', backgroundColor: '#f8fafc' }}>
+                    <h3 style={{ fontSize: '14px', fontWeight: '800', color: '#0f172a', borderBottom: '1px solid #cbd5e1', paddingBottom: '10px', marginBottom: '16px' }}>Active Elector</h3>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '12px', fontSize: '13px' }}>
+                      <strong style={{ color: '#475569' }}>EPIC Number:</strong>
+                      <span style={{ color: '#1e3a8a', fontWeight: 'bold' }}>{currentVoter.epic}</span>
+                      <strong style={{ color: '#475569' }}>Full Name:</strong>
+                      <span style={{ color: '#1e293b', fontWeight: 'bold' }}>{currentVoter.name}</span>
+                      <strong style={{ color: '#475569' }}>PO-1 & PO-2 Status:</strong>
+                      <span>
+                        <span style={{ padding: '2px 8px', borderRadius: '8px', fontSize: '10px', fontWeight: 'bold', backgroundColor: '#dcfce7', color: '#16a34a' }}>
+                          Completed & Verified
+                        </span>
+                      </span>
+                    </div>
+                  </div>
+
+                  <div style={{ border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', minHeight: '200px' }}>
+                    {loading ? (
+                      <div style={{ textAlign: 'center' }}>
+                        <div style={{ border: '4px solid #f3f3f3', borderTop: '4px solid #2563eb', borderRadius: '50%', width: '40px', height: '40px', animation: 'spin 1s linear infinite', margin: '0 auto 12px' }}></div>
+                        <h4 style={{ margin: 0, fontSize: '14px', fontWeight: 'bold', color: '#1e293b' }}>BALLOT UNIT ACTIVE</h4>
+                        <p style={{ margin: '4px 0 0', fontSize: '12px', color: '#64748b' }}>Elector is casting their vote in the compartment...</p>
+                      </div>
+                    ) : (
+                      <div style={{ textAlign: 'center', width: '100%' }}>
+                        <button
+                          onClick={() => {
+                            setLoading(true);
+                            setTimeout(() => {
+                              setLoading(false);
+                              setVoterRoll(prev => prev.map(v => v.epic === currentVoter.epic ? { ...v, status: 'Voted', po3_voted: true } : v));
+                              setVotersProcessed(prev => prev + 1);
+                              setQueueCount(prev => Math.max(0, prev - 1));
+                              setCurrentVoter(null);
+                              alert("Vote successfully cast! EVM Ballot unit locked. Elector cleared.");
+                              setActiveMenu('Voter Search');
+                            }, 3000);
+                          }}
+                          style={{
+                            width: '100%',
+                            padding: '16px 24px',
+                            backgroundColor: '#dc2626',
+                            color: '#fff',
+                            border: 'none',
+                            borderRadius: '12px',
+                            fontSize: '15px',
+                            fontWeight: '800',
+                            cursor: 'pointer',
+                            boxShadow: '0 4px 12px rgba(220,38,38,0.3)',
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.5px'
+                          }}
+                        >
+                          🔴 Press Ballot Button
+                        </button>
+                        <p style={{ fontSize: '11px', color: '#64748b', marginTop: '10px' }}>This enables the Balloting Unit inside the voting compartment for a single vote.</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div style={{ textAlign: 'center', padding: '40px 0', border: '2px dashed #cbd5e1', borderRadius: '16px' }}>
+                  <UserCheck size={48} color="#94a3b8" style={{ marginBottom: '12px' }} />
+                  <h3 style={{ fontSize: '15px', fontWeight: '700', color: '#475569', margin: 0 }}>No Elector Ready</h3>
+                  <p style={{ fontSize: '12px', color: '#64748b', margin: '4px 0 16px' }}>Wait for electors to clear the PO-2 counter.</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeMenu === 'Assigned Complaints' && (
+            <div className="card" style={{ padding: '24px', textAlign: 'left' }}>
+              <h2 style={{ fontSize: '18px', fontWeight: '800', color: '#1e293b', marginBottom: '6px' }}>Assigned Complaints & Issues Desk</h2>
+              <p style={{ fontSize: '12px', color: '#64748b', marginBottom: '20px' }}>Resolve and manage complaints assigned to your desk by the Presiding Officer.</p>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                {complaints.map(comp => (
+                  <div key={comp.id} style={{ border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#f8fafc' }}>
+                    <div>
+                      <span style={{ fontSize: '10px', fontWeight: 'bold', color: '#2563eb', backgroundColor: '#eff6ff', padding: '3px 8px', borderRadius: '8px' }}>
+                        TICKET ID: {comp.id}
+                      </span>
+                      <h3 style={{ fontSize: '14px', fontWeight: 'bold', color: '#0f172a', margin: '8px 0 4px' }}>{comp.type}</h3>
+                      <p style={{ fontSize: '12px', color: '#64748b', margin: 0 }}>Assigned at {comp.time}</p>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                      <select
+                        value={comp.status}
+                        onChange={(e) => {
+                          const newStatus = e.target.value;
+                          setComplaints(prev => prev.map(c => c.id === comp.id ? { ...c, status: newStatus } : c));
+                          alert(`Complaint status updated to ${newStatus}`);
+                        }}
+                        style={{ padding: '6px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '12px', fontWeight: '600' }}
+                      >
+                        <option value="In Progress">In Progress</option>
+                        <option value="Resolved">Resolved</option>
+                      </select>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {activeMenu === 'Accessibility Support' && (
+            <div className="card" style={{ padding: '24px', textAlign: 'left' }}>
+              <h2 style={{ fontSize: '18px', fontWeight: '800', color: '#1e293b', marginBottom: '6px' }}>Accessibility Support Log</h2>
+              <p style={{ fontSize: '12px', color: '#64748b', marginBottom: '20px' }}>Log assistance provided to physically challenged, visually impaired, or senior citizens at the polling booth.</p>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr', gap: '24px' }}>
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    const vName = e.target.vname.value;
+                    const vEpic = e.target.vepic.value;
+                    const vType = e.target.vtype.value;
+                    if (!vName || !vEpic) {
+                      alert("Please enter Name and EPIC ID.");
+                      return;
+                    }
+                    const newReq = {
+                      id: Date.now(),
+                      voterName: vName,
+                      epic: vEpic,
+                      type: vType,
+                      status: 'Pending',
+                      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                    };
+                    setAccessibilityRequests(prev => [newReq, ...prev]);
+                    e.target.reset();
+                    alert("Accessibility request registered.");
+                  }}
+                  style={{ display: 'flex', flexDirection: 'column', gap: '12px', borderRight: '1px solid #e2e8f0', paddingRight: '24px' }}
+                >
+                  <h3 style={{ fontSize: '14px', fontWeight: '800', color: '#0f172a', margin: 0 }}>Register New Request</h3>
+                  
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <label style={{ fontSize: '12px', fontWeight: '600', color: '#475569' }}>Elector Name</label>
+                    <input type="text" name="vname" style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13px' }} placeholder="Rahul Sharma" />
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <label style={{ fontSize: '12px', fontWeight: '600', color: '#475569' }}>EPIC ID</label>
+                    <input type="text" name="vepic" style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13px' }} placeholder="WNV0123456" />
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <label style={{ fontSize: '12px', fontWeight: '600', color: '#475569' }}>Assistance Type Required</label>
+                    <select name="vtype" style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13px', fontWeight: '600' }}>
+                      <option>Wheelchair Request</option>
+                      <option>Priority Entry (Senior Citizen)</option>
+                      <option>Visually Impaired Assistance (Companion/Braille)</option>
+                      <option>Sign Language Interpreter</option>
+                    </select>
+                  </div>
+
+                  <button type="submit" style={{ padding: '10px', backgroundColor: '#2563eb', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer', marginTop: '8px' }}>
+                    Register Request
+                  </button>
+                </form>
+
+                <div>
+                  <h3 style={{ fontSize: '14px', fontWeight: '800', color: '#0f172a', marginBottom: '16px' }}>Registered Requests</h3>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    {accessibilityRequests.map(req => (
+                      <div key={req.id} style={{ padding: '12px', border: '1px solid #e2e8f0', borderRadius: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div>
+                          <strong style={{ fontSize: '13px', display: 'block', color: '#1e293b' }}>{req.voterName} ({req.epic})</strong>
+                          <span style={{ fontSize: '11px', color: '#64748b' }}>{req.type} &bull; {req.time}</span>
+                        </div>
+                        <button
+                          onClick={() => {
+                            setAccessibilityRequests(prev => prev.map(r => r.id === req.id ? { ...r, status: 'Provided' } : r));
+                            alert("Status updated to Provided.");
+                          }}
+                          style={{
+                            padding: '4px 8px',
+                            backgroundColor: req.status === 'Provided' ? '#dcfce7' : '#eff6ff',
+                            color: req.status === 'Provided' ? '#16a34a' : '#2563eb',
+                            border: 'none',
+                            borderRadius: '6px',
+                            fontSize: '11px',
+                            fontWeight: 'bold',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          {req.status}
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeMenu === 'Queue Monitor' && (
+            <div className="card" style={{ padding: '24px', textAlign: 'left' }}>
+              <h2 style={{ fontSize: '18px', fontWeight: '800', color: '#1e293b', marginBottom: '6px' }}>Queue Monitor</h2>
+              <p style={{ fontSize: '12px', color: '#64748b', marginBottom: '20px' }}>Monitor the queue size outside Booth 147 and broadcast real-time metrics back to the Presiding Officer.</p>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+                <div style={{ border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
+                  <h3 style={{ fontSize: '14px', fontWeight: '800', color: '#0f172a', marginBottom: '16px' }}>Current Queue Telemetry</h3>
+                  
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#475569', marginBottom: '6px' }}>People in Queue: {queueCount}</label>
+                      <input
+                        type="range"
+                        min="0"
+                        max="100"
+                        value={queueCount}
+                        onChange={(e) => {
+                          const val = parseInt(e.target.value);
+                          setQueueCount(val);
+                          setAvgProcessTime(val > 30 ? 60 : 45);
+                        }}
+                        style={{ width: '100%', cursor: 'pointer' }}
+                      />
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '12px' }}>
+                      <button
+                        onClick={() => setQueueCount(prev => Math.max(0, prev - 5))}
+                        style={{ flexGrow: 1, padding: '8px', backgroundColor: '#f1f5f9', border: '1px solid #cbd5e1', borderRadius: '8px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }}
+                      >
+                        -5 People
+                      </button>
+                      <button
+                        onClick={() => setQueueCount(prev => prev + 5)}
+                        style={{ flexGrow: 1, padding: '8px', backgroundColor: '#f1f5f9', border: '1px solid #cbd5e1', borderRadius: '8px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }}
+                      >
+                        +5 People
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                  <div>
+                    <h3 style={{ fontSize: '14px', fontWeight: '800', color: '#0f172a', marginBottom: '16px' }}>Alert Presiding Officer</h3>
+                    <p style={{ fontSize: '12px', color: '#64748b', margin: '0 0 16px' }}>Send an instant alert if queue levels exceed control thresholds.</p>
+                  </div>
+                  
+                  <button
+                    onClick={() => {
+                      alert("Queue overload alert broadcasted to Presiding Officer.");
+                    }}
+                    style={{
+                      width: '100%',
+                      padding: '12px',
+                      backgroundColor: '#ef4444',
+                      color: '#fff',
+                      border: 'none',
+                      borderRadius: '10px',
+                      fontSize: '13px',
+                      fontWeight: 'bold',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    🚨 Broadcast Queue Alert
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeMenu === 'Performance' && (
+            <div className="card" style={{ padding: '24px', textAlign: 'left' }}>
+              <h2 style={{ fontSize: '18px', fontWeight: '800', color: '#1e293b', marginBottom: '6px' }}>Processing Analytics & Performance</h2>
+              <p style={{ fontSize: '12px', color: '#64748b', marginBottom: '20px' }}>Real-time statistics displaying the voter processing counters speed and efficiency.</p>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
+                {[
+                  { title: "Avg Process Time", val: `${avgProcessTime} sec`, sub: "Limit: 60 sec", color: '#3b82f6' },
+                  { title: "Processed Today", val: votersProcessed, sub: "Out of 1,287", color: '#10b981' },
+                  { title: "Current Queue", val: `${queueCount} Elector(s)`, sub: "Est Wait: 12 min", color: '#f59e0b' },
+                  { title: "Shift Turnout", val: "42.1%", sub: "Target: 75.0%", color: '#a78bfa' }
+                ].map((stat, i) => (
+                  <div key={i} style={{ border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px', backgroundColor: '#f8fafc' }}>
+                    <span style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748b', textTransform: 'uppercase' }}>{stat.title}</span>
+                    <h3 style={{ fontSize: '20px', fontWeight: '900', color: stat.color, margin: '6px 0' }}>{stat.val}</h3>
+                    <span style={{ fontSize: '11px', color: '#94a3b8' }}>{stat.sub}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {activeMenu === 'Notifications' && (
+            <div className="card" style={{ padding: '24px', textAlign: 'left' }}>
+              <h2 style={{ fontSize: '18px', fontWeight: '800', color: '#1e293b', marginBottom: '6px' }}>Notifications & Directives Log</h2>
+              <p style={{ fontSize: '12px', color: '#64748b', marginBottom: '20px' }}>Chronological feed of official broadcasts and announcements from the Election Commission.</p>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {[
+                  { text: "EVM mock test verification certificate submitted successfully.", time: "07:30 AM", type: "system" },
+                  { text: "Sector Officer has requested hourly turnout update.", time: "10:00 AM", type: "broadcast" },
+                  { text: "VVPAT roll replacement ready at central desk.", time: "11:15 AM", type: "alert" }
+                ].map((note, idx) => (
+                  <div key={idx} style={{ padding: '14px', border: '1px solid #e2e8f0', borderRadius: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#f8fafc' }}>
+                    <div>
+                      <span style={{ fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase', color: note.type === 'alert' ? '#ef4444' : '#2563eb', display: 'block', marginBottom: '4px' }}>
+                        {note.type}
+                      </span>
+                      <span style={{ fontSize: '13px', color: '#334155', fontWeight: '500' }}>{note.text}</span>
+                    </div>
+                    <span style={{ fontSize: '11px', color: '#94a3b8' }}>{note.time}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {activeMenu === 'Messages from PO' && (
+            <div className="card" style={{ padding: '24px', textAlign: 'left' }}>
+              <h2 style={{ fontSize: '18px', fontWeight: '800', color: '#1e293b', marginBottom: '6px' }}>Messages from Presiding Officer</h2>
+              <p style={{ fontSize: '12px', color: '#64748b', marginBottom: '20px' }}>Secure communication portal with the Presiding Officer inside Booth 147.</p>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', height: '350px', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '16px', backgroundColor: '#f8fafc' }}>
+                <div style={{ flexGrow: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  {poMessagesList.map((msg, idx) => (
+                    <div
+                      key={idx}
+                      style={{
+                        alignSelf: msg.sender === 'You' ? 'flex-end' : 'flex-start',
+                        backgroundColor: msg.sender === 'You' ? '#2563eb' : '#fff',
+                        color: msg.sender === 'You' ? '#fff' : '#0f172a',
+                        padding: '10px 14px',
+                        borderRadius: '12px',
+                        maxWidth: '70%',
+                        fontSize: '13px',
+                        border: msg.sender === 'You' ? 'none' : '1px solid #e2e8f0',
+                        boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
+                      }}
+                    >
+                      <strong style={{ fontSize: '10px', display: 'block', opacity: 0.8, marginBottom: '2px' }}>{msg.sender}</strong>
+                      {msg.text}
+                      <span style={{ fontSize: '9px', display: 'block', textAlign: 'right', opacity: 0.6, marginTop: '4px' }}>{msg.time}</span>
+                    </div>
                   ))}
                 </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  {complaints
-                    .filter(c => complaintTab === 'All' || c.status === complaintTab)
-                    .map(item => (
-                      <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px', border: '1px solid #f1f5f9', borderRadius: '8px' }}>
-                        <div>
-                          <strong style={{ fontSize: '12px', display: 'block', color: '#0f172a' }}>{item.type}</strong>
-                          <span style={{ fontSize: '10px', color: '#64748b' }}>{item.citizen} &bull; {item.time}</span>
-                        </div>
-                        <span style={{
-                          fontSize: '9px',
-                          fontWeight: 'bold',
-                          padding: '2px 8px',
-                          borderRadius: '8px',
-                          backgroundColor: item.status === 'Resolved' ? '#dcfce7' : '#ffedd5',
-                          color: item.status === 'Resolved' ? '#15803d' : '#ea580c'
-                        }}>{item.status}</span>
-                      </div>
-                    ))}
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    if (!messageInputText.trim()) return;
+                    const newMsg = {
+                      sender: 'You',
+                      text: messageInputText,
+                      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                    };
+                    setPoMessagesList(prev => [...prev, newMsg]);
+                    setMessageInputText('');
+                    alert("Message sent to Presiding Officer.");
+                  }}
+                  style={{ display: 'flex', gap: '10px', borderTop: '1px solid #e2e8f0', paddingTop: '12px' }}
+                >
+                  <input
+                    type="text"
+                    value={messageInputText}
+                    onChange={(e) => setMessageInputText(e.target.value)}
+                    style={{ flexGrow: 1, padding: '10px 14px', borderRadius: '10px', border: '1px solid #cbd5e1', outline: 'none', fontSize: '13px' }}
+                    placeholder="Type a message or select quick template..."
+                  />
+                  <button type="submit" style={{ padding: '10px 20px', backgroundColor: '#0f172a', color: '#fff', border: 'none', borderRadius: '10px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }}>
+                    Send
+                  </button>
+                </form>
+
+                <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '4px' }}>
+                  {["Counter 1 Queue is high", "Need assistance at Counter 2", "EVM running fine"].map((tmpl, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => setMessageInputText(tmpl)}
+                      style={{
+                        padding: '6px 12px',
+                        backgroundColor: '#fff',
+                        border: '1px solid #cbd5e1',
+                        borderRadius: '20px',
+                        fontSize: '11px',
+                        whiteSpace: 'nowrap',
+                        cursor: 'pointer',
+                        color: '#475569'
+                      }}
+                    >
+                      {tmpl}
+                    </button>
+                  ))}
                 </div>
               </div>
-
-              <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: '10px', marginTop: '12px' }}>
-                <span style={{ fontSize: '11px', color: '#2563eb', cursor: 'pointer', fontWeight: 'bold' }} onClick={() => alert("Loading complaints module...")}>Go to Complaints &rarr;</span>
-              </div>
             </div>
+          )}
 
-            {/* Section 5: Presiding Officer Communication */}
-            <div className="card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-              <div>
-                <div className="panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                  <h2 style={{ fontSize: '14px', fontWeight: '800' }}>Message from Presiding Officer</h2>
-                  <span style={{ fontSize: '11px', color: '#2563eb', cursor: 'pointer', fontWeight: '700' }} onClick={() => alert("Loading message center...")}>View All</span>
-                </div>
+          {activeMenu === 'Resources' && (
+            <div className="card" style={{ padding: '24px', textAlign: 'left' }}>
+              <h2 style={{ fontSize: '18px', fontWeight: '800', color: '#1e293b', marginBottom: '6px' }}>Digital Resources & Guides</h2>
+              <p style={{ fontSize: '12px', color: '#64748b', marginBottom: '20px' }}>Official handbooks, circulars, and downloadable manuals from the Election Commission of India.</p>
 
-                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', padding: '12px', backgroundColor: '#f8fafc', borderRadius: '10px', border: '1px solid #e2e8f0', marginBottom: '12px' }}>
-                  <div style={{ width: '28px', height: '28px', borderRadius: '50%', backgroundColor: '#3b82f6', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '10px' }}>
-                    PO
-                  </div>
-                  <div style={{ flexGrow: 1 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ fontSize: '11px', fontWeight: 'bold', color: '#0f172a' }}>{poMessage.sender}</span>
-                      <span style={{ fontSize: '9px', color: '#94a3b8' }}>{poMessage.time}</span>
-                    </div>
-                    <p style={{ fontSize: '11px', color: '#475569', margin: '4px 0 0' }}>{poMessage.text}</p>
-                  </div>
-                </div>
-              </div>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {poMessage.status === 'New' && (
-                  <button
-                    onClick={handleAcknowledgePoMessage}
-                    style={{
-                      width: '100%',
-                      backgroundColor: '#2563eb',
-                      color: '#fff',
-                      border: 'none',
-                      borderRadius: '8px',
-                      padding: '10px',
-                      fontSize: '11px',
-                      fontWeight: 'bold',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    Acknowledge & Accept
-                  </button>
-                )}
-                {poMessage.status !== 'Completed' && (
-                  <button
-                    onClick={handleCompletePoMessage}
-                    style={{
-                      width: '100%',
-                      backgroundColor: '#fff',
-                      border: '1px solid #22c55e',
-                      color: '#22c55e',
-                      borderRadius: '8px',
-                      padding: '10px',
-                      fontSize: '11px',
-                      fontWeight: 'bold',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    Mark as Completed
-                  </button>
-                )}
-                {poMessage.status === 'Completed' && (
-                  <span style={{ textAlign: 'center', fontSize: '11px', color: '#16a34a', fontWeight: 'bold' }}>✓ Task Completed</span>
-                )}
-              </div>
-            </div>
-
-            {/* Section 6: Quick Actions */}
-            <div className="card">
-              <div className="panel-header" style={{ marginBottom: '12px' }}>
-                <h2 style={{ fontSize: '14px', fontWeight: '800' }}>Quick Actions</h2>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                 {[
-                  { name: 'Search Voter', icon: <Search size={18} />, color: '#3b82f6', bg: '#eff6ff' },
-                  { name: 'Verify Voter', icon: <UserCheck size={18} />, color: '#3b82f6', bg: '#eff6ff' },
-                  { name: 'Mark Inked', icon: <Droplets size={18} />, color: '#f97316', bg: '#fff7ed' },
-                  { name: 'Enable Vote', icon: <CheckSquare size={18} />, color: '#3b82f6', bg: '#eff6ff' },
-                  { name: 'Accessibility Assistance', icon: <Accessibility size={18} />, color: '#3b82f6', bg: '#eff6ff' },
-                  { name: 'Report Issue', icon: <AlertTriangle size={18} />, color: '#ef4444', bg: '#fef2f2' },
-                  { name: 'Call Presiding Officer', icon: <PhoneCall size={18} />, color: '#10b981', bg: '#ecfdf5' },
-                  { name: 'View Checklist', icon: <List size={18} />, color: '#3b82f6', bg: '#eff6ff' }
-                ].map((act, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => handleQuickAction(act.name)}
-                    style={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '6px',
-                      padding: '10px 4px',
-                      borderRadius: '10px',
-                      border: '1px solid transparent',
-                      backgroundColor: act.bg,
-                      color: act.color,
-                      cursor: 'pointer',
-                      textAlign: 'center'
-                    }}
-                  >
-                    {act.icon}
-                    <span style={{ fontSize: '9px', fontWeight: '700', lineHeight: 1.1, color: '#1e293b' }}>{act.name}</span>
-                  </button>
+                  { name: "Handbook for Polling Officers", size: "2.4 MB", type: "PDF Document" },
+                  { name: "ECI SOP Manual 2026", size: "1.8 MB", type: "PDF Document" },
+                  { name: "Form 17A Sample & Guidelines", size: "850 KB", type: "Word Document" },
+                  { name: "EVM Troubleshooting Guide", size: "1.1 MB", type: "PDF Document" }
+                ].map((doc, idx) => (
+                  <div key={idx} style={{ padding: '14px', border: '1px solid #e2e8f0', borderRadius: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#f8fafc' }}>
+                    <div>
+                      <strong style={{ fontSize: '13px', display: 'block', color: '#1e293b' }}>{doc.name}</strong>
+                      <span style={{ fontSize: '11px', color: '#94a3b8' }}>{doc.type} &bull; {doc.size}</span>
+                    </div>
+                    <button
+                      onClick={() => alert(`Downloading ${doc.name}...`)}
+                      style={{
+                        padding: '6px 12px',
+                        backgroundColor: '#0f172a',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: '6px',
+                        fontSize: '11px',
+                        fontWeight: 'bold',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      Download
+                    </button>
+                  </div>
                 ))}
               </div>
             </div>
+          )}
 
-          </div>
+          {activeMenu === 'SOP / Help' && (
+            <div className="card" style={{ padding: '24px', textAlign: 'left' }}>
+              <h2 style={{ fontSize: '18px', fontWeight: '800', color: '#1e293b', marginBottom: '6px' }}>SOP & Elector Support Handbook</h2>
+              <p style={{ fontSize: '12px', color: '#64748b', marginBottom: '20px' }}>Searchable offline database of Electoral Commission guidelines for Polling Officers.</p>
 
-          {/* Main Grid Layout: Row 3 */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 1.3fr', gap: '24px' }}>
-            
-            {/* Section 7: Performance Summary */}
-            <div className="card">
-              <div className="panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                <h2 style={{ fontSize: '14px', fontWeight: '800' }}>Performance Summary</h2>
-                <span style={{ fontSize: '11px', color: '#2563eb', cursor: 'pointer', fontWeight: '700' }} onClick={() => alert("Loading performance metrics...")}>View Details</span>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                 {[
-                  { label: "Voters Processed", pct: 91, color: "#22c55e" },
-                  { label: "Verification Speed", pct: 85, color: "#22c55e" },
-                  { label: "Accuracy Rate", pct: 90, color: "#22c55e" },
-                  { label: "Task Completion", pct: 88, color: "#22c55e" }
-                ].map((perf, idx) => (
-                  <div key={idx} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                    <div style={{ position: 'relative', width: '50px', height: '50px' }}>
-                      <svg width="50" height="50" viewBox="0 0 36 36" style={{ transform: 'rotate(-90deg)' }}>
-                        <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="#f1f5f9" strokeWidth="2.5" />
-                        <circle cx="18" cy="18" r="15.915" fill="transparent" stroke={perf.color} strokeWidth="3" 
-                                strokeDasharray={`${perf.pct} 100`} strokeDashoffset="0" />
-                      </svg>
-                      <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <strong style={{ fontSize: '10px', color: '#0f172a' }}>{perf.pct}%</strong>
-                      </div>
-                    </div>
-                    <span style={{ fontSize: '8px', color: '#64748b', textAlign: 'center', marginTop: '6px', fontWeight: 'bold', lineHeight: 1.1 }}>{perf.label}</span>
+                  { q: "What documents are valid if a voter does not have an EPIC card?", a: "Elector can produce Aadhaar Card, MNREGA Job Card, Passbooks with photo issued by Bank/Post Office, Health Insurance Smart Card, Driving License, PAN Card, Smart Card issued by RGI under NPR, Passport, Pension document with photo, Service Identity Cards for Central/State Govt." },
+                  { q: "What should be done in case of a Challenged Vote?", a: "If an agent challenges a voter's identity, deposit fee of Rs. 2. Presiding Officer conducts brief inquiry. If challenge is established, voter is handed over to police. If not established, voter is allowed to vote." },
+                  { q: "What is a Tendered Ballot?", a: "If a voter finds someone has already voted in their name, they are issued a Tendered Ballot paper by Presiding Officer after satisfying identity. Tendered vote is recorded in Form 17B and ballot placed in separate cover, not EVM." }
+                ].map((sop, idx) => (
+                  <div key={idx} style={{ padding: '16px', border: '1px solid #e2e8f0', borderRadius: '12px', backgroundColor: '#f8fafc' }}>
+                    <strong style={{ fontSize: '14px', color: '#1e3a8a', display: 'block', marginBottom: '8px' }}>❓ {sop.q}</strong>
+                    <p style={{ fontSize: '13px', color: '#475569', margin: 0, lineHeight: 1.4 }}>{sop.a}</p>
                   </div>
                 ))}
               </div>
             </div>
-
-            {/* Section 8: Task Checklist */}
-            <div className="card">
-              <div className="panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                <h2 style={{ fontSize: '14px', fontWeight: '800' }}>Task Checklist</h2>
-                <span style={{ fontSize: '11px', color: '#2563eb', cursor: 'pointer', fontWeight: '700' }} onClick={() => alert("Loading full checklist...")}>View All</span>
-              </div>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '11px' }}>
-                {checklist.map(item => (
-                  <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-                      <input
-                        type="checkbox"
-                        checked={item.checked}
-                        onChange={() => handleToggleChecklist(item.id)}
-                        style={{ width: '13px', height: '13px', cursor: 'pointer' }}
-                      />
-                      <span style={{ textDecoration: item.checked ? 'line-through' : 'none', color: item.checked ? '#94a3b8' : '#0f172a', fontWeight: '500' }}>{item.label}</span>
-                    </label>
-                    <span style={{ fontSize: '10px', color: '#94a3b8' }}>{item.time}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Section 9: Notifications */}
-            <div className="card">
-              <div className="panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                <h2 style={{ fontSize: '14px', fontWeight: '800' }}>Notifications</h2>
-                <span style={{ fontSize: '11px', color: '#2563eb', cursor: 'pointer', fontWeight: '700' }} onClick={() => alert("Loading notification feed...")}>View All</span>
-              </div>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '11px' }}>
-                {[
-                  { text: "Complaint assigned to you", time: "11:20 AM", isNew: true },
-                  { text: "EVM Battery Status Normal", time: "11:00 AM", isNew: false },
-                  { text: "Break time 12:30 PM - 12:45 PM", time: "10:30 AM", isNew: false }
-                ].map((note, idx) => (
-                  <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '6px', borderBottom: '1px solid #f1f5f9' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: note.isNew ? '#dc2626' : '#94a3b8' }} />
-                      <span style={{ color: '#475569', fontWeight: note.isNew ? 'bold' : 'normal' }}>{note.text}</span>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <span style={{ fontSize: '9px', color: '#94a3b8' }}>{note.time}</span>
-                      {note.isNew && <span style={{ fontSize: '8px', color: '#fff', backgroundColor: '#dc2626', padding: '1px 4px', borderRadius: '4px', fontWeight: 'bold' }}>New</span>}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-          </div>
+          )}
 
         </div>
       </main>
-
     </div>
   );
 }

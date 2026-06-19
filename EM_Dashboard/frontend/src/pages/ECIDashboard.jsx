@@ -32,6 +32,34 @@ export default function ECIDashboard({ user, onLogout }) {
     { sender: 'bot', text: 'Current repoll status: 23 requests (7 Approved, 16 Pending, 0 Rejected).' }
   ]);
 
+  // ECI State Management
+  const [repolls, setRepolls] = useState([
+    { id: "REP-01", state: "Uttar Pradesh", constituency: "Varanasi North", boothId: 104, reason: "EVM Tampering Allegations", status: "Pending", requestedBy: "CEO UP", time: "11:28 AM" },
+    { id: "REP-02", state: "West Bengal", constituency: "Diamond Harbour", boothId: 45, reason: "Booth Capture Dispute", status: "Approved", requestedBy: "CEO WB", time: "10:15 AM" },
+    { id: "REP-03", state: "Bihar", constituency: "Patna Sahib", boothId: 12, reason: "VVPAT Mismatch Count", status: "Pending", requestedBy: "CEO Bihar", time: "09:40 AM" },
+    { id: "REP-04", state: "Maharashtra", constituency: "Baramati", boothId: 88, reason: "Unauthorized Crowd Gathering", status: "Rejected", requestedBy: "CEO Maharashtra", time: "08:30 AM" }
+  ]);
+  const [mccViolations, setMccViolations] = useState([
+    { id: "MCC-01", candidate: "Ramesh Sharma", party: "Independent", state: "Uttar Pradesh", violationType: "Hate Speech", detail: "Provocative speech during rally in Varanasi North.", status: "Notice Issued", time: "10:30 AM" },
+    { id: "MCC-02", candidate: "Sunita Verma", party: "Party B", state: "Bihar", violationType: "Cash Distribution", detail: "Accused of distributing cash tokens near Patna polling booth.", status: "Pending Investigation", time: "11:00 AM" },
+    { id: "MCC-03", candidate: "Alok Kumar", party: "Party A", state: "Delhi", violationType: "Illegal Campaigning", detail: "Campaign posters pasted within 100 meters of polling station.", status: "Resolved", time: "09:15 AM" }
+  ]);
+  const [selectedState, setSelectedState] = useState("Uttar Pradesh");
+  const [circulars, setCirculars] = useState([
+    { id: "CIRC-01", title: "Strict Compliance of 100-meter Campaign Restriction", target: "All State CEOs", status: "Published", date: "2026-06-18" },
+    { id: "CIRC-02", title: "VVPAT Slip Matching Protocol Post-Polling", target: "All DEOs / ROs", status: "Published", date: "2026-06-15" }
+  ]);
+  const [newCircularTitle, setNewCircularTitle] = useState("");
+  const [newCircularTarget, setNewCircularTarget] = useState("All State CEOs");
+  const [nationalSettings, setNationalSettings] = useState({
+    mccActive: true,
+    cctvMonitoring: true,
+    postalVotingAllowed: true,
+    repollApprovalRequired: true,
+    alertThreshold: "High"
+  });
+
+
   // Setup Clock
   useEffect(() => {
     const updateTime = () => {
@@ -956,6 +984,721 @@ export default function ECIDashboard({ user, onLogout }) {
 
           </div>
         )}
+
+        {/* ECI WORKSPACE DETAILED VIEWS */}
+        {activeMenu === 'National Overview' && (
+          <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            <div className="card">
+              <h2 style={{ fontSize: '16px', fontWeight: '800', marginBottom: '16px' }}>State-wise National Election Overview</h2>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
+                <thead>
+                  <tr style={{ borderBottom: '2px solid #cbd5e1', color: '#64748b', textAlign: 'left', fontWeight: 'bold' }}>
+                    <th style={{ padding: '10px' }}>State / UT</th>
+                    <th style={{ padding: '10px' }}>Total ACs</th>
+                    <th style={{ padding: '10px' }}>Polling Stations</th>
+                    <th style={{ padding: '10px' }}>Voter Turnout</th>
+                    <th style={{ padding: '10px' }}>Incidents</th>
+                    <th style={{ padding: '10px' }}>EVM Status</th>
+                    <th style={{ padding: '10px' }}>CAPF Coys</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[
+                    { state: "Uttar Pradesh", acs: 403, booths: "1,50,425", turnout: "52.34%", incidents: 7, evm: "99.23% OK", capf: 850 },
+                    { state: "West Bengal", acs: 294, booths: "78,903", turnout: "56.72%", incidents: 4, evm: "98.95% OK", capf: 920 },
+                    { state: "Bihar", acs: 243, booths: "72,723", turnout: "49.12%", incidents: 3, evm: "99.12% OK", capf: 740 },
+                    { state: "Maharashtra", acs: 288, booths: "97,247", turnout: "51.05%", incidents: 2, evm: "99.50% OK", capf: 680 },
+                    { state: "Tamil Nadu", acs: 234, booths: "68,125", turnout: "61.35%", incidents: 0, evm: "99.85% OK", capf: 410 },
+                    { state: "Kerala", acs: 140, booths: "25,120", turnout: "67.21%", incidents: 0, evm: "99.90% OK", capf: 300 }
+                  ].map((row, idx) => (
+                    <tr key={idx} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                      <td style={{ padding: '10px', fontWeight: 'bold' }}>{row.state}</td>
+                      <td style={{ padding: '10px' }}>{row.acs}</td>
+                      <td style={{ padding: '10px' }}>{row.booths}</td>
+                      <td style={{ padding: '10px', color: '#2563eb', fontWeight: 'bold' }}>{row.turnout}</td>
+                      <td style={{ padding: '10px', color: row.incidents > 0 ? '#dc2626' : '#16a34a', fontWeight: 'bold' }}>{row.incidents}</td>
+                      <td style={{ padding: '10px', color: '#16a34a' }}>{row.evm}</td>
+                      <td style={{ padding: '10px', fontWeight: 'bold' }}>{row.capf}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {activeMenu === 'Live Turnout' && (
+          <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            <div className="card">
+              <h2 style={{ fontSize: '16px', fontWeight: '800', marginBottom: '16px' }}>Phase-wise National Voter Turnout</h2>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                {[
+                  { phase: "Phase 1 (19 Apr 2026)", booths: "1.20 Lakh", turnout: "66.12%", status: "Completed" },
+                  { phase: "Phase 2 (26 Apr 2026)", booths: "1.45 Lakh", turnout: "64.85%", status: "Completed" },
+                  { phase: "Phase 3 (Today)", booths: "1.58 Lakh", turnout: "52.34%", status: "Active (Till 10:00 AM)" },
+                  { phase: "Phase 4 (07 May 2026)", booths: "1.80 Lakh", turnout: "0.00%", status: "Scheduled" },
+                  { phase: "Phase 5 (13 May 2026)", booths: "1.25 Lakh", turnout: "0.00%", status: "Scheduled" },
+                  { phase: "Phase 6 (20 May 2026)", booths: "1.30 Lakh", turnout: "0.00%", status: "Scheduled" },
+                  { phase: "Phase 7 (26 May 2026)", booths: "1.92 Lakh", turnout: "0.00%", status: "Scheduled" }
+                ].map((ph, idx) => (
+                  <div key={idx} style={{ backgroundColor: '#f8fafc', padding: '12px 16px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', fontSize: '12px' }}>
+                      <span style={{ fontWeight: 'bold' }}>{ph.phase} &bull; <span style={{ color: '#64748b' }}>{ph.booths} Booths</span></span>
+                      <span style={{ color: ph.status.includes("Active") ? '#2563eb' : ph.status === "Completed" ? '#16a34a' : '#64748b', fontWeight: 'bold' }}>
+                        {ph.status} ({ph.turnout})
+                      </span>
+                    </div>
+                    <div style={{ height: '8px', width: '100%', backgroundColor: '#e2e8f0', borderRadius: '4px', overflow: 'hidden' }}>
+                      <div style={{
+                        height: '100%',
+                        width: ph.turnout,
+                        backgroundColor: ph.status === "Completed" ? '#16a34a' : '#2563eb',
+                        transition: 'width 0.5s ease-in-out'
+                      }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeMenu === 'State / UT Dashboard' && (
+          <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            <div className="card">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                <h2 style={{ fontSize: '16px', fontWeight: '800', margin: 0 }}>State/UT Command Inspector</h2>
+                <select
+                  value={selectedState}
+                  onChange={(e) => setSelectedState(e.target.value)}
+                  style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', outline: 'none', fontWeight: '600' }}
+                >
+                  {["Uttar Pradesh", "West Bengal", "Bihar", "Maharashtra", "Tamil Nadu", "Kerala"].map(s => (
+                    <option key={s} value={s}>{s}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '24px' }}>
+                <div style={{ backgroundColor: '#eff6ff', padding: '16px', borderRadius: '12px', borderLeft: '4px solid #2563eb' }}>
+                  <span style={{ fontSize: '11px', color: '#2563eb', fontWeight: 'bold', textTransform: 'uppercase' }}>State Turnout</span>
+                  <h3 style={{ fontSize: '20px', fontWeight: '800', margin: '4px 0 0' }}>
+                    {selectedState === "Uttar Pradesh" ? "52.34%" : selectedState === "West Bengal" ? "56.72%" : selectedState === "Bihar" ? "49.12%" : "55.20%"}
+                  </h3>
+                </div>
+                <div style={{ backgroundColor: '#fee2e2', padding: '16px', borderRadius: '12px', borderLeft: '4px solid #dc2626' }}>
+                  <span style={{ fontSize: '11px', color: '#dc2626', fontWeight: 'bold', textTransform: 'uppercase' }}>Active Incidents</span>
+                  <h3 style={{ fontSize: '20px', fontWeight: '800', margin: '4px 0 0' }}>
+                    {selectedState === "Uttar Pradesh" ? "7" : selectedState === "West Bengal" ? "4" : selectedState === "Bihar" ? "3" : "1"}
+                  </h3>
+                </div>
+                <div style={{ backgroundColor: '#f0fdf4', padding: '16px', borderRadius: '12px', borderLeft: '4px solid #16a34a' }}>
+                  <span style={{ fontSize: '11px', color: '#16a34a', fontWeight: 'bold', textTransform: 'uppercase' }}>Booths Active</span>
+                  <h3 style={{ fontSize: '20px', fontWeight: '800', margin: '4px 0 0' }}>100.00%</h3>
+                </div>
+                <div style={{ backgroundColor: '#f5f3ff', padding: '16px', borderRadius: '12px', borderLeft: '4px solid #8b5cf6' }}>
+                  <span style={{ fontSize: '11px', color: '#8b5cf6', fontWeight: 'bold', textTransform: 'uppercase' }}>CAPF Personnel</span>
+                  <h3 style={{ fontSize: '20px', fontWeight: '800', margin: '4px 0 0' }}>
+                    {selectedState === "Uttar Pradesh" ? "85,000" : selectedState === "West Bengal" ? "92,000" : selectedState === "Bihar" ? "74,000" : "50,000"}
+                  </h3>
+                </div>
+              </div>
+
+              <div style={{ backgroundColor: '#f8fafc', padding: '16px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '12px' }}>
+                <strong style={{ display: 'block', marginBottom: '8px' }}>CEO Compliance checklist &bull; {selectedState}</strong>
+                <div>&bull; Security Certificates: <span style={{ color: '#16a34a', fontWeight: 'bold' }}>All Received</span></div>
+                <div style={{ marginTop: '4px' }}>&bull; Mock Poll Logs: <span style={{ color: '#16a34a', fontWeight: 'bold' }}>Verified (100% OK)</span></div>
+                <div style={{ marginTop: '4px' }}>&bull; GPS Vehicle Sync: <span style={{ color: '#ca8a04', fontWeight: 'bold' }}>98% Connected</span></div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeMenu === 'Incident Command Center' && (
+          <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            <div className="card">
+              <h2 style={{ fontSize: '16px', fontWeight: '800', marginBottom: '16px' }}>National Incident Command Center</h2>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
+                <thead>
+                  <tr style={{ borderBottom: '2px solid #cbd5e1', color: '#64748b', textAlign: 'left', fontWeight: 'bold' }}>
+                    <th style={{ padding: '10px' }}>ID</th>
+                    <th style={{ padding: '10px' }}>State</th>
+                    <th style={{ padding: '10px' }}>Location / Booth</th>
+                    <th style={{ padding: '10px' }}>Dispute / Issue</th>
+                    <th style={{ padding: '10px' }}>Status</th>
+                    <th style={{ padding: '10px' }}>Priority</th>
+                    <th style={{ padding: '10px', textAlign: 'center' }}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[
+                    { id: "INC-N01", state: "Uttar Pradesh", loc: "Varanasi North - Booth 104", issue: "CU Screen Frozen", status: "Investigating", priority: "Critical" },
+                    { id: "INC-N02", state: "West Bengal", loc: "Diamond Harbour - Booth 45", issue: "Clash near Polling Center", status: "Force Dispatched", priority: "Critical" },
+                    { id: "INC-N03", state: "Bihar", loc: "Patna Sahib - Booth 12", issue: "VVPAT Jammed", status: "Resolved", priority: "High" },
+                    { id: "INC-N04", state: "Maharashtra", loc: "Baramati - Booth 88", issue: "Minor Queue Dispute", status: "Resolved", priority: "Low" }
+                  ].map((row, idx) => (
+                    <tr key={idx} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                      <td style={{ padding: '10px', fontWeight: 'bold' }}>{row.id}</td>
+                      <td style={{ padding: '10px' }}>{row.state}</td>
+                      <td style={{ padding: '10px' }}>{row.loc}</td>
+                      <td style={{ padding: '10px' }}>{row.issue}</td>
+                      <td style={{ padding: '10px' }}>
+                        <span style={{
+                          padding: '2px 8px', borderRadius: '12px', fontSize: '10px', fontWeight: 'bold',
+                          backgroundColor: row.status === "Resolved" ? '#dcfce7' : '#fef9c3',
+                          color: row.status === "Resolved" ? '#15803d' : '#854d0e'
+                        }}>{row.status}</span>
+                      </td>
+                      <td style={{ padding: '10px', color: row.priority === "Critical" ? '#dc2626' : '#2563eb', fontWeight: 'bold' }}>{row.priority}</td>
+                      <td style={{ padding: '10px', textAlign: 'center' }}>
+                        <button
+                          onClick={() => alert(`Direct Dispatch initiated for observers to ${row.loc}`)}
+                          style={{ padding: '4px 8px', backgroundColor: '#0f172a', color: '#fff', border: 'none', borderRadius: '4px', fontSize: '10px', cursor: 'pointer', marginRight: '4px' }}
+                        >Dispatch Observer</button>
+                        <button
+                          onClick={() => alert(`${row.id} status updated to Resolved`)}
+                          style={{ padding: '4px 8px', backgroundColor: '#16a34a', color: '#fff', border: 'none', borderRadius: '4px', fontSize: '10px', cursor: 'pointer' }}
+                        >Resolve</button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {activeMenu === 'MCC Violation Monitor' && (
+          <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            <div className="card">
+              <h2 style={{ fontSize: '16px', fontWeight: '800', marginBottom: '16px' }}>Model Code of Conduct Violation Dashboard</h2>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
+                <thead>
+                  <tr style={{ borderBottom: '2px solid #cbd5e1', color: '#64748b', textAlign: 'left', fontWeight: 'bold' }}>
+                    <th style={{ padding: '10px' }}>ID</th>
+                    <th style={{ padding: '10px' }}>Candidate / Party</th>
+                    <th style={{ padding: '10px' }}>State</th>
+                    <th style={{ padding: '10px' }}>Violation Type</th>
+                    <th style={{ padding: '10px' }}>Details</th>
+                    <th style={{ padding: '10px' }}>Status</th>
+                    <th style={{ padding: '10px', textAlign: 'center' }}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {mccViolations.map((row) => (
+                    <tr key={row.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                      <td style={{ padding: '10px', fontWeight: 'bold' }}>{row.id}</td>
+                      <td style={{ padding: '10px', fontWeight: '700' }}>{row.candidate} <span style={{ fontSize: '10px', color: '#64748b' }}>({row.party})</span></td>
+                      <td style={{ padding: '10px' }}>{row.state}</td>
+                      <td style={{ padding: '10px', color: '#b91c1c', fontWeight: 'bold' }}>{row.violationType}</td>
+                      <td style={{ padding: '10px' }}>{row.detail}</td>
+                      <td style={{ padding: '10px' }}>
+                        <span style={{
+                          padding: '2px 8px', borderRadius: '12px', fontSize: '10px', fontWeight: 'bold',
+                          backgroundColor: row.status === 'Resolved' ? '#dcfce7' : '#fee2e2',
+                          color: row.status === 'Resolved' ? '#15803d' : '#b91c1c'
+                        }}>{row.status}</span>
+                      </td>
+                      <td style={{ padding: '10px', textAlign: 'center' }}>
+                        <button
+                          onClick={() => {
+                            setMccViolations(prev => prev.map(v => v.id === row.id ? { ...v, status: "Notice Issued" } : v));
+                            alert(`Official ECI Notice served to ${row.candidate}. Response required in 48 hours.`);
+                          }}
+                          style={{ padding: '4px 8px', backgroundColor: '#ea580c', color: '#fff', border: 'none', borderRadius: '4px', fontSize: '10px', cursor: 'pointer', marginRight: '4px' }}
+                        >Issue Notice</button>
+                        <button
+                          onClick={() => {
+                            setMccViolations(prev => prev.map(v => v.id === row.id ? { ...v, status: "Resolved" } : v));
+                            alert(`MCC complaint ${row.id} marked as Resolved.`);
+                          }}
+                          style={{ padding: '4px 8px', backgroundColor: '#16a34a', color: '#fff', border: 'none', borderRadius: '4px', fontSize: '10px', cursor: 'pointer' }}
+                        >Mark Resolved</button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {activeMenu === 'EVM Tracking' && (
+          <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            <div className="card">
+              <h2 style={{ fontSize: '16px', fontWeight: '800', marginBottom: '16px' }}>National EVM Inventory & Transit Registry</h2>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '16px', marginBottom: '24px' }}>
+                {[
+                  { label: "Total Deployed", count: "11.23 Lakh", color: "#22c55e" },
+                  { label: "Reserve in Transit", count: "1.45 Lakh", color: "#3b82f6" },
+                  { label: "Warehouse Inventory", count: "2.10 Lakh", color: "#64748b" },
+                  { label: "RO District Vaults", count: "1.80 Lakh", color: "#8b5cf6" },
+                  { label: "Under Repair / Review", count: "21,000", color: "#ef4444" }
+                ].map((card, idx) => (
+                  <div key={idx} style={{ backgroundColor: '#f8fafc', padding: '16px', borderRadius: '12px', border: '1px solid #cbd5e1', textAlign: 'center' }}>
+                    <div style={{ fontSize: '11px', color: '#64748b', fontWeight: 'bold' }}>{card.label}</div>
+                    <h3 style={{ fontSize: '20px', fontWeight: '800', color: card.color, margin: '6px 0 0' }}>{card.count}</h3>
+                  </div>
+                ))}
+              </div>
+              <div style={{ backgroundColor: '#eff6ff', padding: '16px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '12px' }}>
+                <strong>ECI Double Randomization Protocol Check:</strong>
+                <div style={{ marginTop: '8px' }}>&bull; 1st Randomization: Completed across all 543 Parliamentary Constituencies.</div>
+                <div style={{ marginTop: '4px' }}>&bull; 2nd Randomization: Verified by independent Observers. Certificates uploaded.</div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeMenu === 'Repoll Management' && (
+          <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            <div className="card">
+              <h2 style={{ fontSize: '16px', fontWeight: '800', marginBottom: '16px' }}>ECI National Repoll Authority Console</h2>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
+                <thead>
+                  <tr style={{ borderBottom: '2px solid #cbd5e1', color: '#64748b', textAlign: 'left', fontWeight: 'bold' }}>
+                    <th style={{ padding: '10px' }}>Request ID</th>
+                    <th style={{ padding: '10px' }}>State</th>
+                    <th style={{ padding: '10px' }}>Constituency</th>
+                    <th style={{ padding: '10px' }}>Booth ID</th>
+                    <th style={{ padding: '10px' }}>Reason</th>
+                    <th style={{ padding: '10px' }}>Requested By</th>
+                    <th style={{ padding: '10px' }}>Status</th>
+                    <th style={{ padding: '10px', textAlign: 'center' }}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {repolls.map((rep) => (
+                    <tr key={rep.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                      <td style={{ padding: '10px', fontWeight: 'bold' }}>{rep.id}</td>
+                      <td style={{ padding: '10px' }}>{rep.state}</td>
+                      <td style={{ padding: '10px' }}>{rep.constituency}</td>
+                      <td style={{ padding: '10px' }}>Booth {rep.boothId}</td>
+                      <td style={{ padding: '10px', color: '#b91c1c' }}>{rep.reason}</td>
+                      <td style={{ padding: '10px', fontWeight: 'bold' }}>{rep.requestedBy}</td>
+                      <td style={{ padding: '10px' }}>
+                        <span style={{
+                          padding: '2px 8px', borderRadius: '12px', fontSize: '10px', fontWeight: 'bold',
+                          backgroundColor: rep.status === 'Approved' ? '#dcfce7' : rep.status === 'Pending' ? '#fef9c3' : '#fee2e2',
+                          color: rep.status === 'Approved' ? '#15803d' : rep.status === 'Pending' ? '#854d0e' : '#b91c1c'
+                        }}>{rep.status}</span>
+                      </td>
+                      <td style={{ padding: '10px', textAlign: 'center' }}>
+                        <button
+                          onClick={() => {
+                            setRepolls(prev => prev.map(r => r.id === rep.id ? { ...r, status: "Approved" } : r));
+                            alert(`Repoll request ${rep.id} officially APPROVED. Notifying CEO ${rep.state} and DEO to arrange fresh polling.`);
+                          }}
+                          disabled={rep.status !== 'Pending'}
+                          style={{ padding: '4px 8px', backgroundColor: '#16a34a', color: '#fff', border: 'none', borderRadius: '4px', fontSize: '10px', cursor: rep.status === 'Pending' ? 'pointer' : 'not-allowed', opacity: rep.status === 'Pending' ? 1 : 0.5, marginRight: '4px' }}
+                        >Approve</button>
+                        <button
+                          onClick={() => {
+                            setRepolls(prev => prev.map(r => r.id === rep.id ? { ...r, status: "Rejected" } : r));
+                            alert(`Repoll request ${rep.id} REJECTED.`);
+                          }}
+                          disabled={rep.status !== 'Pending'}
+                          style={{ padding: '4px 8px', backgroundColor: '#dc2626', color: '#fff', border: 'none', borderRadius: '4px', fontSize: '10px', cursor: rep.status === 'Pending' ? 'pointer' : 'not-allowed', opacity: rep.status === 'Pending' ? 1 : 0.5 }}
+                        >Reject</button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {activeMenu === 'Security & Force Deployment' && (
+          <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            <div className="card">
+              <h2 style={{ fontSize: '16px', fontWeight: '800', marginBottom: '16px' }}>CAPF & Security Force Coordination</h2>
+              <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '24px' }}>
+                <div>
+                  <h3 style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '10px' }}>Active CAPF Deployments</h3>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
+                    <thead>
+                      <tr style={{ borderBottom: '1px solid #cbd5e1', textAlign: 'left', color: '#64748b' }}>
+                        <th style={{ padding: '8px' }}>Force Name</th>
+                        <th style={{ padding: '8px' }}>Companies Deployed</th>
+                        <th style={{ padding: '8px' }}>Primary State</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {[
+                        { force: "CRPF (Central Reserve Police Force)", coys: 1200, state: "West Bengal & Bihar" },
+                        { force: "BSF (Border Security Force)", coys: 800, state: "Uttar Pradesh & WB" },
+                        { force: "CISF (Central Industrial Security)", coys: 650, state: "Maharashtra" },
+                        { force: "ITBP (Indo-Tibetan Border Police)", coys: 400, state: "Himachal Pradesh" }
+                      ].map((item, idx) => (
+                        <tr key={idx} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                          <td style={{ padding: '8px', fontWeight: '600' }}>{item.force}</td>
+                          <td style={{ padding: '8px', fontWeight: 'bold' }}>{item.coys} Coys</td>
+                          <td style={{ padding: '8px' }}>{item.state}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                <div style={{ backgroundColor: '#f8fafc', padding: '20px', borderRadius: '12px', border: '1px solid #cbd5e1' }}>
+                  <h3 style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '12px' }}>Simulate Force Dispatch / Deployment</h3>
+                  <form onSubmit={(e) => {
+                    e.preventDefault();
+                    alert("Force mobilization order signed and dispatched to Ministry of Home Affairs Liaison.");
+                  }}>
+                    <div style={{ marginBottom: '12px' }}>
+                      <label style={{ fontSize: '10px', textTransform: 'uppercase', color: '#64748b', display: 'block', marginBottom: '4px' }}>Select Force type</label>
+                      <select style={{ width: '100%', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '6px' }}>
+                        <option>CRPF Reserve Division</option>
+                        <option>BSF Tactical Division</option>
+                        <option>State Armed Reserve</option>
+                      </select>
+                    </div>
+                    <div style={{ marginBottom: '12px' }}>
+                      <label style={{ fontSize: '10px', textTransform: 'uppercase', color: '#64748b', display: 'block', marginBottom: '4px' }}>Destination State</label>
+                      <select style={{ width: '100%', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '6px' }}>
+                        <option>West Bengal</option>
+                        <option>Uttar Pradesh</option>
+                        <option>Bihar</option>
+                      </select>
+                    </div>
+                    <div style={{ marginBottom: '16px' }}>
+                      <label style={{ fontSize: '10px', textTransform: 'uppercase', color: '#64748b', display: 'block', marginBottom: '4px' }}>Companies Count</label>
+                      <input type="number" defaultValue="10" style={{ width: '100%', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '6px' }} />
+                    </div>
+                    <button type="submit" style={{ width: '100%', padding: '10px', backgroundColor: '#2563eb', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer' }}>
+                      Mobilize Forces ⚡
+                    </button>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeMenu === 'Sensitive Booths' && (
+          <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            <div className="card">
+              <h2 style={{ fontSize: '16px', fontWeight: '800', marginBottom: '16px' }}>Sensitive & Critical Booths Map</h2>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '24px' }}>
+                {[
+                  { label: "Normal Stations", count: "7,42,800", pct: "70.8%" },
+                  { label: "Sensitive Stations", count: "2,15,600", pct: "20.5%" },
+                  { label: "Hyper-Sensitive", count: "69,300", pct: "6.6%" },
+                  { label: "Critical (CCTV Required)", count: "22,372", pct: "2.1%" }
+                ].map((item, idx) => (
+                  <div key={idx} style={{ backgroundColor: '#f8fafc', padding: '16px', borderRadius: '12px', border: '1px solid #cbd5e1' }}>
+                    <div style={{ fontSize: '10px', color: '#64748b', fontWeight: 'bold' }}>{item.label}</div>
+                    <div style={{ fontSize: '18px', fontWeight: '900', margin: '4px 0 2px' }}>{item.count}</div>
+                    <span style={{ fontSize: '10px', color: '#2563eb', fontWeight: '700' }}>{item.pct} of National Total</span>
+                  </div>
+                ))}
+              </div>
+              <div style={{ backgroundColor: '#fff7ed', padding: '16px', borderRadius: '8px', border: '1px solid #fed7aa', fontSize: '12px', color: '#c2410c' }}>
+                <strong>ECI Guideline Circular 44B:</strong> All Critical and Hyper-Sensitive polling booths must be backed by live webcasting streams visible directly in district and state command panels.
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeMenu === 'Officer Performance' && (
+          <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            <div className="card">
+              <h2 style={{ fontSize: '16px', fontWeight: '800', marginBottom: '16px' }}>State CEO & District DEO Performance Metrics</h2>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
+                <thead>
+                  <tr style={{ borderBottom: '2px solid #cbd5e1', color: '#64748b', textAlign: 'left', fontWeight: 'bold' }}>
+                    <th style={{ padding: '10px' }}>State / Officer</th>
+                    <th style={{ padding: '10px' }}>Roster Verification %</th>
+                    <th style={{ padding: '10px' }}>Incident Close Time (Avg)</th>
+                    <th style={{ padding: '10px' }}>Hourly Turnout Sync Rate</th>
+                    <th style={{ padding: '10px' }}>Training Certification</th>
+                    <th style={{ padding: '10px' }}>Compliance Rating</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[
+                    { officer: "CEO Uttar Pradesh", roster: "99.12%", close: "8.2 mins", sync: "98.45%", train: "97.48%", rating: "4.8 ★" },
+                    { officer: "CEO Kerala", roster: "100.00%", close: "4.1 mins", sync: "99.80%", train: "99.12%", rating: "4.9 ★" },
+                    { officer: "CEO Bihar", roster: "96.50%", close: "14.5 mins", sync: "91.20%", train: "92.05%", rating: "4.2 ★" },
+                    { officer: "CEO West Bengal", roster: "98.20%", close: "11.2 mins", sync: "95.10%", train: "95.60%", rating: "4.5 ★" },
+                    { officer: "CEO Maharashtra", roster: "99.00%", close: "7.8 mins", sync: "97.60%", train: "96.80%", rating: "4.6 ★" }
+                  ].map((row, idx) => (
+                    <tr key={idx} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                      <td style={{ padding: '10px', fontWeight: 'bold' }}>{row.officer}</td>
+                      <td style={{ padding: '10px' }}>{row.roster}</td>
+                      <td style={{ padding: '10px' }}>{row.close}</td>
+                      <td style={{ padding: '10px' }}>{row.sync}</td>
+                      <td style={{ padding: '10px' }}>{row.train}</td>
+                      <td style={{ padding: '10px', color: '#ca8a04', fontWeight: 'bold' }}>{row.rating}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {activeMenu === 'Reports & Analytics' && (
+          <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            <div className="card">
+              <h2 style={{ fontSize: '16px', fontWeight: '800', marginBottom: '16px' }}>ECI National Reports & Statutory Library</h2>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+                {[
+                  { title: "National Turnout Summary", desc: "Phase-wise consolidated statistics", form: "ECI-Form 20A" },
+                  { title: "MCC Violations audit", desc: "Consolidated list of violations & action taken", form: "ECI-Form MCC" },
+                  { title: "Repoll and Reschedule logs", desc: "All approved repoll orders and status updates", form: "ECI-Form 12R" },
+                  { title: "Security Force Deployment Map", desc: "CAPF allocation matrices state-wide", form: "ECI-Form SF" },
+                  { title: "EVM Verification audit", desc: "Double Randomization certificates by ROs", form: "ECI-Form EVM" },
+                  { title: "Officer Performance Scorecard", desc: "CEO, DEO response rates & rating report", form: "ECI-Form OPS" }
+                ].map((rep, idx) => (
+                  <div key={idx} style={{ backgroundColor: '#f8fafc', padding: '16px', borderRadius: '12px', border: '1px solid #cbd5e1', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: '120px' }}>
+                    <div>
+                      <span style={{ fontSize: '9px', backgroundColor: '#e2e8f0', padding: '2px 6px', borderRadius: '4px', fontWeight: 'bold', color: '#475569' }}>{rep.form}</span>
+                      <strong style={{ display: 'block', fontSize: '13px', marginTop: '6px', color: '#0f172a' }}>{rep.title}</strong>
+                      <p style={{ fontSize: '10px', color: '#64748b', margin: '4px 0 0' }}>{rep.desc}</p>
+                    </div>
+                    <button
+                      onClick={() => alert(`Generating PDF for ${rep.title}... Downloader initialized.`)}
+                      style={{ border: '1px solid #cbd5e1', backgroundColor: '#fff', borderRadius: '6px', padding: '4px', fontSize: '10px', fontWeight: 'bold', cursor: 'pointer', color: '#2563eb' }}
+                    >
+                      Export PDF / Excel
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeMenu === 'AI Risk Analytics' && (
+          <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            <div className="card">
+              <h2 style={{ fontSize: '16px', fontWeight: '800', marginBottom: '16px' }}>ECI AI Risk Engine & Turnout Projections</h2>
+              <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '24px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  <h3 style={{ fontSize: '13px', fontWeight: 'bold' }}>Active AI Risk Bulletins</h3>
+                  {[
+                    { title: "Uttar Pradesh (Varanasi North) - Turnout Stagnation", desc: "Turnout has lagged by 4.2% behind Phase 2 historical baseline due to EVM replacement delays. Projected final: 61.2% (Target: 66%).", risk: "Medium Risk", color: "#ca8a04" },
+                    { title: "West Bengal (Diamond Harbour) - Security Conflict Profile", desc: "AI models flag 6 polling locations exhibiting high community tension risk based on social sentiment telemetry. CAPF reinforcement advised.", risk: "High Risk", color: "#dc2626" },
+                    { title: "Kerala (All ACs) - Optimal Turnout Growth", desc: "Turnout trajectory exceeds baseline by 2.8%. Lower queue wait times predicted (Average 8 minutes per elector).", risk: "Low Risk", color: "#16a34a" }
+                  ].map((bul, idx) => (
+                    <div key={idx} style={{ backgroundColor: '#f8fafc', padding: '12px 16px', borderRadius: '8px', border: `1px solid ${bul.color}` }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px', fontSize: '12px' }}>
+                        <span style={{ fontWeight: 'bold' }}>{bul.title}</span>
+                        <span style={{ color: bul.color, fontWeight: 'bold' }}>{bul.risk}</span>
+                      </div>
+                      <p style={{ fontSize: '10px', color: '#64748b', margin: 0 }}>{bul.desc}</p>
+                    </div>
+                  ))}
+                </div>
+
+                <div style={{ backgroundColor: '#f8fafc', padding: '20px', borderRadius: '12px', border: '1px solid #cbd5e1' }}>
+                  <h3 style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '12px' }}>Run Predictive Scenario Mock</h3>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '11px' }}>
+                    <div>
+                      <strong>Turnout Target Optimizer:</strong>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '6px' }}>
+                        <span>Projected National Turnout:</span>
+                        <strong>67.12%</strong>
+                      </div>
+                    </div>
+                    <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '10px' }}>
+                      <strong>Weather Interference:</strong>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '6px' }}>
+                        <span>Heatwave Impact Warning:</span>
+                        <span style={{ color: '#dc2626', fontWeight: 'bold' }}>Active (3 States)</span>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => alert("Re-running AI forecasting models... Telemetries synchronized.")}
+                      style={{ padding: '8px', backgroundColor: '#2563eb', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', marginTop: '10px' }}
+                    >
+                      Recalculate Projections
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeMenu === 'Media & Public Portal' && (
+          <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            <div className="card">
+              <h2 style={{ fontSize: '16px', fontWeight: '800', marginBottom: '16px' }}>Media & Citizen Portal Control Console</h2>
+              <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '24px' }}>
+                <div>
+                  <h3 style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '12px' }}>Published ECI Circulars</h3>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    {circulars.map((circ) => (
+                      <div key={circ.id} style={{ backgroundColor: '#f8fafc', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '12px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 'bold' }}>
+                          <span>{circ.title}</span>
+                          <span style={{ color: '#16a34a' }}>{circ.status}</span>
+                        </div>
+                        <div style={{ fontSize: '10px', color: '#64748b', marginTop: '4px' }}>Target: {circ.target} &bull; Date: {circ.date}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div style={{ backgroundColor: '#f8fafc', padding: '20px', borderRadius: '12px', border: '1px solid #cbd5e1' }}>
+                  <h3 style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '12px' }}>Publish New Circular / Press Release</h3>
+                  <form onSubmit={(e) => {
+                    e.preventDefault();
+                    if (!newCircularTitle.trim()) return;
+                    const newCirc = {
+                      id: `CIRC-0${circulars.length + 1}`,
+                      title: newCircularTitle,
+                      target: newCircularTarget,
+                      status: "Published",
+                      date: new Date().toISOString().split('T')[0]
+                    };
+                    setCirculars(prev => [newCirc, ...prev]);
+                    setNewCircularTitle("");
+                    alert("ECI Circular successfully published to Media and Voter portals.");
+                  }}>
+                    <div style={{ marginBottom: '12px' }}>
+                      <label style={{ fontSize: '10px', textTransform: 'uppercase', color: '#64748b', display: 'block', marginBottom: '4px' }}>Circular Title</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Directive on Webcasting Standards"
+                        value={newCircularTitle}
+                        onChange={(e) => setNewCircularTitle(e.target.value)}
+                        style={{ width: '100%', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '6px' }}
+                      />
+                    </div>
+                    <div style={{ marginBottom: '16px' }}>
+                      <label style={{ fontSize: '10px', textTransform: 'uppercase', color: '#64748b', display: 'block', marginBottom: '4px' }}>Target Audience</label>
+                      <select
+                        value={newCircularTarget}
+                        onChange={(e) => setNewCircularTarget(e.target.value)}
+                        style={{ width: '100%', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '6px' }}
+                      >
+                        <option>All State CEOs</option>
+                        <option>All DEOs / ROs</option>
+                        <option>General Public & Media</option>
+                      </select>
+                    </div>
+                    <button type="submit" style={{ width: '100%', padding: '10px', backgroundColor: '#2563eb', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer' }}>
+                      Publish Directive
+                    </button>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeMenu === 'Audit Trail' && (
+          <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            <div className="card">
+              <h2 style={{ fontSize: '16px', fontWeight: '800', marginBottom: '16px' }}>ECI National System Audit Trail</h2>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
+                <thead>
+                  <tr style={{ borderBottom: '2px solid #cbd5e1', color: '#64748b', textAlign: 'left', fontWeight: 'bold' }}>
+                    <th style={{ padding: '10px' }}>Timestamp</th>
+                    <th style={{ padding: '10px' }}>User</th>
+                    <th style={{ padding: '10px' }}>Level</th>
+                    <th style={{ padding: '10px' }}>Action Performed</th>
+                    <th style={{ padding: '10px' }}>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[
+                    { time: "2026-06-19 11:34:12", user: "DEO Varanasi", level: "District", action: "Approved EVM swap at Booth 104", status: "Success" },
+                    { time: "2026-06-19 11:15:30", user: "CEO West Bengal", level: "State", action: "Submitted Phase 3 readiness verification", status: "Success" },
+                    { time: "2026-06-19 10:45:18", user: "ECI Admin", level: "National", action: "Published circular on 100m restrictions", status: "Success" },
+                    { time: "2026-06-19 10:12:00", user: "DEO Lucknow", level: "District", action: "1st Randomization matrix commit", status: "Success" }
+                  ].map((row, idx) => (
+                    <tr key={idx} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                      <td style={{ padding: '10px', color: '#64748b' }}>{row.time}</td>
+                      <td style={{ padding: '10px', fontWeight: 'bold' }}>{row.user}</td>
+                      <td style={{ padding: '10px' }}>{row.level}</td>
+                      <td style={{ padding: '10px' }}>{row.action}</td>
+                      <td style={{ padding: '10px', color: '#16a34a', fontWeight: 'bold' }}>{row.status}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {activeMenu === 'System Settings' && (
+          <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            <div className="card">
+              <h2 style={{ fontSize: '16px', fontWeight: '800', marginBottom: '20px' }}>ECI National Command Settings</h2>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '24px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <strong style={{ display: 'block', fontSize: '13px' }}>Model Code of Conduct Mode</strong>
+                      <span style={{ fontSize: '11px', color: '#64748b' }}>Toggles MCC enforcement rules system-wide</span>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={nationalSettings.mccActive}
+                      onChange={(e) => setNationalSettings(prev => ({ ...prev, mccActive: e.target.checked }))}
+                      style={{ width: '20px', height: '20px', cursor: 'pointer' }}
+                    />
+                  </div>
+
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #f1f5f9', paddingTop: '16px' }}>
+                    <div>
+                      <strong style={{ display: 'block', fontSize: '13px' }}>Live Polling Webcast Streaming</strong>
+                      <span style={{ fontSize: '11px', color: '#64748b' }}>Enables CCTV streams from sensitive booths</span>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={nationalSettings.cctvMonitoring}
+                      onChange={(e) => setNationalSettings(prev => ({ ...prev, cctvMonitoring: e.target.checked }))}
+                      style={{ width: '20px', height: '20px', cursor: 'pointer' }}
+                    />
+                  </div>
+
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #f1f5f9', paddingTop: '16px' }}>
+                    <div>
+                      <strong style={{ display: 'block', fontSize: '13px' }}>Postal Ballot Applications</strong>
+                      <span style={{ fontSize: '11px', color: '#64748b' }}>Allow citizens to submit postal applications</span>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={nationalSettings.postalVotingAllowed}
+                      onChange={(e) => setNationalSettings(prev => ({ ...prev, postalVotingAllowed: e.target.checked }))}
+                      style={{ width: '20px', height: '20px', cursor: 'pointer' }}
+                    />
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', borderLeft: '1px solid #e2e8f0', paddingLeft: '24px' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', marginBottom: '6px' }}>National Alert Sensitivity Threshold</label>
+                    <select
+                      value={nationalSettings.alertThreshold}
+                      onChange={(e) => setNationalSettings(prev => ({ ...prev, alertThreshold: e.target.value }))}
+                      style={{ padding: '8px', width: '100%', borderRadius: '6px', border: '1px solid #cbd5e1' }}
+                    >
+                      <option value="High">High (Notify ECI on all incidents)</option>
+                      <option value="Medium">Medium (Notify ECI on Critical/High only)</option>
+                      <option value="Low">Low (Notify ECI on Critical only)</option>
+                    </select>
+                  </div>
+
+                  <button
+                    onClick={() => alert("Settings successfully committed system-wide. Dispatched notification to State CEOs.")}
+                    style={{ padding: '12px', backgroundColor: '#2563eb', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', marginTop: '20px' }}
+                  >
+                    Commit Settings System-Wide
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
 
         {/* DIALOG PHONE OVERLAY */}
         {callModal.open && (

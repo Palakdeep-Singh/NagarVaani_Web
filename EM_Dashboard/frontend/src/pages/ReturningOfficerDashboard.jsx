@@ -24,6 +24,29 @@ export default function ReturningOfficerDashboard({ user, onLogout }) {
   const [broadcastText, setBroadcastText] = useState('');
   const [callModal, setCallModal] = useState({ open: false, recipient: '', number: '', isVideo: false });
   
+  // RO Dashboard states
+  const [nominations, setNominations] = useState([
+    { id: "NOM001", candidate: "Rajesh Kumar", party: "National Congress Party", age: 48, status: "Accepted" },
+    { id: "NOM002", candidate: "Sunita Devi", party: "Lok Kalyan Party", age: 52, status: "Accepted" },
+    { id: "NOM003", candidate: "Vijay Malhotra", party: "Independent", age: 39, status: "Pending" },
+    { id: "NOM004", candidate: "Anita Sen", party: "Progressive Front", age: 44, status: "Rejected" }
+  ]);
+  const [symbols, setSymbols] = useState([
+    { candidate: "Rajesh Kumar", party: "National Congress Party", symbol: "Hand" },
+    { candidate: "Sunita Devi", party: "Lok Kalyan Party", symbol: "Lotus" },
+    { candidate: "Vijay Malhotra", party: "Independent", symbol: "Kite" }
+  ]);
+  const [countingRound, setCountingRound] = useState(1);
+  const [candidateVotes, setCandidateVotes] = useState([
+    { name: "Rajesh Kumar", party: "National Congress Party", votes: 45201, leading: true },
+    { name: "Sunita Devi", party: "Lok Kalyan Party", votes: 41850, leading: false },
+    { name: "Vijay Malhotra", party: "Independent", votes: 1205, leading: false }
+  ]);
+  const [sectorRequests, setSectorRequests] = useState([
+    { id: "REQ-301", sector: "Sector 3", boothId: 104, type: "EVM Replacement Approval", status: "Pending", time: "11:30 AM" },
+    { id: "REQ-302", sector: "Sector 1", boothId: 103, type: "Additional Security Dispatch", status: "Approved", time: "11:15 AM" }
+  ]);
+  
   // AI assistant chat state
   const [chatInput, setChatInput] = useState('');
   const [chatMessages, setChatMessages] = useState([
@@ -1043,6 +1066,625 @@ export default function ReturningOfficerDashboard({ user, onLogout }) {
 
             </div>
 
+          </div>
+        )}
+
+        {activeMenu === 'Nomination Management' && (
+          <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px', textAlign: 'left' }}>
+            <div className="card" style={{ padding: '24px' }}>
+              <h2 style={{ fontSize: '18px', fontWeight: '800', color: '#1e293b', marginBottom: '6px' }}>Nomination Vetting Console</h2>
+              <p style={{ fontSize: '12px', color: '#64748b', marginBottom: '20px' }}>Review, accept, or reject candidate nomination papers filed for AC-123.</p>
+
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+                  <thead>
+                    <tr style={{ backgroundColor: '#f8fafc', borderBottom: '2px solid #e2e8f0' }}>
+                      <th style={{ padding: '12px', textAlign: 'left', fontWeight: '700', color: '#475569' }}>Nomination ID</th>
+                      <th style={{ padding: '12px', textAlign: 'left', fontWeight: '700', color: '#475569' }}>Candidate Name</th>
+                      <th style={{ padding: '12px', textAlign: 'left', fontWeight: '700', color: '#475569' }}>Affiliated Party</th>
+                      <th style={{ padding: '12px', textAlign: 'left', fontWeight: '700', color: '#475569' }}>Age</th>
+                      <th style={{ padding: '12px', textAlign: 'left', fontWeight: '700', color: '#475569' }}>Status</th>
+                      <th style={{ padding: '12px', textAlign: 'center', fontWeight: '700', color: '#475569' }}>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {nominations.map(nom => (
+                      <tr key={nom.id} style={{ borderBottom: '1px solid #e2e8f0' }}>
+                        <td style={{ padding: '12px', fontWeight: '700', color: '#1e3a8a' }}>{nom.id}</td>
+                        <td style={{ padding: '12px', fontWeight: '600' }}>{nom.candidate}</td>
+                        <td style={{ padding: '12px' }}>{nom.party}</td>
+                        <td style={{ padding: '12px' }}>{nom.age}</td>
+                        <td style={{ padding: '12px' }}>
+                          <span style={{
+                            padding: '3px 8px',
+                            borderRadius: '8px',
+                            fontSize: '10px',
+                            fontWeight: 'bold',
+                            backgroundColor: nom.status === 'Accepted' ? '#dcfce7' : nom.status === 'Rejected' ? '#fee2e2' : '#fef3c7',
+                            color: nom.status === 'Accepted' ? '#16a34a' : nom.status === 'Rejected' ? '#ef4444' : '#b45309'
+                          }}>{nom.status}</span>
+                        </td>
+                        <td style={{ padding: '12px', textAlign: 'center' }}>
+                          {nom.status === 'Pending' ? (
+                            <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                              <button
+                                onClick={() => {
+                                  setNominations(prev => prev.map(n => n.id === nom.id ? { ...n, status: 'Accepted' } : n));
+                                  alert("Nomination Paper Accepted.");
+                                }}
+                                style={{ padding: '4px 8px', backgroundColor: '#16a34a', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer' }}
+                              >
+                                Accept
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setNominations(prev => prev.map(n => n.id === nom.id ? { ...n, status: 'Rejected' } : n));
+                                  alert("Nomination Paper Rejected.");
+                                }}
+                                style={{ padding: '4px 8px', backgroundColor: '#ef4444', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer' }}
+                              >
+                                Reject
+                              </button>
+                            </div>
+                          ) : (
+                            <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '500' }}>Decided</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeMenu === 'Candidate Details' && (
+          <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px', textAlign: 'left' }}>
+            <div className="card" style={{ padding: '24px' }}>
+              <h2 style={{ fontSize: '18px', fontWeight: '800', color: '#1e293b', marginBottom: '6px' }}>Candidate Profiles</h2>
+              <p style={{ fontSize: '12px', color: '#64748b', marginBottom: '20px' }}>Electoral profiles and affidavit tracking for validated candidates.</p>
+              
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+                {nominations.filter(n => n.status === 'Accepted').map((cand, idx) => (
+                  <div key={idx} style={{ border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px', backgroundColor: '#f8fafc' }}>
+                    <h3 style={{ fontSize: '14px', fontWeight: 'bold', color: '#0f172a', margin: '0 0 6px' }}>{cand.candidate}</h3>
+                    <span style={{ fontSize: '11px', color: '#2563eb', fontWeight: '700', textTransform: 'uppercase' }}>{cand.party}</span>
+                    <div style={{ borderTop: '1px solid #e2e8f0', marginTop: '12px', paddingTop: '10px', fontSize: '12px', color: '#475569', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      <div>📄 <strong>Affidavit:</strong> Verified & Clear</div>
+                      <div>⚖️ <strong>Criminal Records:</strong> Nil Declared</div>
+                      <div>💰 <strong>Assets:</strong> Declared & Audited</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeMenu === 'Symbol Allocation' && (
+          <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px', textAlign: 'left' }}>
+            <div className="card" style={{ padding: '24px' }}>
+              <h2 style={{ fontSize: '18px', fontWeight: '800', color: '#1e293b', marginBottom: '6px' }}>Symbol Allocation Matrix</h2>
+              <p style={{ fontSize: '12px', color: '#64748b', marginBottom: '20px' }}>Allocate and review approved party and free symbols for contesting candidates.</p>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '24px' }}>
+                <div style={{ border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px', backgroundColor: '#f8fafc' }}>
+                  <h3 style={{ fontSize: '14px', fontWeight: '800', color: '#0f172a', marginBottom: '16px' }}>Allocated Symbols</h3>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    {symbols.map((sym, idx) => (
+                      <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '13px', borderBottom: '1px solid #e2e8f0', paddingBottom: '8px' }}>
+                        <div>
+                          <strong style={{ color: '#0f172a' }}>{sym.candidate}</strong>
+                          <span style={{ fontSize: '11px', color: '#64748b', display: 'block' }}>{sym.party}</span>
+                        </div>
+                        <span style={{ padding: '4px 10px', backgroundColor: '#eff6ff', color: '#2563eb', borderRadius: '8px', fontWeight: 'bold' }}>
+                          🏷️ {sym.symbol}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    const name = e.target.candName.value;
+                    const sym = e.target.candSymbol.value;
+                    setSymbols(prev => prev.map(s => s.candidate === name ? { ...s, symbol: sym } : s));
+                    alert(`Symbol "${sym}" allocated to ${name}.`);
+                  }}
+                  style={{ border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}
+                >
+                  <h3 style={{ fontSize: '14px', fontWeight: '800', color: '#0f172a', margin: 0 }}>Allocate Symbol</h3>
+                  
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <label style={{ fontSize: '12px', fontWeight: '600', color: '#475569' }}>Candidate</label>
+                    <select name="candName" style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13px', fontWeight: '600' }}>
+                      {symbols.map(s => <option key={s.candidate}>{s.candidate}</option>)}
+                    </select>
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <label style={{ fontSize: '12px', fontWeight: '600', color: '#475569' }}>Free / Reserved Symbol</label>
+                    <select name="candSymbol" style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13px', fontWeight: '600' }}>
+                      <option>Hand</option>
+                      <option>Lotus</option>
+                      <option>Kite</option>
+                      <option>Bicycle</option>
+                      <option>Elephant</option>
+                      <option>Car</option>
+                    </select>
+                  </div>
+
+                  <button type="submit" style={{ padding: '10px', backgroundColor: '#2563eb', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer', marginTop: '8px' }}>
+                    Allocate Symbol
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeMenu === 'Polling Day Monitoring' && (
+          <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px', textAlign: 'left' }}>
+            <div className="card" style={{ padding: '24px' }}>
+              <h2 style={{ fontSize: '18px', fontWeight: '800', color: '#1e293b', marginBottom: '6px' }}>Assembly Polling Station Telemetries</h2>
+              <p style={{ fontSize: '12px', color: '#64748b', marginBottom: '20px' }}>Real-time statistics aggregating all 328 polling stations in AC-123.</p>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
+                {[
+                  { name: "Mock Poll Conducted", val: "328 / 328", color: '#16a34a' },
+                  { name: "Poll Commencement", val: "328 / 328", color: '#16a34a' },
+                  { name: "Critical Booths Monitor", val: "14 Booths", color: '#ef4444' },
+                  { name: "GPS Escorts Active", val: "22 Vehicles", color: '#2563eb' }
+                ].map((stat, idx) => (
+                  <div key={idx} style={{ border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px', backgroundColor: '#f8fafc' }}>
+                    <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 'bold', textTransform: 'uppercase' }}>{stat.name}</span>
+                    <h4 style={{ fontSize: '20px', fontWeight: '900', color: stat.color, margin: '6px 0 0' }}>{stat.val}</h4>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeMenu === 'Turnout Analytics' && (
+          <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px', textAlign: 'left' }}>
+            <div className="card" style={{ padding: '24px' }}>
+              <h2 style={{ fontSize: '18px', fontWeight: '800', color: '#1e293b', marginBottom: '6px' }}>Constituency Voter Turnout Summary</h2>
+              <p style={{ fontSize: '12px', color: '#64748b', marginBottom: '20px' }}>Consolidated gender-wise and hour-wise elector turnout records.</p>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '24px' }}>
+                <div style={{ border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px', backgroundColor: '#f8fafc' }}>
+                  <h3 style={{ fontSize: '14px', fontWeight: '800', color: '#0f172a', marginBottom: '16px' }}>Assembly Turnout Split</h3>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+                    <thead>
+                      <tr style={{ borderBottom: '2px solid #cbd5e1', textAlign: 'left' }}>
+                        <th style={{ padding: '8px 0', fontWeight: '700', color: '#475569' }}>Gender</th>
+                        <th style={{ padding: '8px 0', fontWeight: '700', color: '#475569' }}>Total Enrolled</th>
+                        <th style={{ padding: '8px 0', fontWeight: '700', color: '#475569' }}>Votes Polled</th>
+                        <th style={{ padding: '8px 0', fontWeight: '700', color: '#475569' }}>Turnout %</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {[
+                        { g: "Male", total: "1,28,452", voted: "68,142", pct: "53.05%" },
+                        { g: "Female", total: "1,17,212", voted: "60,422", pct: "51.55%" },
+                        { g: "Third Gender", total: "14", voted: "12", pct: "85.71%" }
+                      ].map((dem, i) => (
+                        <tr key={i} style={{ borderBottom: '1px solid #e2e8f0' }}>
+                          <td style={{ padding: '10px 0', fontWeight: '600' }}>{dem.g}</td>
+                          <td style={{ padding: '10px 0' }}>{dem.total}</td>
+                          <td style={{ padding: '10px 0', fontWeight: '600', color: '#16a34a' }}>{dem.voted}</td>
+                          <td style={{ padding: '10px 0', fontWeight: '700', color: '#1e3a8a' }}>{dem.pct}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                <div style={{ border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+                  <h3 style={{ fontSize: '14px', fontWeight: '800', color: '#0f172a', marginBottom: '6px' }}>Aggregate Turnout</h3>
+                  <h4 style={{ fontSize: '36px', fontWeight: '900', color: '#2563eb', margin: '10px 0' }}>52.34%</h4>
+                  <span style={{ fontSize: '11px', color: '#64748b' }}>Last updated: 11:34 AM (Next hour count due)</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeMenu === 'Incident Management' && (
+          <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px', textAlign: 'left' }}>
+            <div className="card" style={{ padding: '24px' }}>
+              <h2 style={{ fontSize: '18px', fontWeight: '800', color: '#1e293b', marginBottom: '6px' }}>Constituency Incident Control Desk</h2>
+              <p style={{ fontSize: '12px', color: '#64748b', marginBottom: '20px' }}>Review and manage incident reports escalated by Sector Officers.</p>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {[
+                  { id: "INC-901", boothId: 104, type: "EVM Control Unit Fault", priority: "Critical", sector: "Sector 3", time: "11:28 AM", status: "In Progress" },
+                  { id: "INC-902", boothId: 103, type: "Crowd Gathering outside PS", priority: "High", sector: "Sector 1", time: "11:20 AM", status: "Resolved" }
+                ].map(inc => (
+                  <div key={inc.id} style={{ border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#f8fafc' }}>
+                    <div>
+                      <span style={{ fontSize: '10px', fontWeight: 'bold', color: inc.priority === 'Critical' ? '#ef4444' : '#ea580c', backgroundColor: inc.priority === 'Critical' ? '#fee2e2' : '#ffedd5', padding: '3px 8px', borderRadius: '8px' }}>
+                        {inc.id} &bull; {inc.priority}
+                      </span>
+                      <h4 style={{ fontSize: '13px', fontWeight: 'bold', color: '#0f172a', margin: '8px 0 2px' }}>{inc.type} at Booth {inc.boothId} ({inc.sector})</h4>
+                      <span style={{ fontSize: '11px', color: '#64748b' }}>Escalated: {inc.time}</span>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <button
+                        onClick={() => alert(`Police force dispatched to ${inc.sector} Booth ${inc.boothId}.`)}
+                        style={{ padding: '6px 12px', backgroundColor: '#0f172a', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer' }}
+                      >
+                        Dispatch Force
+                      </button>
+                      <button
+                        onClick={() => alert(`Incident ${inc.id} marked resolved.`)}
+                        style={{ padding: '6px 12px', backgroundColor: '#dcfce7', color: '#16a34a', border: '1px solid #bbf7d0', borderRadius: '8px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer' }}
+                      >
+                        {inc.status}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeMenu === 'EVM & Strong Room' && (
+          <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px', textAlign: 'left' }}>
+            <div className="card" style={{ padding: '24px' }}>
+              <h2 style={{ fontSize: '18px', fontWeight: '800', color: '#1e293b', marginBottom: '6px' }}>Strong Room Diagnostics</h2>
+              <p style={{ fontSize: '12px', color: '#64748b', marginBottom: '20px' }}>Security feeds, double-lock logs, and temperature sensors monitoring for the Main Strong Room.</p>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '24px' }}>
+                <div style={{ border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px', backgroundColor: '#f8fafc' }}>
+                  <h3 style={{ fontSize: '14px', fontWeight: '800', color: '#0f172a', marginBottom: '16px' }}>CCTV Streams Diagnostics</h3>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                    {["Camera 1 (Outer Gate)", "Camera 2 (Corridor)", "Camera 3 (Inner Safe)", "Camera 4 (Ventilation)"].map((cam, idx) => (
+                      <div key={idx} style={{ padding: '16px', backgroundColor: '#1e293b', color: '#fff', borderRadius: '8px', textAlign: 'center', fontSize: '12px' }}>
+                        🎥 {cam} <br />
+                        <span style={{ fontSize: '10px', color: '#22c55e', fontWeight: 'bold' }}>Online (Broadcasting)</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div style={{ border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
+                  <h3 style={{ fontSize: '14px', fontWeight: '800', color: '#0f172a', marginBottom: '16px' }}>Lock & Seals Log</h3>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '13px' }}>
+                    <div>🔐 <strong>Double Lock State:</strong> Locked & Sealed</div>
+                    <div>🏷️ <strong>Outer Door Seal ID:</strong> SL-9012A</div>
+                    <div>👮 <strong>Armed Security Guard:</strong> CAPF Platoon A (Present)</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeMenu === 'Counting Management' && (
+          <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px', textAlign: 'left' }}>
+            <div className="card" style={{ padding: '24px' }}>
+              <h2 style={{ fontSize: '18px', fontWeight: '800', color: '#1e293b', marginBottom: '6px' }}>EVM Counting Round Dashboard</h2>
+              <p style={{ fontSize: '12px', color: '#64748b', marginBottom: '20px' }}>Record and tally EVM votes round-by-round across 14 counting tables.</p>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '24px' }}>
+                <div style={{ border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px', backgroundColor: '#f8fafc' }}>
+                  <h3 style={{ fontSize: '14px', fontWeight: '800', color: '#0f172a', marginBottom: '16px' }}>Round {countingRound} Vote Tally</h3>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    {candidateVotes.map((cand, idx) => (
+                      <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '13px' }}>
+                        <div>
+                          <strong style={{ color: '#0f172a' }}>{cand.name}</strong>
+                          <span style={{ fontSize: '11px', color: '#64748b', display: 'block' }}>{cand.party}</span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                          <strong style={{ fontSize: '15px' }}>{cand.votes.toLocaleString()}</strong>
+                          {cand.leading && <span style={{ padding: '2px 6px', backgroundColor: '#dcfce7', color: '#16a34a', borderRadius: '6px', fontSize: '9px', fontWeight: 'bold' }}>LEADING</span>}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    const name = e.target.cname.value;
+                    const vts = parseInt(e.target.cvotes.value);
+                    if (!vts) return;
+                    setCandidateVotes(prev => {
+                      const updated = prev.map(c => c.name === name ? { ...c, votes: c.votes + vts } : c);
+                      const max = Math.max(...updated.map(c => c.votes));
+                      return updated.map(c => ({ ...c, leading: c.votes === max }));
+                    });
+                    setCountingRound(prev => prev + 1);
+                    e.target.reset();
+                    alert("Votes added. Counting Round incremented.");
+                  }}
+                  style={{ border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}
+                >
+                  <h3 style={{ fontSize: '14px', fontWeight: '800', color: '#0f172a', margin: 0 }}>Add Round Votes</h3>
+                  
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <label style={{ fontSize: '12px', fontWeight: '600', color: '#475569' }}>Candidate</label>
+                    <select name="cname" style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13px', fontWeight: '600' }}>
+                      {candidateVotes.map(c => <option key={c.name}>{c.name}</option>)}
+                    </select>
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <label style={{ fontSize: '12px', fontWeight: '600', color: '#475569' }}>Votes Polled in Round</label>
+                    <input type="number" name="cvotes" style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13px' }} placeholder="Enter round vote share..."/>
+                  </div>
+
+                  <button type="submit" style={{ padding: '10px', backgroundColor: '#0f172a', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer', marginTop: '8px' }}>
+                     Tally Round Votes
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeMenu === 'Result Dashboard' && (
+          <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px', textAlign: 'left' }}>
+            <div className="card" style={{ padding: '24px' }}>
+              <h2 style={{ fontSize: '18px', fontWeight: '800', color: '#1e293b', marginBottom: '6px' }}>Official Election Leaderboard</h2>
+              <p style={{ fontSize: '12px', color: '#64748b', marginBottom: '20px' }}>Real-time result status and margins for AC-123.</p>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+                <div style={{ border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px', backgroundColor: '#f0fdf4' }}>
+                  <span style={{ fontSize: '11px', color: '#15803d', fontWeight: 'bold', textTransform: 'uppercase' }}>Leading Candidate</span>
+                  <h4 style={{ fontSize: '18px', fontWeight: '800', color: '#14532d', margin: '6px 0' }}>Rajesh Kumar</h4>
+                  <span style={{ fontSize: '12px', color: '#16a34a', fontWeight: '700' }}>National Congress Party</span>
+                </div>
+
+                <div style={{ border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px', backgroundColor: '#f8fafc' }}>
+                  <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 'bold', textTransform: 'uppercase' }}>Margin of Lead</span>
+                  <h4 style={{ fontSize: '18px', fontWeight: '800', color: '#0f172a', margin: '6px 0' }}>3,351 Votes</h4>
+                  <span style={{ fontSize: '11px', color: '#94a3b8' }}>Ahead of Sunita Devi</span>
+                </div>
+
+                <div style={{ border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                  <button
+                    onClick={() => alert("victory certificate generated successfully.")}
+                    style={{
+                      padding: '12px 20px',
+                      backgroundColor: '#ca8a04',
+                      color: '#fff',
+                      border: 'none',
+                      borderRadius: '8px',
+                      fontSize: '12px',
+                      fontWeight: 'bold',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    🏆 Generate Victory Certificate
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeMenu === 'Agent Management' && (
+          <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px', textAlign: 'left' }}>
+            <div className="card" style={{ padding: '24px' }}>
+              <h2 style={{ fontSize: '18px', fontWeight: '800', color: '#1e293b', marginBottom: '6px' }}>Polling Agents Registry</h2>
+              <p style={{ fontSize: '12px', color: '#64748b', marginBottom: '20px' }}>Verify, approve, and allocate badges to polling/counting agents assigned by candidates.</p>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                {[
+                  { name: "Vikram Malhotra", party: "Party A", boothId: 104, status: "Approved" },
+                  { name: "Poonam Sen", party: "Party B", boothId: 104, status: "Approved" },
+                  { name: "Dilip Kumar", party: "Independent", boothId: 103, status: "Approved" }
+                ].map((agent, idx) => (
+                  <div key={idx} style={{ padding: '14px', border: '1px solid #e2e8f0', borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#f8fafc' }}>
+                    <div>
+                      <strong style={{ fontSize: '13px', display: 'block', color: '#1e293b' }}>{agent.name}</strong>
+                      <span style={{ fontSize: '11px', color: '#64748b' }}>Party: {agent.party} &bull; Assigned to Booth {agent.boothId}</span>
+                    </div>
+                    <span style={{ fontSize: '11px', fontWeight: 'bold', color: '#16a34a', backgroundColor: '#dcfce7', padding: '3px 8px', borderRadius: '8px' }}>
+                      {agent.status}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeMenu === 'Postal Ballot Tracking' && (
+          <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px', textAlign: 'left' }}>
+            <div className="card" style={{ padding: '24px' }}>
+              <h2 style={{ fontSize: '18px', fontWeight: '800', color: '#1e293b', marginBottom: '6px' }}>Postal Ballot Database</h2>
+              <p style={{ fontSize: '12px', color: '#64748b', marginBottom: '20px' }}>Track postal ballot applications, dispatches, receipts, and verification stats.</p>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '16px' }}>
+                {[
+                  { label: "Applied", count: "1,256", color: '#3b82f6' },
+                  { label: "Dispatched", count: "1,100", color: '#2563eb' },
+                  { label: "Received", count: "1,085", color: '#ea580c' },
+                  { label: "Accepted", count: "1,032", color: '#16a34a' },
+                  { label: "Rejected", count: "53", color: '#dc2626' }
+                ].map((ballot, idx) => (
+                  <div key={idx} style={{ border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px', backgroundColor: '#f8fafc', textAlign: 'center' }}>
+                    <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 'bold', textTransform: 'uppercase' }}>{ballot.label}</span>
+                    <h4 style={{ fontSize: '20px', fontWeight: '900', color: ballot.color, margin: '6px 0 0' }}>{ballot.count}</h4>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeMenu === 'RO Orders & Approvals' && (
+          <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px', textAlign: 'left' }}>
+            <div className="card" style={{ padding: '24px' }}>
+              <h2 style={{ fontSize: '18px', fontWeight: '800', color: '#1e293b', marginBottom: '6px' }}>Pending Approvals Desk</h2>
+              <p style={{ fontSize: '12px', color: '#64748b', marginBottom: '20px' }}>Vet and sign approval requests sent by Sector Officers (e.g. EVM replacements, extra security).</p>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {sectorRequests.map(req => (
+                  <div key={req.id} style={{ border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#f8fafc' }}>
+                    <div>
+                      <span style={{ fontSize: '10px', fontWeight: 'bold', color: '#2563eb', backgroundColor: '#eff6ff', padding: '3px 8px', borderRadius: '8px' }}>
+                        REQUEST ID: {req.id}
+                      </span>
+                      <h4 style={{ fontSize: '13px', fontWeight: 'bold', color: '#0f172a', margin: '8px 0 2px' }}>{req.type} &bull; Booth {req.boothId} ({req.sector})</h4>
+                      <span style={{ fontSize: '11px', color: '#64748b' }}>Time: {req.time}</span>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      {req.status === 'Pending' ? (
+                        <>
+                          <button
+                            onClick={() => {
+                              setSectorRequests(prev => prev.map(r => r.id === req.id ? { ...r, status: 'Approved' } : r));
+                              alert("Request approved.");
+                            }}
+                            style={{ padding: '6px 12px', backgroundColor: '#16a34a', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer' }}
+                          >
+                            Approve
+                          </button>
+                          <button
+                            onClick={() => {
+                              setSectorRequests(prev => prev.map(r => r.id === req.id ? { ...r, status: 'Denied' } : r));
+                              alert("Request denied.");
+                            }}
+                            style={{ padding: '6px 12px', backgroundColor: '#ef4444', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer' }}
+                          >
+                            Deny
+                          </button>
+                        </>
+                      ) : (
+                        <span style={{
+                          padding: '4px 10px',
+                          borderRadius: '8px',
+                          fontSize: '11px',
+                          fontWeight: 'bold',
+                          backgroundColor: req.status === 'Approved' ? '#dcfce7' : '#fee2e2',
+                          color: req.status === 'Approved' ? '#16a34a' : '#ef4444'
+                        }}>{req.status}</span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeMenu === 'Reports & Forms' && (
+          <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px', textAlign: 'left' }}>
+            <div className="card" style={{ padding: '24px' }}>
+              <h2 style={{ fontSize: '18px', fontWeight: '800', color: '#1e293b', marginBottom: '6px' }}>Reports & Forms Library</h2>
+              <p style={{ fontSize: '12px', color: '#64748b', marginBottom: '20px' }}>Access official electoral documentation forms (Form 17C, Form 21E, and PO Diaries).</p>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+                {[
+                  { name: "Form 17C (Votes Account)", status: "Pending Closing", desc: "Detailed votes account from all booths." },
+                  { name: "Form 21E (Return of Election)", status: "Draft Ready", desc: "Official declaration certificate copy." },
+                  { name: "PO Diary Consolidated Report", status: "Tallying", desc: "Aggregated dairies of all 328 polling stations." }
+                ].map((rep, idx) => (
+                  <div key={idx} style={{ border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px', backgroundColor: '#f8fafc', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: '140px' }}>
+                    <div>
+                      <strong style={{ fontSize: '14px', color: '#1e293b' }}>{rep.name}</strong>
+                      <p style={{ fontSize: '11px', color: '#64748b', margin: '4px 0 0' }}>{rep.desc}</p>
+                    </div>
+                    <span style={{ fontSize: '11px', fontWeight: 'bold', color: '#2563eb' }}>{rep.status} &rarr;</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeMenu === 'Communication Hub' && (
+          <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px', textAlign: 'left' }}>
+            <div className="card" style={{ padding: '24px' }}>
+              <h2 style={{ fontSize: '18px', fontWeight: '800', color: '#1e293b', marginBottom: '6px' }}>Assembly Radio Broadcast Center</h2>
+              <p style={{ fontSize: '12px', color: '#64748b', marginBottom: '20px' }}>Broadcast notices to all 328 Presiding Officers or Sector Officers immediately.</p>
+
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  const txt = e.target.broad.value;
+                  if (!txt.trim()) return;
+                  alert(`Broadcast notice sent to all Sector & Presiding Officers: "${txt}"`);
+                  e.target.reset();
+                }}
+                style={{ border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}
+              >
+                <h3 style={{ fontSize: '14px', fontWeight: '800', color: '#0f172a', margin: 0 }}>Create Assembly Notice</h3>
+                <textarea name="broad" style={{ height: '100px', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13px', outline: 'none', resize: 'none' }} placeholder="Type message to broadcast..."></textarea>
+                <button type="submit" style={{ padding: '10px 20px', backgroundColor: '#0f172a', color: '#fff', border: 'none', borderRadius: '10px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer', alignSelf: 'flex-start' }}>Send Broadcast Notice</button>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {activeMenu === 'AI Assistant' && (
+          <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px', textAlign: 'left' }}>
+            <div className="card" style={{ padding: '24px' }}>
+              <h2 style={{ fontSize: '18px', fontWeight: '800', color: '#1e293b', marginBottom: '6px' }}>RO ECI Handbook Assistant</h2>
+              <p style={{ fontSize: '12px', color: '#64748b', marginBottom: '20px' }}>Offline AI advisor trained on Election Commission guidelines for Returning Officers.</p>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', height: '350px', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '16px', backgroundColor: '#f8fafc' }}>
+                <div style={{ flexGrow: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  {chatMessages.map((msg, i) => (
+                    <div key={i} style={{ alignSelf: msg.sender === 'user' ? 'flex-end' : 'flex-start', backgroundColor: msg.sender === 'user' ? '#2563eb' : '#fff', color: msg.sender === 'user' ? '#fff' : '#0f172a', padding: '10px 14px', borderRadius: '12px', maxWidth: '70%', fontSize: '12px', border: msg.sender === 'user' ? 'none' : '1px solid #e2e8f0' }}>
+                      {msg.text}
+                    </div>
+                  ))}
+                </div>
+
+                <form onSubmit={handleChatSend} style={{ display: 'flex', gap: '10px' }}>
+                  <input
+                    type="text"
+                    placeholder="Ask SOP or guideline question..."
+                    value={chatInput}
+                    onChange={(e) => setChatInput(e.target.value)}
+                    style={{ flexGrow: 1, padding: '10px 14px', borderRadius: '10px', border: '1px solid #cbd5e1', outline: 'none', fontSize: '12px' }}
+                  />
+                  <button type="submit" style={{ padding: '10px 20px', backgroundColor: '#0f172a', color: '#fff', border: 'none', borderRadius: '10px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }}>Ask</button>
+                </form>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeMenu === 'Settings' && (
+          <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px', textAlign: 'left' }}>
+            <div className="card" style={{ padding: '24px' }}>
+              <h2 style={{ fontSize: '18px', fontWeight: '800', color: '#1e293b', marginBottom: '6px' }}>RO Command Center Settings</h2>
+              <p style={{ fontSize: '12px', color: '#64748b', marginBottom: '20px' }}>Configure notification alerts, dashboard refreshing, and counting status.</p>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', maxWidth: '400px' }}>
+                <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '13px' }}>
+                  <span>Direct SMS Alerts to DEO</span>
+                  <input type="checkbox" defaultChecked style={{ width: '16px', height: '16px' }} />
+                </label>
+                <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '13px' }}>
+                  <span>Sound Alarm on Critical Incidents</span>
+                  <input type="checkbox" defaultChecked style={{ width: '16px', height: '16px' }} />
+                </label>
+                <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '13px' }}>
+                  <span>Telemetry Sync Rate</span>
+                  <select style={{ padding: '4px', borderRadius: '4px', border: '1px solid #cbd5e1' }} defaultValue="10s">
+                    <option>5s</option>
+                    <option>10s</option>
+                    <option>30s</option>
+                  </select>
+                </label>
+              </div>
+            </div>
           </div>
         )}
 

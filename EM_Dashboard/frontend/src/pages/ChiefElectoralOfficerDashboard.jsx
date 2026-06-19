@@ -32,6 +32,48 @@ export default function ChiefElectoralOfficerDashboard({ user, onLogout }) {
     { sender: 'bot', text: 'Active state MCC cases: 12 Model Code Violations, 5 Cash distribution complaints, and 3 Hate Speech alerts.' }
   ]);
 
+  // CEO State Management
+  const [ceoDistricts, setCeoDistricts] = useState([
+    { id: 1, name: "Varanasi", turnout: "52.34%", readiness: "96.21%", incidents: 7, status: "Healthy" },
+    { id: 2, name: "Lucknow", turnout: "50.15%", readiness: "93.45%", incidents: 2, status: "Healthy" },
+    { id: 3, name: "Gautam Buddha Nagar", turnout: "55.80%", readiness: "98.76%", incidents: 0, status: "Healthy" },
+    { id: 4, name: "Kanpur Nagar", turnout: "48.90%", readiness: "91.30%", incidents: 5, status: "Warning" },
+    { id: 5, name: "Siddharthnagar", turnout: "42.08%", readiness: "18.76%", incidents: 9, status: "Critical" }
+  ]);
+  const [electoralRollStats, setElectoralRollStats] = useState({
+    additions: "12,34,567",
+    deletions: "2,45,678",
+    corrections: "8,76,543",
+    epicCoverage: "98.35%"
+  });
+  const [sveepEvents, setSveepEvents] = useState([
+    { id: "SV-01", name: "Youth Voter Fest Lucknow", reach: "2.5 Lakhs", budget: "₹ 15 Lakhs", status: "Completed" },
+    { id: "SV-02", name: "Gram Panchayat Awareness Varanasi", reach: "4.8 Lakhs", budget: "₹ 25 Lakhs", status: "Active" },
+    { id: "SV-03", name: "Nukkad Natak Campaign Kanpur", reach: "1.2 Lakhs", budget: "₹ 8 Lakhs", status: "Scheduled" }
+  ]);
+  const [trainingRoster, setTrainingRoster] = useState([
+    { district: "Varanasi", PO: "100%", pollingStaff: "98.5%", security: "100%" },
+    { district: "Lucknow", PO: "99.2%", pollingStaff: "97.8%", security: "100%" },
+    { district: "Kanpur Nagar", PO: "98.5%", pollingStaff: "95.6%", security: "99.1%" },
+    { district: "Siddharthnagar", PO: "88.4%", pollingStaff: "81.2%", security: "92.0%" }
+  ]);
+  const [expenditures, setExpenditures] = useState([
+    { id: "EXP-01", candidate: "Amit Kumar", constituency: "Lucknow East", spent: "₹ 92.15 Lakhs", limit: "₹ 95.00 Lakhs", status: "High Risk" },
+    { id: "EXP-02", candidate: "Rajendra Singh", constituency: "Meerut", spent: "₹ 88.70 Lakhs", limit: "₹ 95.00 Lakhs", status: "High Risk" },
+    { id: "EXP-03", candidate: "Vikram Pratap", constituency: "Kanpur South", spent: "₹ 81.30 Lakhs", limit: "₹ 95.00 Lakhs", status: "Moderate Risk" }
+  ]);
+  const [mccComplaints, setMccComplaints] = useState([
+    { id: "CEO-MCC-01", candidate: "Ramesh Sharma", district: "Varanasi", type: "Hate Speech", detail: "Provocative rally comments.", status: "Pending CEO Review", time: "10:30 AM" },
+    { id: "CEO-MCC-02", candidate: "Sunita Verma", district: "Siddharthnagar", type: "Cash Distribution", detail: "Tokens distribution near polling station.", status: "DEO Dispatched", time: "11:00 AM" },
+    { id: "CEO-MCC-03", candidate: "Alok Kumar", district: "Lucknow", type: "Illegal Posters", detail: "Posters on government buildings.", status: "Resolved", time: "09:15 AM" }
+  ]);
+  const [ceoSettings, setCeoSettings] = useState({
+    allowMobileInBooth: false,
+    webcastActiveState: true,
+    mccAdvisoryLevel: "Strict"
+  });
+
+
   // Setup Clock
   useEffect(() => {
     const updateTime = () => {
@@ -968,6 +1010,576 @@ export default function ChiefElectoralOfficerDashboard({ user, onLogout }) {
 
           </div>
         )}
+
+        {/* CEO WORKSPACE DETAILED VIEWS */}
+        {activeMenu === 'State Overview' && (
+          <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            <div className="card">
+              <h2 style={{ fontSize: '16px', fontWeight: '800', marginBottom: '16px' }}>State Districts Roster & Operational Readiness</h2>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
+                <thead>
+                  <tr style={{ borderBottom: '2px solid #cbd5e1', color: '#64748b', textAlign: 'left', fontWeight: 'bold' }}>
+                    <th style={{ padding: '10px' }}>District Name</th>
+                    <th style={{ padding: '10px' }}>Voter Turnout</th>
+                    <th style={{ padding: '10px' }}>Readiness Level</th>
+                    <th style={{ padding: '10px' }}>Active Incidents</th>
+                    <th style={{ padding: '10px' }}>Status</th>
+                    <th style={{ padding: '10px', textAlign: 'center' }}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {ceoDistricts.map((d) => (
+                    <tr key={d.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                      <td style={{ padding: '10px', fontWeight: 'bold' }}>{d.name}</td>
+                      <td style={{ padding: '10px', color: '#2563eb', fontWeight: 'bold' }}>{d.turnout}</td>
+                      <td style={{ padding: '10px' }}>{d.readiness}</td>
+                      <td style={{ padding: '10px', color: d.incidents > 3 ? '#dc2626' : '#16a34a', fontWeight: 'bold' }}>{d.incidents}</td>
+                      <td style={{ padding: '10px' }}>
+                        <span style={{
+                          padding: '2px 8px', borderRadius: '12px', fontSize: '10px', fontWeight: 'bold',
+                          backgroundColor: d.status === 'Healthy' ? '#dcfce7' : d.status === 'Warning' ? '#fef9c3' : '#fee2e2',
+                          color: d.status === 'Healthy' ? '#15803d' : d.status === 'Warning' ? '#854d0e' : '#b91c1c'
+                        }}>{d.status}</span>
+                      </td>
+                      <td style={{ padding: '10px', textAlign: 'center' }}>
+                        <button
+                          onClick={() => handleTriggerCall(`${d.name} DEO Desk`, "+91 94500-XXXXX", false)}
+                          style={{ padding: '4px 8px', backgroundColor: '#0f172a', color: '#fff', border: 'none', borderRadius: '4px', fontSize: '10px', cursor: 'pointer', marginRight: '4px' }}
+                        >Call DEO</button>
+                        <button
+                          onClick={() => alert(`Opening district drilldown for ${d.name}...`)}
+                          style={{ padding: '4px 8px', backgroundColor: '#2563eb', color: '#fff', border: 'none', borderRadius: '4px', fontSize: '10px', cursor: 'pointer' }}
+                        >Inspect</button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {activeMenu === 'District Performance' && (
+          <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            <div className="card">
+              <h2 style={{ fontSize: '16px', fontWeight: '800', marginBottom: '16px' }}>District Compliance & Performance Scoreboard</h2>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
+                <thead>
+                  <tr style={{ borderBottom: '2px solid #cbd5e1', color: '#64748b', textAlign: 'left', fontWeight: 'bold' }}>
+                    <th style={{ padding: '10px' }}>Rank</th>
+                    <th style={{ padding: '10px' }}>District</th>
+                    <th style={{ padding: '10px' }}>Readiness Score</th>
+                    <th style={{ padding: '10px' }}>Incident Close Time (Avg)</th>
+                    <th style={{ padding: '10px' }}>Turnout Update Sync rate</th>
+                    <th style={{ padding: '10px' }}>Overall Grade</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[
+                    { rank: 1, name: "Gautam Buddha Nagar", score: "98.76%", close: "5.4 mins", sync: "99.12%", grade: "A+" },
+                    { rank: 2, name: "Varanasi", score: "96.21%", close: "8.2 mins", sync: "98.45%", grade: "A" },
+                    { rank: 3, name: "Lucknow", score: "93.45%", close: "9.5 mins", sync: "97.60%", grade: "A" },
+                    { rank: 4, name: "Kanpur Nagar", score: "91.30%", close: "12.0 mins", sync: "95.10%", grade: "B" },
+                    { rank: 5, name: "Siddharthnagar", score: "18.76%", close: "45.0 mins", sync: "78.20%", grade: "F" }
+                  ].map((row, idx) => (
+                    <tr key={idx} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                      <td style={{ padding: '10px', fontWeight: 'bold', color: '#64748b' }}>{row.rank}</td>
+                      <td style={{ padding: '10px', fontWeight: 'bold' }}>{row.name}</td>
+                      <td style={{ padding: '10px' }}>{row.score}</td>
+                      <td style={{ padding: '10px' }}>{row.close}</td>
+                      <td style={{ padding: '10px' }}>{row.sync}</td>
+                      <td style={{ padding: '10px', color: row.grade === 'F' ? '#dc2626' : '#16a34a', fontWeight: 'bold' }}>{row.grade}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {activeMenu === 'Electoral Roll Management' && (
+          <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            <div className="card">
+              <h2 style={{ fontSize: '16px', fontWeight: '800', marginBottom: '16px' }}>State Electoral Roll Registry</h2>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '24px' }}>
+                <div style={{ backgroundColor: '#f8fafc', padding: '16px', borderRadius: '12px', border: '1px solid #cbd5e1' }}>
+                  <span style={{ fontSize: '10px', color: '#64748b', fontWeight: 'bold', textTransform: 'uppercase' }}>Additions (Form 6)</span>
+                  <strong style={{ fontSize: '20px', display: 'block', margin: '4px 0' }}>{electoralRollStats.additions}</strong>
+                  <span style={{ fontSize: '10px', color: '#16a34a', fontWeight: '700' }}>Approved & Sync'd</span>
+                </div>
+                <div style={{ backgroundColor: '#f8fafc', padding: '16px', borderRadius: '12px', border: '1px solid #cbd5e1' }}>
+                  <span style={{ fontSize: '10px', color: '#64748b', fontWeight: 'bold', textTransform: 'uppercase' }}>Deletions (Form 7)</span>
+                  <strong style={{ fontSize: '20px', display: 'block', margin: '4px 0' }}>{electoralRollStats.deletions}</strong>
+                  <span style={{ fontSize: '10px', color: '#16a34a', fontWeight: '700' }}>Removals committed</span>
+                </div>
+                <div style={{ backgroundColor: '#f8fafc', padding: '16px', borderRadius: '12px', border: '1px solid #cbd5e1' }}>
+                  <span style={{ fontSize: '10px', color: '#64748b', fontWeight: 'bold', textTransform: 'uppercase' }}>Corrections (Form 8)</span>
+                  <strong style={{ fontSize: '20px', display: 'block', margin: '4px 0' }}>{electoralRollStats.corrections}</strong>
+                  <span style={{ fontSize: '10px', color: '#16a34a', fontWeight: '700' }}>Updates published</span>
+                </div>
+                <div style={{ backgroundColor: '#f8fafc', padding: '16px', borderRadius: '12px', border: '1px solid #cbd5e1' }}>
+                  <span style={{ fontSize: '10px', color: '#64748b', fontWeight: 'bold', textTransform: 'uppercase' }}>EPIC Coverage</span>
+                  <strong style={{ fontSize: '20px', display: 'block', margin: '4px 0' }}>{electoralRollStats.epicCoverage}</strong>
+                  <span style={{ fontSize: '10px', color: '#16a34a', fontWeight: '700' }}>National Lead</span>
+                </div>
+              </div>
+              <button
+                onClick={() => alert("Re-publishing official Electoral Roll metadata to National ECI Servers...")}
+                style={{ padding: '10px', backgroundColor: '#0f172a', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', width: '220px' }}
+              >
+                Publish State Electoral Roll
+              </button>
+            </div>
+          </div>
+        )}
+
+        {activeMenu === 'SVEEP & Voter Awareness' && (
+          <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            <div className="card">
+              <h2 style={{ fontSize: '16px', fontWeight: '800', marginBottom: '16px' }}>State SVEEP (Voter Awareness Campaign) Dashboard</h2>
+              <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '24px' }}>
+                <div>
+                  <h3 style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '12px' }}>Active Campaigns</h3>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
+                    <thead>
+                      <tr style={{ borderBottom: '1px solid #cbd5e1', textAlign: 'left', color: '#64748b' }}>
+                        <th style={{ padding: '8px' }}>Campaign Name</th>
+                        <th style={{ padding: '8px' }}>Est. Reach</th>
+                        <th style={{ padding: '8px' }}>Budget</th>
+                        <th style={{ padding: '8px' }}>Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {sveepEvents.map((ev) => (
+                        <tr key={ev.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                          <td style={{ padding: '8px', fontWeight: '600' }}>{ev.name}</td>
+                          <td style={{ padding: '8px' }}>{ev.reach}</td>
+                          <td style={{ padding: '8px', fontWeight: 'bold' }}>{ev.budget}</td>
+                          <td style={{ padding: '8px' }}>
+                            <span style={{
+                              padding: '2px 8px', borderRadius: '12px', fontSize: '10px', fontWeight: 'bold',
+                              backgroundColor: ev.status === 'Completed' ? '#dcfce7' : ev.status === 'Active' ? '#eff6ff' : '#cbd5e1',
+                              color: ev.status === 'Completed' ? '#15803d' : ev.status === 'Active' ? '#1e40af' : '#475569'
+                            }}>{ev.status}</span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                <div style={{ backgroundColor: '#f8fafc', padding: '20px', borderRadius: '12px', border: '1px solid #cbd5e1' }}>
+                  <h3 style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '12px' }}>Add SVEEP Campaign</h3>
+                  <form onSubmit={(e) => {
+                    e.preventDefault();
+                    const form = e.target;
+                    const name = form.elements.name.value;
+                    const reach = form.elements.reach.value;
+                    const budget = form.elements.budget.value;
+                    if (!name || !reach) return;
+                    const newEv = {
+                      id: `SV-0${sveepEvents.length + 1}`,
+                      name, reach, budget, status: "Active"
+                    };
+                    setSveepEvents(prev => [...prev, newEv]);
+                    form.reset();
+                    alert("New SVEEP Campaign registered successfully.");
+                  }}>
+                    <div style={{ marginBottom: '10px' }}>
+                      <label style={{ fontSize: '10px', textTransform: 'uppercase', color: '#64748b', display: 'block', marginBottom: '4px' }}>Campaign Name</label>
+                      <input name="name" type="text" placeholder="e.g. Metro Station Voter Booths" style={{ width: '100%', padding: '6px', border: '1px solid #cbd5e1', borderRadius: '6px' }} required />
+                    </div>
+                    <div style={{ marginBottom: '10px' }}>
+                      <label style={{ fontSize: '10px', textTransform: 'uppercase', color: '#64748b', display: 'block', marginBottom: '4px' }}>Estimated Reach</label>
+                      <input name="reach" type="text" placeholder="e.g. 5 Lakh Citizens" style={{ width: '100%', padding: '6px', border: '1px solid #cbd5e1', borderRadius: '6px' }} required />
+                    </div>
+                    <div style={{ marginBottom: '12px' }}>
+                      <label style={{ fontSize: '10px', textTransform: 'uppercase', color: '#64748b', display: 'block', marginBottom: '4px' }}>Budget Allocated</label>
+                      <input name="budget" type="text" placeholder="e.g. ₹ 10 Lakhs" style={{ width: '100%', padding: '6px', border: '1px solid #cbd5e1', borderRadius: '6px' }} />
+                    </div>
+                    <button type="submit" style={{ width: '100%', padding: '8px', backgroundColor: '#2563eb', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer' }}>
+                      Submit Campaign
+                    </button>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeMenu === 'Training Management' && (
+          <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            <div className="card">
+              <h2 style={{ fontSize: '16px', fontWeight: '800', marginBottom: '16px' }}>District-wise Polling Personnel Training Progress</h2>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
+                <thead>
+                  <tr style={{ borderBottom: '2px solid #cbd5e1', color: '#64748b', textAlign: 'left', fontWeight: 'bold' }}>
+                    <th style={{ padding: '10px' }}>District</th>
+                    <th style={{ padding: '10px' }}>Presiding Officers (PO)</th>
+                    <th style={{ padding: '10px' }}>Polling Officers (PO1/PO2/PO3)</th>
+                    <th style={{ padding: '10px' }}>Security Personnel</th>
+                    <th style={{ padding: '10px', textAlign: 'center' }}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {trainingRoster.map((row, idx) => (
+                    <tr key={idx} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                      <td style={{ padding: '10px', fontWeight: 'bold' }}>{row.district}</td>
+                      <td style={{ padding: '10px', color: '#16a34a', fontWeight: 'bold' }}>{row.PO}</td>
+                      <td style={{ padding: '10px', color: '#16a34a', fontWeight: 'bold' }}>{row.pollingStaff}</td>
+                      <td style={{ padding: '10px', color: '#16a34a', fontWeight: 'bold' }}>{row.security}</td>
+                      <td style={{ padding: '10px', textAlign: 'center' }}>
+                        <button
+                          onClick={() => alert(`Certifying all trained polling staff in ${row.district}... Roster verified.`)}
+                          style={{ padding: '4px 8px', backgroundColor: '#0f172a', color: '#fff', border: 'none', borderRadius: '4px', fontSize: '10px', cursor: 'pointer' }}
+                        >Certify District</button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {activeMenu === 'EVM & Logistics' && (
+          <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            <div className="card">
+              <h2 style={{ fontSize: '16px', fontWeight: '800', marginBottom: '16px' }}>State EVM Logistics & Inter-District Allocations</h2>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '16px', marginBottom: '24px' }}>
+                {[
+                  { label: "State Deployed EVMs", count: "11.23 Lakh", color: "#22c55e" },
+                  { label: "Reserve Pool", count: "1.20 Lakh", color: "#3b82f6" },
+                  { label: "Under Randomisation", count: "80,000", color: "#eab308" },
+                  { label: "Repair Centers", count: "4,500", color: "#ef4444" },
+                  { label: "State Lockers", count: "15,000", color: "#8b5cf6" }
+                ].map((item, idx) => (
+                  <div key={idx} style={{ backgroundColor: '#f8fafc', padding: '16px', borderRadius: '12px', border: '1px solid #cbd5e1', textAlign: 'center' }}>
+                    <div style={{ fontSize: '10px', color: '#64748b', fontWeight: 'bold' }}>{item.label}</div>
+                    <h3 style={{ fontSize: '18px', fontWeight: '800', color: item.color, margin: '6px 0 0' }}>{item.count}</h3>
+                  </div>
+                ))}
+              </div>
+              <div style={{ backgroundColor: '#eff6ff', padding: '16px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '12px' }}>
+                <strong>State-wide EVM Randomisation Compliance Check:</strong>
+                <div style={{ marginTop: '8px' }}>&bull; All 75 Districts have completed 1st Stage Randomization.</div>
+                <div style={{ marginTop: '4px' }}>&bull; 2nd Stage Randomization checks verified for Varanasi, Lucknow, Kanpur, and Meerut divisions.</div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeMenu === 'Candidate Expenditure' && (
+          <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            <div className="card">
+              <h2 style={{ fontSize: '16px', fontWeight: '800', marginBottom: '16px' }}>Candidate Campaign Expenditure Auditing (State-wide)</h2>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
+                <thead>
+                  <tr style={{ borderBottom: '2px solid #cbd5e1', color: '#64748b', textAlign: 'left', fontWeight: 'bold' }}>
+                    <th style={{ padding: '10px' }}>ID</th>
+                    <th style={{ padding: '10px' }}>Candidate Name</th>
+                    <th style={{ padding: '10px' }}>Constituency Division</th>
+                    <th style={{ padding: '10px' }}>Total Spent</th>
+                    <th style={{ padding: '10px' }}>Constituency Limit</th>
+                    <th style={{ padding: '10px' }}>Risk Assessment</th>
+                    <th style={{ padding: '10px', textAlign: 'center' }}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {expenditures.map((row) => (
+                    <tr key={row.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                      <td style={{ padding: '10px', fontWeight: 'bold' }}>{row.id}</td>
+                      <td style={{ padding: '10px', fontWeight: '600' }}>{row.candidate}</td>
+                      <td style={{ padding: '10px' }}>{row.constituency}</td>
+                      <td style={{ padding: '10px', fontWeight: 'bold' }}>{row.spent}</td>
+                      <td style={{ padding: '10px' }}>{row.limit}</td>
+                      <td style={{ padding: '10px' }}>
+                        <span style={{
+                          padding: '2px 8px', borderRadius: '12px', fontSize: '10px', fontWeight: 'bold',
+                          backgroundColor: row.status === 'High Risk' ? '#fee2e2' : '#fff7ed',
+                          color: row.status === 'High Risk' ? '#b91c1c' : '#c2410c'
+                        }}>{row.status}</span>
+                      </td>
+                      <td style={{ padding: '10px', textAlign: 'center' }}>
+                        <button
+                          onClick={() => alert(`Exp audit observer dispatched to inspect affidavits and accounts for ${row.candidate}`)}
+                          style={{ padding: '4px 8px', backgroundColor: '#0f172a', color: '#fff', border: 'none', borderRadius: '4px', fontSize: '10px', cursor: 'pointer' }}
+                        >Audit Accounts</button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {activeMenu === 'Force Deployment' && (
+          <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            <div className="card">
+              <h2 style={{ fontSize: '16px', fontWeight: '800', marginBottom: '16px' }}>State Police & CAPF Mobilisation Console</h2>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '24px' }}>
+                {[
+                  { label: "CAPF Companies", count: "1,250 Coys", pct: "Deployed" },
+                  { label: "State Police Forces", count: "3.2 Lakhs", pct: "Deployed" },
+                  { label: "Home Guards", count: "1.1 Lakhs", pct: "Deployed" },
+                  { label: "Quick Response Teams (QRT)", count: "450 Teams", pct: "Standby" }
+                ].map((item, idx) => (
+                  <div key={idx} style={{ backgroundColor: '#f8fafc', padding: '16px', borderRadius: '12px', border: '1px solid #cbd5e1' }}>
+                    <div style={{ fontSize: '10px', color: '#64748b', fontWeight: 'bold' }}>{item.label}</div>
+                    <div style={{ fontSize: '18px', fontWeight: '900', margin: '4px 0 2px' }}>{item.count}</div>
+                    <span style={{ fontSize: '10px', color: '#16a34a', fontWeight: '700' }}>{item.pct}</span>
+                  </div>
+                ))}
+              </div>
+              <div style={{ backgroundColor: '#eff6ff', padding: '16px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '12px' }}>
+                <strong>State Security Liaison Alert:</strong> Force mobilizations are monitored real-time. Direct links to Varanasi North (AC-1) and Siddharthnagar (AC-5) divisions have been reinforced.
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeMenu === 'MCC & Complaint Monitor' && (
+          <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            <div className="card">
+              <h2 style={{ fontSize: '16px', fontWeight: '800', marginBottom: '16px' }}>State Model Code of Conduct & c-VIGIL Monitoring Desk</h2>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
+                <thead>
+                  <tr style={{ borderBottom: '2px solid #cbd5e1', color: '#64748b', textAlign: 'left', fontWeight: 'bold' }}>
+                    <th style={{ padding: '10px' }}>ID</th>
+                    <th style={{ padding: '10px' }}>Candidate Name</th>
+                    <th style={{ padding: '10px' }}>District</th>
+                    <th style={{ padding: '10px' }}>Violation Category</th>
+                    <th style={{ padding: '10px' }}>Details</th>
+                    <th style={{ padding: '10px' }}>Verification Status</th>
+                    <th style={{ padding: '10px', textAlign: 'center' }}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {mccComplaints.map((comp) => (
+                    <tr key={comp.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                      <td style={{ padding: '10px', fontWeight: 'bold' }}>{comp.id}</td>
+                      <td style={{ padding: '10px', fontWeight: '600' }}>{comp.candidate}</td>
+                      <td style={{ padding: '10px' }}>{comp.district}</td>
+                      <td style={{ padding: '10px', color: '#b91c1c', fontWeight: 'bold' }}>{comp.type}</td>
+                      <td style={{ padding: '10px' }}>{comp.detail}</td>
+                      <td style={{ padding: '10px' }}>
+                        <span style={{
+                          padding: '2px 8px', borderRadius: '12px', fontSize: '10px', fontWeight: 'bold',
+                          backgroundColor: comp.status === 'Resolved' ? '#dcfce7' : '#fee2e2',
+                          color: comp.status === 'Resolved' ? '#15803d' : '#b91c1c'
+                        }}>{comp.status}</span>
+                      </td>
+                      <td style={{ padding: '10px', textAlign: 'center' }}>
+                        <button
+                          onClick={() => {
+                            setMccComplaints(prev => prev.map(c => c.id === comp.id ? { ...c, status: "Official Warning Issued" } : c));
+                            alert(`Warned candidate ${comp.candidate} on ${comp.type} allegations.`);
+                          }}
+                          style={{ padding: '4px 8px', backgroundColor: '#ea580c', color: '#fff', border: 'none', borderRadius: '4px', fontSize: '10px', cursor: 'pointer', marginRight: '4px' }}
+                        >Warn Candidate</button>
+                        <button
+                          onClick={() => {
+                            setMccComplaints(prev => prev.map(c => c.id === comp.id ? { ...c, status: "Referred to ECI" } : c));
+                            alert(`Referred complaint ${comp.id} to Chief Election Commissioner desk.`);
+                          }}
+                          style={{ padding: '4px 8px', backgroundColor: '#0f172a', color: '#fff', border: 'none', borderRadius: '4px', fontSize: '10px', cursor: 'pointer' }}
+                        >Refer to ECI</button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {activeMenu === 'Reports & Analytics' && (
+          <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            <div className="card">
+              <h2 style={{ fontSize: '16px', fontWeight: '800', marginBottom: '16px' }}>State Consolidated Statutory Reports Desk</h2>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+                {[
+                  { title: "State Turnout Summary", desc: "Phase-wise consolidated reports by district", form: "CEO-Form 20S" },
+                  { title: "MCC Violations Log Summary", desc: "c-Vigil consolidated statistics & resolutions", form: "CEO-Form MCC" },
+                  { title: "Training Completion Registry", desc: "Staff training certifications compiled", form: "CEO-Form ST" },
+                  { title: "EVM Logistics and Stock Roster", desc: "Double Randomization audits by DEOs", form: "CEO-Form EVM" }
+                ].map((rep, idx) => (
+                  <div key={idx} style={{ backgroundColor: '#f8fafc', padding: '16px', borderRadius: '12px', border: '1px solid #cbd5e1', display: 'flex', flexDirection: 'column', justifycontent: 'space-between', height: '120px' }}>
+                    <div>
+                      <span style={{ fontSize: '9px', backgroundColor: '#e2e8f0', padding: '2px 6px', borderRadius: '4px', fontWeight: 'bold', color: '#475569' }}>{rep.form}</span>
+                      <strong style={{ display: 'block', fontSize: '13px', marginTop: '6px', color: '#0f172a' }}>{rep.title}</strong>
+                      <p style={{ fontSize: '10px', color: '#64748b', margin: '4px 0 0' }}>{rep.desc}</p>
+                    </div>
+                    <button
+                      onClick={() => alert(`Exporting ${rep.title} file...`)}
+                      style={{ border: '1px solid #cbd5e1', backgroundColor: '#fff', borderRadius: '6px', padding: '4px', fontSize: '10px', fontWeight: 'bold', cursor: 'pointer', color: '#2563eb', marginTop: '8px' }}
+                    >
+                      Export PDF / Excel
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeMenu === 'Election Readiness' && (
+          <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            <div className="card">
+              <h2 style={{ fontSize: '16px', fontWeight: '800', marginBottom: '16px' }}>State district Readiness Verification Checklist</h2>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                {ceoDistricts.map((d) => (
+                  <div key={d.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#f8fafc', padding: '12px 16px', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
+                    <div style={{ fontSize: '12px', fontWeight: 'bold', color: '#1e293b' }}>
+                      {d.name} District Readiness Checklist Sign-Off
+                    </div>
+                    <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                      <span style={{ fontSize: '10px', color: '#64748b' }}>Readiness Level: {d.readiness}</span>
+                      <button
+                        onClick={() => {
+                          setCeoDistricts(prev => prev.map(item => item.id === d.id ? { ...item, readiness: "100.00%", status: "Healthy" } : item));
+                          alert(`Certified and signed off election day readiness for ${d.name} district.`);
+                        }}
+                        style={{ padding: '4px 8px', backgroundColor: '#16a34a', color: '#fff', border: 'none', borderRadius: '4px', fontSize: '10px', cursor: 'pointer' }}
+                      >Sign Off Readiness</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeMenu === 'Communication Hub' && (
+          <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            <div className="card">
+              <h2 style={{ fontSize: '16px', fontWeight: '800', marginBottom: '16px' }}>State Broadcast Console</h2>
+              <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '24px' }}>
+                <div>
+                  <h3 style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '12px' }}>Publish Broadcast to all 75 Districts</h3>
+                  <form onSubmit={(e) => {
+                    e.preventDefault();
+                    if (!broadcastText.trim()) return;
+                    alert(`State Circular broadcasted to all 75 Districts: "${broadcastText}"`);
+                    setBroadcastText("");
+                  }}>
+                    <textarea
+                      placeholder="Type priority operational guidelines to broadcast to all district DEO headquarters..."
+                      value={broadcastText}
+                      onChange={(e) => setBroadcastText(e.target.value)}
+                      style={{ width: '100%', height: '100px', padding: '10px', border: '1px solid #cbd5e1', borderRadius: '8px', fontSize: '12px', outline: 'none', marginBottom: '12px' }}
+                      required
+                    />
+                    <button type="submit" style={{ padding: '10px 20px', backgroundColor: '#2563eb', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer' }}>
+                      Publish Priority Directives ⚡
+                    </button>
+                  </form>
+                </div>
+
+                <div style={{ backgroundColor: '#f8fafc', padding: '20px', borderRadius: '12px', border: '1px solid #cbd5e1', fontSize: '12px' }}>
+                  <h3 style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '12px' }}>Hotline Quick Dials</h3>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', borderBottom: '1px solid #e2e8f0' }}>
+                      <span>ECI National Command Desk</span>
+                      <button onClick={() => handleTriggerCall("ECI National Command Desk", "+91 11-2301-ECI", false)} style={{ padding: '3px 8px', backgroundColor: '#0f172a', color: '#fff', border: 'none', borderRadius: '4px', fontSize: '10px', cursor: 'pointer' }}>Call</button>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0' }}>
+                      <span>State Police Liaison Chief</span>
+                      <button onClick={() => handleTriggerCall("State Police Coordinator", "+91 94544-XXXXX", false)} style={{ padding: '3px 8px', backgroundColor: '#0f172a', color: '#fff', border: 'none', borderRadius: '4px', fontSize: '10px', cursor: 'pointer' }}>Call</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeMenu === 'Turnout Analytics' && (
+          <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            <div className="card">
+              <h2 style={{ fontSize: '16px', fontWeight: '800', marginBottom: '16px' }}>State Turnout split by Districts</h2>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                {ceoDistricts.map((d) => (
+                  <div key={d.id} style={{ backgroundColor: '#f8fafc', padding: '12px 16px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', fontSize: '12px' }}>
+                      <span style={{ fontWeight: 'bold' }}>{d.name} District</span>
+                      <span style={{ color: '#2563eb', fontWeight: 'bold' }}>{d.turnout} Turnout</span>
+                    </div>
+                    <div style={{ height: '8px', width: '100%', backgroundColor: '#e2e8f0', borderRadius: '4px', overflow: 'hidden' }}>
+                      <div style={{
+                        height: '100%',
+                        width: d.turnout,
+                        backgroundColor: '#2563eb',
+                        transition: 'width 0.5s ease-in-out'
+                      }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeMenu === 'System Settings' && (
+          <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            <div className="card">
+              <h2 style={{ fontSize: '16px', fontWeight: '800', marginBottom: '20px' }}>State Operations Configuration</h2>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '24px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <strong style={{ display: 'block', fontSize: '13px' }}>Live Webcasting Monitoring</strong>
+                      <span style={{ fontSize: '11px', color: '#64748b' }}>Allow direct stream access from booth panels</span>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={ceoSettings.webcastActiveState}
+                      onChange={(e) => setCeoSettings(prev => ({ ...prev, webcastActiveState: e.target.checked }))}
+                      style={{ width: '20px', height: '20px', cursor: 'pointer' }}
+                    />
+                  </div>
+
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #f1f5f9', paddingTop: '16px' }}>
+                    <div>
+                      <strong style={{ display: 'block', fontSize: '13px' }}>Allow Electronic Devices in Booth</strong>
+                      <span style={{ fontSize: '11px', color: '#64748b' }}>Permit electors carrying mobile devices into polling chamber</span>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={ceoSettings.allowMobileInBooth}
+                      onChange={(e) => setCeoSettings(prev => ({ ...prev, allowMobileInBooth: e.target.checked }))}
+                      style={{ width: '20px', height: '20px', cursor: 'pointer' }}
+                    />
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', borderLeft: '1px solid #e2e8f0', paddingLeft: '24px' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', marginBottom: '6px' }}>MCC Enforcement Advisory Level</label>
+                    <select
+                      value={ceoSettings.mccAdvisoryLevel}
+                      onChange={(e) => setCeoSettings(prev => ({ ...prev, mccAdvisoryLevel: e.target.value }))}
+                      style={{ padding: '8px', width: '100%', borderRadius: '6px', border: '1px solid #cbd5e1' }}
+                    >
+                      <option value="Strict">Strict (Immediate notices and confiscations)</option>
+                      <option value="Standard">Standard (ECI guidelines default)</option>
+                      <option value="Lenient">Lenient (Warnings before notices)</option>
+                    </select>
+                  </div>
+
+                  <button
+                    onClick={() => alert("State operation settings committed successfully.")}
+                    style={{ padding: '12px', backgroundColor: '#2563eb', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', marginTop: '20px' }}
+                  >
+                    Commit Configuration
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
 
         {/* DIALOG PHONE OVERLAY */}
         {callModal.open && (

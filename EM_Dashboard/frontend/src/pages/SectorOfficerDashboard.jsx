@@ -1404,11 +1404,356 @@ export default function SectorOfficerDashboard({ user, onLogout }) {
               )}
 
               {/* fallback for other views */}
-              {!['Booth Heatmap', 'Live Alerts', 'Visits & Patrol', 'Turnout Analytics', 'Queue Monitor', 'EVM Status', 'Requests from RO'].includes(activeMenu) && (
-                <div style={{ padding: '40px 0', textAlign: 'center', color: '#64748b' }}>
-                  <HelpCircle size={48} style={{ margin: '0 auto 16px', opacity: 0.5 }} />
-                  <h3>Section under active admin supervision</h3>
-                  <p style={{ fontSize: '12px', marginTop: '6px' }}>Please use the main Dashboard to operate critical communication, AI assistants, incident reports, and staff pool logs.</p>
+              {activeMenu === 'Operational Desk' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                  <div className="card" style={{ padding: '24px', backgroundColor: '#fff', borderRadius: '16px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+                    <h3 style={{ fontSize: '16px', fontWeight: '800', color: '#1e293b', marginBottom: '14px' }}>Booth Control Desk &bull; Booth {selectedBooth.id}</h3>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '20px' }}>
+                      <div style={{ padding: '12px', border: '1px solid #e2e8f0', borderRadius: '10px' }}>
+                        <span style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', fontWeight: 'bold' }}>Status</span>
+                        <h4 style={{ fontSize: '16px', fontWeight: '800', color: getStatusColor(selectedBooth.status), margin: '4px 0 0' }}>{selectedBooth.status}</h4>
+                      </div>
+                      <div style={{ padding: '12px', border: '1px solid #e2e8f0', borderRadius: '10px' }}>
+                        <span style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', fontWeight: 'bold' }}>Voter Turnout</span>
+                        <h4 style={{ fontSize: '16px', fontWeight: '800', color: '#0f172a', margin: '4px 0 0' }}>{selectedBooth.turnout}%</h4>
+                      </div>
+                      <div style={{ padding: '12px', border: '1px solid #e2e8f0', borderRadius: '10px' }}>
+                        <span style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', fontWeight: 'bold' }}>EVM Battery</span>
+                        <h4 style={{ fontSize: '16px', fontWeight: '800', color: selectedBooth.evmBattery < 30 ? '#dc2626' : '#16a34a', margin: '4px 0 0' }}>{selectedBooth.evmBattery}%</h4>
+                      </div>
+                    </div>
+
+                    <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                      <h4 style={{ fontSize: '13px', fontWeight: 'bold', margin: 0 }}>Command Center Actions</h4>
+                      <div style={{ display: 'flex', gap: '12px' }}>
+                        <button onClick={() => handleDeployEVM(selectedBooth.id)} style={{ flexGrow: 1, padding: '10px', backgroundColor: '#0f172a', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }}>Deploy Spare EVM</button>
+                        <button onClick={() => handleDeployStaff(selectedBooth.id)} style={{ flexGrow: 1, padding: '10px', backgroundColor: '#2563eb', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }}>Deploy Reserve Staff</button>
+                      </div>
+
+                      <form
+                        onSubmit={(e) => {
+                          e.preventDefault();
+                          const directive = e.target.directive.value;
+                          if (!directive.trim()) return;
+                          alert(`Directive sent to Presiding Officer of Booth ${selectedBooth.id}: "${directive}"`);
+                          e.target.reset();
+                        }}
+                        style={{ display: 'flex', gap: '8px', marginTop: '8px' }}
+                      >
+                        <input name="directive" type="text" placeholder="Type official directive to Presiding Officer..." style={{ flexGrow: 1, padding: '8px 12px', border: '1px solid #cbd5e1', borderRadius: '8px', fontSize: '12px', outline: 'none' }} />
+                        <button type="submit" style={{ padding: '8px 16px', backgroundColor: '#ea580c', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }}>Send Directive</button>
+                      </form>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activeMenu === 'Booth Heatmap' && (
+                <div className="card" style={{ padding: '24px' }}>
+                  <h3 style={{ fontSize: '16px', fontWeight: '800', color: '#1e293b', marginBottom: '14px' }}>Sector Booth Heatmap Grid</h3>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
+                    {booths.map(b => (
+                      <div
+                        key={b.id}
+                        onClick={() => setSelectedBoothId(b.id)}
+                        style={{
+                          padding: '20px 14px',
+                          border: selectedBoothId === b.id ? '2px solid #2563eb' : '1px solid #e2e8f0',
+                          backgroundColor: selectedBoothId === b.id ? '#eff6ff' : '#fff',
+                          borderRadius: '12px',
+                          textAlign: 'center',
+                          cursor: 'pointer',
+                          boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
+                        }}
+                      >
+                        <strong style={{ fontSize: '15px', color: '#1e293b' }}>Booth {b.id}</strong>
+                        <p style={{ fontSize: '11px', color: '#64748b', margin: '4px 0 10px' }}>{b.name}</p>
+                        <span style={{
+                          padding: '3px 8px',
+                          borderRadius: '8px',
+                          fontSize: '10px',
+                          fontWeight: 'bold',
+                          backgroundColor: getStatusBgColor(b.status),
+                          color: getStatusColor(b.status)
+                        }}>{b.status}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {activeMenu === 'Booth Monitoring' && (
+                <div className="card" style={{ padding: '24px' }}>
+                  <h3 style={{ fontSize: '16px', fontWeight: '800', color: '#1e293b', marginBottom: '14px' }}>All Booths Database</h3>
+                  <div style={{ overflowX: 'auto' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px', textAlign: 'left' }}>
+                      <thead>
+                        <tr style={{ backgroundColor: '#f8fafc', borderBottom: '2px solid #e2e8f0' }}>
+                          <th style={{ padding: '10px' }}>Booth ID</th>
+                          <th style={{ padding: '10px' }}>Polling Station Name</th>
+                          <th style={{ padding: '10px' }}>Status</th>
+                          <th style={{ padding: '10px' }}>Turnout</th>
+                          <th style={{ padding: '10px' }}>Queue</th>
+                          <th style={{ padding: '10px' }}>Visit Status</th>
+                          <th style={{ padding: '10px', textAlign: 'center' }}>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {booths.map(b => (
+                          <tr key={b.id} style={{ borderBottom: '1px solid #e2e8f0' }}>
+                            <td style={{ padding: '10px', fontWeight: 'bold' }}>{b.id}</td>
+                            <td style={{ padding: '10px' }}>{b.name}</td>
+                            <td style={{ padding: '10px', fontWeight: 'bold', color: getStatusColor(b.status) }}>{b.status}</td>
+                            <td style={{ padding: '10px', fontWeight: 'bold' }}>{b.turnout}%</td>
+                            <td style={{ padding: '10px' }}>{b.queueCount} voters</td>
+                            <td style={{ padding: '10px' }}>{b.visitStatus} ({b.visitTime})</td>
+                            <td style={{ padding: '10px', textAlign: 'center' }}>
+                              <button
+                                onClick={() => {
+                                  setSelectedBoothId(b.id);
+                                  setActiveMenu('Operational Desk');
+                                }}
+                                style={{
+                                  padding: '4px 8px',
+                                  backgroundColor: '#eff6ff',
+                                  color: '#2563eb',
+                                  border: '1px solid #bfdbfe',
+                                  borderRadius: '6px',
+                                  fontSize: '11px',
+                                  fontWeight: 'bold',
+                                  cursor: 'pointer'
+                                }}
+                              >
+                                Select
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {activeMenu === 'Incident War Room' && (
+                <div className="card" style={{ padding: '24px' }}>
+                  <h3 style={{ fontSize: '16px', fontWeight: '800', color: '#1e293b', marginBottom: '14px' }}>Incident War Room</h3>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    {incidents.map(inc => (
+                      <div key={inc.id} style={{ border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#f8fafc' }}>
+                        <div>
+                          <span style={{ fontSize: '10px', fontWeight: 'bold', color: '#ef4444', backgroundColor: '#fef2f2', padding: '3px 8px', borderRadius: '8px' }}>
+                            TICKET ID: {inc.id}
+                          </span>
+                          <h4 style={{ fontSize: '13px', fontWeight: 'bold', color: '#0f172a', margin: '8px 0 2px' }}>{inc.type} at Booth {inc.boothId}</h4>
+                          <span style={{ fontSize: '11px', color: '#64748b' }}>Reported: {inc.time}</span>
+                        </div>
+
+                        <button
+                          onClick={() => {
+                            setIncidents(prev => prev.map(i => i.id === inc.id ? { ...i, status: i.status === 'Resolved' ? 'Open' : 'Resolved' } : i));
+                            alert("Incident status updated.");
+                          }}
+                          style={{
+                            padding: '6px 12px',
+                            backgroundColor: inc.status === 'Resolved' ? '#dcfce7' : '#ffedd5',
+                            color: inc.status === 'Resolved' ? '#16a34a' : '#ea580c',
+                            border: 'none',
+                            borderRadius: '8px',
+                            fontSize: '11px',
+                            fontWeight: 'bold',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          {inc.status}
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {activeMenu === 'EVM Movement' && (
+                <div className="card" style={{ padding: '24px' }}>
+                  <h3 style={{ fontSize: '16px', fontWeight: '800', color: '#1e293b', marginBottom: '14px' }}>EVM & VVPAT Logistics Tracker</h3>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '24px' }}>
+                    <div style={{ border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px', backgroundColor: '#f8fafc' }}>
+                      <h4 style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '14px' }}>Active GPS Patrol Vehicles</h4>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '12px' }}>
+                        <div>🚚 <strong>Vehicle 1 (Spare Stock):</strong> En-route to Booth 104 (Eta 3 mins)</div>
+                        <div>🚚 <strong>Vehicle 2 (Security Escort):</strong> Base Standby (Ready)</div>
+                      </div>
+                    </div>
+                    <div style={{ border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px' }}>
+                      <h4 style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '14px' }}>EVM & VVPAT Spares Pool</h4>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '8px' }}>
+                        <span>Reserve EVM Units</span>
+                        <strong>{reserveResources.evms} Units Available</strong>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
+                        <span>Reserve VVPAT Units</span>
+                        <strong>{reserveResources.vvpats} Units Available</strong>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activeMenu === 'Staff Attendance' && (
+                <div className="card" style={{ padding: '24px' }}>
+                  <h3 style={{ fontSize: '16px', fontWeight: '800', color: '#1e293b', marginBottom: '14px' }}>Counter Staff Attendance Desk</h3>
+                  <div style={{ overflowX: 'auto' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px', textAlign: 'left' }}>
+                      <thead>
+                        <tr style={{ backgroundColor: '#f8fafc', borderBottom: '2px solid #e2e8f0' }}>
+                          <th style={{ padding: '10px' }}>Staff Name</th>
+                          <th style={{ padding: '10px' }}>Assigned Duty</th>
+                          <th style={{ padding: '10px' }}>Attendance Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {[
+                          { name: "Officer Rajesh", role: "PO-1 (Verification) Booth 101", status: "Present" },
+                          { name: "Officer Priya", role: "PO-2 (Ink & Entry) Booth 101", status: "Present" },
+                          { name: "Officer Vinod", role: "PO-3 (EVM) Booth 102", status: "Present" },
+                          { name: "Officer Sita", role: "PO-4 (Auxiliary) Booth 103", status: "Present" }
+                        ].map((staff, idx) => (
+                          <tr key={idx} style={{ borderBottom: '1px solid #e2e8f0' }}>
+                            <td style={{ padding: '10px', fontWeight: 'bold' }}>{staff.name}</td>
+                            <td style={{ padding: '10px' }}>{staff.role}</td>
+                            <td style={{ padding: '10px' }}>
+                              <span style={{
+                                padding: '3px 8px',
+                                borderRadius: '8px',
+                                fontSize: '10px',
+                                fontWeight: 'bold',
+                                backgroundColor: '#dcfce7',
+                                color: '#16a34a'
+                              }}>{staff.status}</span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {activeMenu === 'Resource Deployment' && (
+                <div className="card" style={{ padding: '24px' }}>
+                  <h3 style={{ fontSize: '16px', fontWeight: '800', color: '#1e293b', marginBottom: '14px' }}>Reserve Pools Deployment Center</h3>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
+                    {[
+                      { name: "Reserve EVMs", val: reserveResources.evms, color: '#3b82f6' },
+                      { name: "Reserve VVPATs", val: reserveResources.vvpats, color: '#2563eb' },
+                      { name: "Reserve Staff", val: reserveResources.staff, color: '#10b981' },
+                      { name: "Reserve Vehicles", val: reserveResources.vehicles, color: '#f59e0b' }
+                    ].map((res, idx) => (
+                      <div key={idx} style={{ border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px', textAlign: 'center', backgroundColor: '#f8fafc' }}>
+                        <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 'bold', textTransform: 'uppercase' }}>{res.name}</span>
+                        <h4 style={{ fontSize: '24px', fontWeight: '900', color: res.color, margin: '6px 0 0' }}>{res.val}</h4>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {activeMenu === 'Communications' && (
+                <div className="card" style={{ padding: '24px' }}>
+                  <h3 style={{ fontSize: '16px', fontWeight: '800', color: '#1e293b', marginBottom: '14px' }}>Secure Sector Radio Logs</h3>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '24px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                      <h4 style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '4px' }}>Radio Calls & Activity</h4>
+                      {commLogs.map((log, idx) => (
+                        <div key={idx} style={{ padding: '10px 14px', border: '1px solid #e2e8f0', borderRadius: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#f8fafc' }}>
+                          <div>
+                            <span style={{ fontSize: '9px', fontWeight: 'bold', color: '#2563eb', textTransform: 'uppercase' }}>{log.type}</span>
+                            <p style={{ fontSize: '12px', color: '#334155', margin: '4px 0 0', fontWeight: '500' }}>{log.text}</p>
+                          </div>
+                          <span style={{ fontSize: '10px', color: '#94a3b8' }}>{log.time}</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    <form onSubmit={handleBroadcast} style={{ border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                      <h4 style={{ fontSize: '13px', fontWeight: 'bold', margin: 0 }}>Push Sector-wide Announcement</h4>
+                      <textarea
+                        value={broadcastText}
+                        onChange={(e) => setBroadcastText(e.target.value)}
+                        placeholder="Type message to broadcast to all 12 booths..."
+                        style={{ height: '80px', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '12px', outline: 'none', resize: 'none' }}
+                      />
+                      <button type="submit" style={{ padding: '10px', backgroundColor: '#0f172a', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }}>Broadcast Announcement</button>
+                    </form>
+                  </div>
+                </div>
+              )}
+
+              {activeMenu === 'Reports' && (
+                <div className="card" style={{ padding: '24px' }}>
+                  <h3 style={{ fontSize: '16px', fontWeight: '800', color: '#1e293b', marginBottom: '14px' }}>Constituency Forms & Diary Logs</h3>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+                    {[
+                      { name: "Mock Poll Certificates", status: "12 / 12 Submitted", color: '#16a34a' },
+                      { name: "Form 17C Accounts", status: "0 / 12 Submitted", color: '#ef4444' },
+                      { name: "Presiding Officer Diaries", status: "2 / 12 Closed", color: '#ea580c' }
+                    ].map((rep, idx) => (
+                      <div key={idx} style={{ border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px', backgroundColor: '#f8fafc' }}>
+                        <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 'bold', textTransform: 'uppercase' }}>{rep.name}</span>
+                        <h4 style={{ fontSize: '14px', fontWeight: '800', color: rep.color, margin: '6px 0 0' }}>{rep.status}</h4>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {activeMenu === 'AI Assistant' && (
+                <div className="card" style={{ padding: '24px' }}>
+                  <h3 style={{ fontSize: '16px', fontWeight: '800', color: '#1e293b', marginBottom: '14px' }}>Offline AI Advisor Console</h3>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', height: '350px', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '16px', backgroundColor: '#f8fafc' }}>
+                    <div style={{ flexGrow: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                      {chatMessages.map((msg, i) => (
+                        <div key={i} style={{ alignSelf: msg.sender === 'user' ? 'flex-end' : 'flex-start', backgroundColor: msg.sender === 'user' ? '#2563eb' : '#fff', color: msg.sender === 'user' ? '#fff' : '#0f172a', padding: '10px 14px', borderRadius: '12px', maxWidth: '70%', fontSize: '12px', border: msg.sender === 'user' ? 'none' : '1px solid #e2e8f0' }}>
+                          {msg.text}
+                        </div>
+                      ))}
+                    </div>
+
+                    <form onSubmit={handleChatSend} style={{ display: 'flex', gap: '10px' }}>
+                      <input
+                        type="text"
+                        placeholder="Ask SOP or guideline question..."
+                        value={chatInput}
+                        onChange={(e) => setChatInput(e.target.value)}
+                        style={{ flexGrow: 1, padding: '10px 14px', borderRadius: '10px', border: '1px solid #cbd5e1', outline: 'none', fontSize: '12px' }}
+                      />
+                      <button type="submit" style={{ padding: '10px 20px', backgroundColor: '#0f172a', color: '#fff', border: 'none', borderRadius: '10px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }}>Ask</button>
+                    </form>
+                  </div>
+                </div>
+              )}
+
+              {activeMenu === 'Settings' && (
+                <div className="card" style={{ padding: '24px' }}>
+                  <h3 style={{ fontSize: '16px', fontWeight: '800', color: '#1e293b', marginBottom: '14px' }}>Sector Command Configuration</h3>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', maxWidth: '400px' }}>
+                    <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '13px' }}>
+                      <span>Enable Sound Notification Alarms</span>
+                      <input type="checkbox" defaultChecked style={{ width: '16px', height: '16px' }} />
+                    </label>
+                    <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '13px' }}>
+                      <span>Direct GPS Tracking Broadcasts</span>
+                      <input type="checkbox" defaultChecked style={{ width: '16px', height: '16px' }} />
+                    </label>
+                    <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '13px' }}>
+                      <span>Poll Interval Rate</span>
+                      <select style={{ padding: '4px', borderRadius: '4px', border: '1px solid #cbd5e1' }} defaultValue="5s">
+                        <option>3s</option>
+                        <option>5s</option>
+                        <option>10s</option>
+                      </select>
+                    </label>
+                  </div>
                 </div>
               )}
 
