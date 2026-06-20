@@ -9,6 +9,7 @@ import DistrictElectionOfficerDashboard from './pages/DistrictElectionOfficerDas
 import ChiefElectoralOfficerDashboard from './pages/ChiefElectoralOfficerDashboard.jsx';
 import ECIDashboard from './pages/ECIDashboard.jsx';
 import PollingOfficerDashboard from './pages/PollingOfficerDashboard.jsx';
+import HierarchySelector from './components/HierarchySelector.jsx';
 
 export default function App() {
   const [token, setToken] = useState(() => localStorage.getItem('em_auth_token'));
@@ -16,13 +17,14 @@ export default function App() {
     const u = localStorage.getItem('em_auth_user');
     return u ? JSON.parse(u) : null;
   });
-  const [currentView, setCurrentView] = useState('login'); // 'login', 'dashboard', 'portal'
+  const [currentView, setCurrentView] = useState('home'); // 'home', 'hierarchy_selection', 'dashboard', 'portal'
+  const [targetRole, setTargetRole] = useState('');
 
   useEffect(() => {
     if (token && user) {
       setCurrentView('dashboard');
-    } else if (currentView !== 'portal') {
-      setCurrentView('login');
+    } else if (currentView !== 'portal' && currentView !== 'hierarchy_selection') {
+      setCurrentView('home');
     }
   }, [token, user]);
 
@@ -39,7 +41,15 @@ export default function App() {
     localStorage.removeItem('em_auth_user');
     setToken(null);
     setUser(null);
-    setCurrentView('login');
+    setCurrentView('hierarchy_selection');
+  };
+
+  const handleGoHome = () => {
+    localStorage.removeItem('em_auth_token');
+    localStorage.removeItem('em_auth_user');
+    setToken(null);
+    setUser(null);
+    setCurrentView('home');
   };
 
   // 1. Voter Portal View
@@ -49,70 +59,95 @@ export default function App() {
 
   // 2. Dashboard View (Logged in)
   if (token && user) {
-    if (user.role === 'CM') {
-      return (
-        <CMDboard
-          user={user}
-          onLogout={handleLogout}
-        />
-      );
-    } else if (user.role === 'Sector Officer') {
-      return (
-        <SectorOfficerDashboard
-          user={user}
-          onLogout={handleLogout}
-        />
-      );
-    } else if (user.role === 'Returning Officer') {
-      return (
-        <ReturningOfficerDashboard
-          user={user}
-          onLogout={handleLogout}
-        />
-      );
-    } else if (user.role === 'DEO') {
-      return (
-        <DistrictElectionOfficerDashboard
-          user={user}
-          onLogout={handleLogout}
-        />
-      );
-    } else if (user.role === 'CEO') {
-      return (
-        <ChiefElectoralOfficerDashboard
-          user={user}
-          onLogout={handleLogout}
-        />
-      );
-    } else if (user.role === 'ECI') {
-      return (
-        <ECIDashboard
-          user={user}
-          onLogout={handleLogout}
-        />
-      );
-    } else if (user.role === 'Polling Officer') {
-      return (
-        <PollingOfficerDashboard
-          user={user}
-          onLogout={handleLogout}
-        />
-      );
-    } else {
-      return (
-        <PresidingOfficerDashboard
-          user={user}
-          onLogout={handleLogout}
-        />
-      );
-    }
+    const renderDashboard = () => {
+      if (user.role === 'CM') {
+        return <CMDboard user={user} onLogout={handleLogout} />;
+      } else if (user.role === 'Sector Officer') {
+        return <SectorOfficerDashboard user={user} onLogout={handleLogout} />;
+      } else if (user.role === 'Returning Officer') {
+        return <ReturningOfficerDashboard user={user} onLogout={handleLogout} />;
+      } else if (user.role === 'DEO') {
+        return <DistrictElectionOfficerDashboard user={user} onLogout={handleLogout} />;
+      } else if (user.role === 'CEO') {
+        return <ChiefElectoralOfficerDashboard user={user} onLogout={handleLogout} />;
+      } else if (user.role === 'ECI') {
+        return <ECIDashboard user={user} onLogout={handleLogout} />;
+      } else if (user.role === 'Polling Officer') {
+        return <PollingOfficerDashboard user={user} onLogout={handleLogout} />;
+      } else {
+        return <PresidingOfficerDashboard user={user} onLogout={handleLogout} />;
+      }
+    };
+
+    return (
+      <>
+        {renderDashboard()}
+      </>
+    );
   }
 
-  // 3. Login Page (Not Logged in)
+  // 3. Hierarchy Selection View
+  if (currentView === 'hierarchy_selection') {
+    return (
+      <HierarchySelector 
+        targetRole={targetRole} 
+        onSelectOfficer={(officer) => handleLoginSuccess('mock-token', officer)}
+        onGoBack={() => setCurrentView('home')}
+      />
+    );
+  }
+
+  // 4. Role Selector (Not Logged in) - Main Home
   return (
-    <Login
-      onLoginSuccess={handleLoginSuccess}
-      onGoToPortal={() => setCurrentView('portal')}
-    />
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #0f2027, #203a43, #2c5364)', color: 'white', padding: '2rem', fontFamily: '"Inter", sans-serif' }}>
+      <h1 style={{ fontSize: '3rem', marginBottom: '3rem', fontWeight: 'bold', textShadow: '0 4px 6px rgba(0,0,0,0.3)' }}>NagarVaani</h1>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem', width: '100%', maxWidth: '1200px' }}>
+        {[
+          { label: 'ECI', role: 'ECI' },
+          { label: 'CEO', role: 'CEO' },
+          { label: 'DEO', role: 'DEO' },
+          { label: 'Returning Officer', role: 'Returning Officer' },
+          { label: 'Sector Officer', role: 'Sector Officer' },
+          { label: 'Presiding Officer', role: 'Presiding Officer' },
+          { label: 'Polling Officer', role: 'Polling Officer' },
+          { label: 'User Complaint', role: 'portal' },
+        ].map((btn) => (
+          <button
+            key={btn.label}
+            onClick={() => {
+              if (btn.role === 'portal') {
+                setCurrentView('portal');
+              } else {
+                setTargetRole(btn.role);
+                setCurrentView('hierarchy_selection');
+              }
+            }}
+            style={{
+              padding: '1.5rem',
+              fontSize: '1.25rem',
+              fontWeight: '600',
+              color: '#fff',
+              background: 'rgba(255, 255, 255, 0.1)',
+              backdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              borderRadius: '16px',
+              cursor: 'pointer',
+              transition: 'all 0.3s ease',
+              boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)'
+            }}
+            onMouseOver={(e) => {
+              e.currentTarget.style.transform = 'translateY(-5px)';
+              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+            }}
+          >
+            {btn.label}
+          </button>
+        ))}
+      </div>
+    </div>
   );
 }

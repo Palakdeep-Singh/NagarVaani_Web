@@ -21,9 +21,9 @@ export default function PollingOfficerDashboard({ user, onLogout }) {
   const [lastSyncTime, setLastSyncTime] = useState('11:33 AM');
   
   // Interactive Telemetry & Actions
-  const [votersProcessed, setVotersProcessed] = useState(268);
-  const [queueCount, setQueueCount] = useState(18);
-  const [avgProcessTime, setAvgProcessTime] = useState(45);
+  const [votersProcessed, setVotersProcessed] = useState(() => Math.floor(Math.random() * 160) + 187);
+  const [queueCount, setQueueCount] = useState(() => Math.floor(Math.random() * 10) + 12);
+  const [avgProcessTime, setAvgProcessTime] = useState(() => Math.floor(Math.random() * 27) + 31);
   const [breakStatus, setBreakStatus] = useState(false);
   
   // Interactive Checklist
@@ -146,7 +146,7 @@ export default function PollingOfficerDashboard({ user, onLogout }) {
             style={{ width: '30px', height: '30px' }}
           />
           <div className="sidebar-logo-text">
-            <h2 style={{ fontSize: '18px', margin: 0, color: '#fff', fontWeight: 800 }}>AAKAR</h2>
+            <h2 style={{ fontSize: '18px', margin: 0, color: '#fff', fontWeight: 800 }}>NagarVaani</h2>
             <p style={{ fontSize: '9px', margin: 0, color: '#38bdf8', letterSpacing: '1px', fontWeight: 700 }}>Election Day Operations</p>
           </div>
         </div>

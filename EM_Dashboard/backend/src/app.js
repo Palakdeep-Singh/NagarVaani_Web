@@ -44,6 +44,7 @@ import complaintsRoutes from './routes/complaints.routes.js';
 import documentsRoutes from './routes/documents.routes.js';
 import milestonesRoutes from './routes/milestones.routes.js';
 import schemeRoutes from './routes/scheme.routes.js';
+import hierarchyRoutes from './routes/hierarchy.routes.js';
 
 app.use('/api', dashboardRoutes);
 app.use('/api/auth', authRoutes);
@@ -53,6 +54,7 @@ app.use('/api/complaints', complaintsRoutes);
 app.use('/api/documents', documentsRoutes);
 app.use('/api/milestones', milestonesRoutes);
 app.use('/api/schemes', schemeRoutes);
+app.use('/api/hierarchy', hierarchyRoutes);
 
 // ── Static Files (Production) ────────────────────────────────────────────────
 const clientDist = path.resolve(__dirname, '../../client/dist');

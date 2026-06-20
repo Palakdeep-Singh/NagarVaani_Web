@@ -36,7 +36,7 @@ export default function ReturningOfficerDashboard({ user, onLogout }) {
     { candidate: "Sunita Devi", party: "Lok Kalyan Party", symbol: "Lotus" },
     { candidate: "Vijay Malhotra", party: "Independent", symbol: "Kite" }
   ]);
-  const [countingRound, setCountingRound] = useState(1);
+  const [countingRound, setCountingRound] = useState(() => Math.floor(Math.random() * 1) + 1);
   const [candidateVotes, setCandidateVotes] = useState([
     { name: "Rajesh Kumar", party: "National Congress Party", votes: 45201, leading: true },
     { name: "Sunita Devi", party: "Lok Kalyan Party", votes: 41850, leading: false },
@@ -129,7 +129,7 @@ export default function ReturningOfficerDashboard({ user, onLogout }) {
             style={{ width: '30px', height: '30px' }}
           />
           <div className="sidebar-logo-text">
-            <h2 style={{ fontSize: '18px', margin: 0, color: '#fff', fontWeight: 800 }}>AAKAR</h2>
+            <h2 style={{ fontSize: '18px', margin: 0, color: '#fff', fontWeight: 800 }}>NagarVaani</h2>
             <p style={{ fontSize: '9px', margin: 0, color: '#38bdf8', letterSpacing: '1px', fontWeight: 700 }}>Election Day Operations</p>
           </div>
         </div>

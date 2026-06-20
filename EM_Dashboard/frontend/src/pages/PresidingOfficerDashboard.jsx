@@ -45,7 +45,7 @@ export default function PresidingOfficerDashboard({ user, onLogout, boothIdOverr
     date: "25 Apr 2024"
   });
 
-  const [healthScore, setHealthScore] = useState(87);
+  const [healthScore, setHealthScore] = useState(() => Math.floor(Math.random() * 52) + 60);
   const [healthChecks, setHealthChecks] = useState({
     evm: true,
     power: true,

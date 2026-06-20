@@ -34,7 +34,7 @@ export default function SectorOfficerDashboard({ user, onLogout }) {
   }, []);
 
   // Selected booth for Right Command Sidebar / Operational Desk (default Booth 104)
-  const [selectedBoothId, setSelectedBoothId] = useState(104);
+  const [selectedBoothId, setSelectedBoothId] = useState(() => Math.floor(Math.random() * 62) + 72);
 
   // Core booths state (Booths 101 - 112)
   const [booths, setBooths] = useState([
@@ -301,7 +301,7 @@ export default function SectorOfficerDashboard({ user, onLogout }) {
           />
           <div className="sidebar-logo-text">
             <h2 style={{ fontSize: '18px', margin: 0, color: '#fff', fontWeight: 800 }}>NagarVaani</h2>
-            <p style={{ fontSize: '9px', margin: 0, color: '#38bdf8', letterSpacing: '1px', fontWeight: 700 }}>AAKAR SYSTEM</p>
+            <p style={{ fontSize: '9px', margin: 0, color: '#38bdf8', letterSpacing: '1px', fontWeight: 700 }}>NAGARVAANI SYSTEM</p>
           </div>
         </div>
 
@@ -1831,7 +1831,7 @@ export default function SectorOfficerDashboard({ user, onLogout }) {
           marginTop: 'auto',
           fontWeight: '500'
         }}>
-          &copy; 2026 AAKAR Election Management System &bull; Sector Officer Command Dashboard &bull; Version 2.0
+          &copy; 2026 NagarVaani Election Management System &bull; Sector Officer Command Dashboard &bull; Version 2.0
         </footer>
       </main>
     </div>
