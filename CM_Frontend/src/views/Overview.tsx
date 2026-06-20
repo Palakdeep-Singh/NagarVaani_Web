@@ -33,22 +33,37 @@ interface StatCardProps {
 }
 
 const StatCard: React.FC<StatCardProps> = ({ label, value, sub, accent, icon, trend, trendLabel }) => (
-  <div className={`stat-card c-${accent}`}>
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div className="stat-card-label">{label}</div>
-        <div className="stat-card-value">{value}</div>
-        {sub && <div className="stat-card-sub">{sub}</div>}
-        {trend && trendLabel && (
-          <div className="stat-card-trend" style={{ color: trend === 'up' ? 'var(--primary-light)' : trend === 'down' ? '#8B3A3A' : 'var(--text-muted)' }}>
-            {trend === 'up' ? <TrendingUp size={14} /> : null}
-            {trendLabel}
-          </div>
-        )}
-      </div>
-      <div className="stat-card-icon">
+  <div className="bg-white rounded-2xl border border-[#E5E7EB] shadow-sm p-6 hover:shadow-md transition-all relative overflow-hidden group hover:-translate-y-0.5">
+    {accent === 'red' && <div className="absolute top-0 left-0 w-full h-1 bg-[#DC2626]" />}
+    {accent === 'amber' && <div className="absolute top-0 left-0 w-full h-1 bg-[#F59E0B]" />}
+    {accent === 'green' && <div className="absolute top-0 left-0 w-full h-1 bg-[#16A34A]" />}
+    {accent === 'blue' && <div className="absolute top-0 left-0 w-full h-1 bg-[#2563EB]" />}
+    {accent === 'purple' && <div className="absolute top-0 left-0 w-full h-1 bg-[#7C3AED]" />}
+
+    <div className="flex justify-between items-start mb-4">
+      <div className={`p-2.5 rounded-xl ${
+        accent === 'red' ? 'bg-[#FEF2F2] text-[#DC2626]' : 
+        accent === 'amber' ? 'bg-[#FFFBEB] text-[#F59E0B]' :
+        accent === 'green' ? 'bg-[#F0FDF4] text-[#16A34A]' :
+        accent === 'purple' ? 'bg-[#F3E8FF] text-[#7C3AED]' :
+        'bg-[#EFF6FF] text-[#2563EB]'
+      }`}>
         {icon}
       </div>
+      {trend && trendLabel && (
+        <div className={`flex items-center gap-1 text-[11px] font-bold px-2 py-1 rounded-full ${
+          trend === 'up' ? 'bg-rose-50 text-rose-600' : 'bg-emerald-50 text-emerald-600'
+        }`}>
+          {trend === 'up' ? <TrendingUp size={12} /> : null}
+          {trendLabel}
+        </div>
+      )}
+    </div>
+    
+    <div>
+      <div className="text-[#111827] font-extrabold text-3xl tracking-tight mb-1">{value}</div>
+      <div className="text-[#6B7280] text-xs font-semibold uppercase tracking-wider">{label}</div>
+      {sub && <div className="text-[#9CA3AF] text-[11px] mt-1.5 font-medium">{sub}</div>}
     </div>
   </div>
 );
@@ -213,87 +228,73 @@ export const Overview: React.FC = () => {
 
   return (
     <div className="page-shell fade-in">
-      {/* Page header */}
-      <div className="page-shell-header">
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
+      {/* Hero Command Center Header */}
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 mb-6">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
-            <div className="page-shell-office">
-              {isCM ? 'CM Executive Office · Grievance Management Cell' : isDM ? `${activeDistrict} · District Magistrate Office` : `Department: ${activeDepartment}`}
+            <div className="flex items-center gap-3 mb-2">
+              <span className="px-2.5 py-1 bg-indigo-50 text-indigo-700 text-[10px] font-bold uppercase tracking-widest rounded-md border border-indigo-100">
+                {isCM ? 'Executive Dashboard' : isDM ? 'District Monitoring' : 'Department View'}
+              </span>
+              <span className="flex items-center gap-1.5 text-[11px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                LIVE SYSTEM SYNC
+              </span>
             </div>
-            <h1 className="page-shell-title">Grievance Command Cockpit</h1>
-            <p className="page-shell-subtitle">
-              Real-time monitoring, AI diagnostics, and accountability scorecards across Delhi Government departments.
+            <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
+              <Activity className="text-indigo-600" size={24} />
+              Grievance Command Cockpit
+            </h1>
+            <p className="text-sm text-slate-500 font-medium mt-1">
+              {isCM ? 'Statewide monitoring' : isDM ? `${activeDistrict} District Oversight` : `${activeDepartment} Overview`} · Last updated: {new Date().toLocaleTimeString('en-IN')}
             </p>
-            <div className="page-shell-source">
-              <Info size={9} /> Data source: Delhi State Portal (synthetic MVP) · Last updated: {new Date().toLocaleTimeString('en-IN')}
-            </div>
           </div>
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'flex-start' }}>
-            <button className="gov-btn gov-btn-outline gov-btn-sm">
-              <Download size={15} /> Export CSV
+          <div className="flex gap-2">
+            <button className="flex items-center gap-2 px-4 py-2 bg-white border border-[#E5E7EB] text-[#2563EB] rounded-xl text-xs font-bold hover:bg-[#F8FAFC] transition-colors shadow-sm">
+              <Download size={14} /> Export Report
             </button>
-            <button className="gov-btn gov-btn-outline gov-btn-sm">
-              <Download size={15} /> PDF Report
-            </button>
-            <button className="gov-btn gov-btn-primary gov-btn-sm">
-              <RefreshCw size={15} /> Refresh
+            <button className="flex items-center gap-2 px-4 py-2 bg-[#2563EB] text-white rounded-xl text-xs font-bold hover:bg-[#1D4ED8] transition-colors shadow-sm">
+              <RefreshCw size={14} /> Force Sync
             </button>
           </div>
         </div>
       </div>
 
-      {/* Emergency alert strip */}
+      {/* Emergency Alert Banner */}
       {emergency > 0 && (
-        <div className="alert-strip critical mb-16">
-          <AlertTriangle size={16} style={{ flexShrink: 0, marginTop: 2 }} />
-          <div style={{ lineHeight: 1.55 }}>
-            <strong>EMERGENCY — Immediate Action Required:</strong>{' '}
-            {emergency} emergency grievance{emergency > 1 ? 's' : ''} unresolved and require{emergency === 1 ? 's' : ''} DM-level escalation within 2 hours per Citizen Charter norms.
-            Refer: DOPT OM No. 43011/2/2014-Estt.(D) — Grievance Redressal Guidelines.
+        <div className="bg-rose-50 border border-rose-200 rounded-2xl p-6 mb-6 flex items-start gap-6 shadow-sm relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-1 h-full bg-rose-500"></div>
+          <div className="p-2 bg-white rounded-xl shadow-sm border border-rose-100 text-rose-600 shrink-0">
+            <AlertTriangle size={20} className="animate-pulse" />
           </div>
+          <div className="flex-1">
+            <h3 className="text-rose-800 font-bold text-sm mb-1 flex items-center gap-2">
+              CRITICAL ESCALATION ALERT
+              <span className="px-2 py-0.5 bg-rose-600 text-white text-[9px] uppercase rounded font-bold tracking-wider animate-pulse">Action Required</span>
+            </h3>
+            <p className="text-rose-700 text-xs font-medium leading-relaxed">
+              <strong>{emergency} emergency grievances</strong> remain unresolved and mandate immediate DM-level intervention within 2 hours.
+              Failure to act will trigger auto-escalation to Chief Secretary per Citizen Charter norms.
+            </p>
+          </div>
+          <button className="px-4 py-2 bg-rose-600 text-white text-xs font-bold rounded-xl shadow-sm hover:bg-rose-700 transition-colors whitespace-nowrap shrink-0">
+            View Emergency Cases
+          </button>
         </div>
       )}
 
-      {/* Stat cards */}
-      <div className="grid grid-cols-2 md:grid-cols-6 gap-4 mb-6">
-        <StatCard label="Total Grievances" value={total.toLocaleString('en-IN')} sub="All status" accent="navy" icon={<FileText size={20} />} />
-        <StatCard label="Pending" value={pending.toLocaleString('en-IN')} sub="Awaiting assignment" accent="amber" icon={<Clock size={20} />} />
-        <StatCard label="Active" value={active.toLocaleString('en-IN')} sub="Assigned to officers" accent="teal" icon={<Activity size={20} />} />
-        <StatCard label="Escalated" value={escalated.toLocaleString('en-IN')} sub="Executive review" accent="saffron" icon={<ShieldAlert size={20} />} />
-        <StatCard label="SLA Breach %" value={`${slaBreachPct}%`} sub={`${slaBreachCount} breached`} accent="red" icon={<AlertTriangle size={20} />} />
-        <StatCard label="Emergency Cases" value={emergency.toLocaleString('en-IN')} sub="Immediate priority" accent="red" icon={<CheckCircle2 size={20} />} />
-      </div>
-
-      {/* Status distribution bar */}
-      <div className="gov-card mb-16">
-        <div className="gov-card-header">
-          <div>
-            <div className="gov-card-title"><Activity size={14} /> Grievance Status Distribution</div>
-            <div className="gov-card-subtitle">Breakdown across all complaint stages</div>
-          </div>
-        </div>
-        <div className="gov-card-body">
-          <div style={{ display: 'flex', height: 18, borderRadius: 6, overflow: 'hidden', marginBottom: 16 }}>
-            {statusDist.map(s => s.pct > 0 && (
-              <div key={s.label} style={{ width: `${s.pct}%`, background: s.color, transition: 'width 0.5s' }} title={`${s.label}: ${s.count}`} />
-            ))}
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
-            {statusDist.map(s => (
-              <div key={s.label} style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
-                <div style={{ width: 12, height: 12, borderRadius: 3, background: s.color, flexShrink: 0, marginTop: 3 }} />
-                <div>
-                  <div style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1.3 }}>{s.count.toLocaleString('en-IN')}</div>
-                  <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', lineHeight: 1.3 }}>{s.label} ({s.pct}%)</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+      {/* Premium KPI Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 mb-6">
+        <StatCard label="Total Volume" value={total.toLocaleString('en-IN')} sub="Current cycle" accent="blue" icon={<FileText size={20} />} trend="up" trendLabel="+5%" />
+        <StatCard label="Pending Triage" value={pending.toLocaleString('en-IN')} sub="Unassigned cases" accent="amber" icon={<Clock size={20} />} trend="up" trendLabel="+12" />
+        <StatCard label="Active Work" value={active.toLocaleString('en-IN')} sub="In progress" accent="blue" icon={<Activity size={20} />} />
+        <StatCard label="Escalated" value={escalated.toLocaleString('en-IN')} sub="CS / CM review" accent="amber" icon={<ShieldAlert size={20} />} trend="up" trendLabel="Critical" />
+        <StatCard label="SLA Breach Rate" value={`${slaBreachPct}%`} sub={`${slaBreachCount} cases breached`} accent="red" icon={<AlertTriangle size={20} />} trend="down" trendLabel="Warning" />
+        <StatCard label="Emergency" value={emergency.toLocaleString('en-IN')} sub="< 2hr SLA" accent="red" icon={<CheckCircle2 size={20} />} />
       </div>
 
       {/* Natural Language Query Search Bar */}
-      <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm mb-6 flex items-center gap-3">
+      <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm mb-6 flex items-center gap-4">
         <div className="p-2 bg-indigo-50 rounded-xl text-indigo-600">
           <Search size={18} />
         </div>
@@ -316,82 +317,113 @@ export const Overview: React.FC = () => {
         )}
       </div>
 
-      {/* Grid containing Priority Action, SLA Tracker & AI Suggestions */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        {/* Priority Action List */}
-        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
-          <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+      {/* Row 1: 60/40 Split */}
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 mb-6">
+        {/* Grievance Status Distribution - 60% */}
+        <div className="lg:col-span-3 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col">
+          <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5 mb-1">
+            <Activity size={14} className="text-indigo-600" />
+            Grievance Status Distribution
+          </h3>
+          <p className="text-[11px] text-slate-500 mb-6 font-medium">Breakdown across all complaint stages</p>
+          
+          <div className="flex-1 flex flex-col justify-center">
+            <div style={{ display: 'flex', height: 24, borderRadius: 8, overflow: 'hidden', marginBottom: 20 }}>
+              {statusDist.map(s => s.pct > 0 && (
+                <div key={s.label} style={{ width: `${s.pct}%`, background: s.color, transition: 'width 0.5s' }} title={`${s.label}: ${s.count}`} />
+              ))}
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
+              {statusDist.map(s => (
+                <div key={s.label} style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+                  <div style={{ width: 12, height: 12, borderRadius: 3, background: s.color, flexShrink: 0, marginTop: 3 }} />
+                  <div>
+                    <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#111827', lineHeight: 1.2 }}>{s.count.toLocaleString('en-IN')}</div>
+                    <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{s.label} ({s.pct}%)</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Priority Action List - 40% */}
+        <div className="lg:col-span-2 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col">
+          <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5 mb-4">
             <ShieldAlert size={14} className="text-amber-500" />
             Priority Action List (Risk Score)
           </h3>
-          <div className="space-y-3">
+          <div className="space-y-3 flex-1 overflow-y-auto">
             {priorityActionList.map(dist => (
-              <div key={dist.name} className="flex justify-between items-center text-xs p-2.5 bg-slate-50 rounded-xl border border-slate-100">
+              <div key={dist.name} className="flex justify-between items-center p-3 bg-slate-50 rounded-xl border border-slate-100 hover:border-slate-200 transition-colors">
                 <div>
-                  <span className="font-bold text-slate-800 block">{dist.name}</span>
-                  <span className="text-[10px] text-slate-450">{dist.pendingCount} pending issues</span>
+                  <span className="font-bold text-slate-800 block text-sm">{dist.name}</span>
+                  <span className="text-[11px] font-medium text-slate-500">{dist.pendingCount} pending issues</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="font-extrabold text-amber-600 bg-amber-50 px-2 py-0.5 rounded text-[10px] border border-amber-150">Score: {dist.score}</span>
+                <div className="flex items-center gap-3">
+                  <span className="font-extrabold text-amber-700 bg-amber-50 px-2.5 py-1 rounded-md text-[11px] border border-amber-200 shadow-sm">Score: {dist.score}</span>
                   <button
                     onClick={() => alert(`Escalation order submitted to Chief Secretary for ${dist.name}`)}
-                    className="p-1 bg-white hover:bg-rose-50 border border-slate-200 hover:border-rose-200 text-rose-600 rounded"
+                    className="p-1.5 bg-white hover:bg-rose-50 border border-slate-200 hover:border-rose-300 text-rose-600 rounded-lg transition-colors shadow-sm"
                     title="Escalate to CS"
                   >
-                    <ArrowUpRight size={12} />
+                    <ArrowUpRight size={14} />
                   </button>
                 </div>
               </div>
             ))}
           </div>
         </div>
+      </div>
 
-        {/* SLA Breach Tracker */}
-        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
-          <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
-            <Clock size={14} className="text-rose-500" />
-            SLA Breach Tracker
-          </h3>
-          <div className="space-y-3">
-            {departmentsList.map(dept => (
-              <div key={dept.name} className="flex justify-between items-center text-xs p-2.5 bg-slate-50 rounded-xl border border-slate-100">
-                <span className="font-medium text-slate-700">{dept.name}</span>
-                <div className="flex gap-2">
-                  {dept.count > 0 && <span className="bg-amber-100 text-amber-800 font-bold px-2 py-0.5 rounded text-[9px]">15d+ Flag: {dept.count}</span>}
-                  {dept.red > 0 ? (
-                    <span className="bg-red-100 text-red-800 font-bold px-2 py-0.5 rounded text-[9px]">21d+ Breach: {dept.red}</span>
-                  ) : (
-                    <span className="bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded text-[9px]">OK</span>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* AI Suggestions Panel */}
-        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
-          <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+      {/* Row 2: 60/40 Split */}
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 mb-6">
+        {/* AI Suggestions Panel - 60% */}
+        <div className="lg:col-span-3 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col">
+          <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5 mb-4">
             <Brain size={14} className="text-indigo-600 animate-pulse" />
             AI Policy & Suggestions
           </h3>
-          <div className="space-y-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1">
             {loadingSuggestions ? (
-              <div className="p-4 text-center text-xs text-slate-500 animate-pulse bg-slate-50 rounded-xl border border-slate-100">
+              <div className="col-span-full p-6 text-center text-sm font-medium text-slate-500 animate-pulse bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-center">
                 Analyzing Live Grievances for Policy Suggestions...
               </div>
             ) : aiSuggestions.length > 0 ? (
               aiSuggestions.map((s, i) => (
-                <div key={i} className="p-3 bg-indigo-50/50 rounded-xl border border-indigo-100 text-xs">
-                  <span className="font-extrabold text-[10px] text-indigo-850 uppercase tracking-wider block">{s.rule}</span>
-                  <p className="mt-1 text-slate-700 leading-normal font-medium">{s.desc}</p>
+                <div key={i} className="p-4 bg-indigo-50/40 rounded-xl border border-indigo-100/50 hover:bg-indigo-50/80 transition-colors flex flex-col">
+                  <span className="font-extrabold text-[10px] text-indigo-700 uppercase tracking-wider block mb-2">{s.rule}</span>
+                  <p className="text-slate-700 text-xs leading-relaxed font-medium flex-1">{s.desc}</p>
                 </div>
               ))
             ) : (
-              <div className="p-4 text-center text-xs text-slate-400 bg-slate-50/50 rounded-xl border border-slate-100/50">
+              <div className="col-span-full p-6 text-center text-sm font-medium text-slate-400 bg-slate-50/50 rounded-xl border border-slate-100/50 flex items-center justify-center">
                 No policy suggestions available.
               </div>
             )}
+          </div>
+        </div>
+
+        {/* SLA Breach Tracker - 40% */}
+        <div className="lg:col-span-2 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col">
+          <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5 mb-4">
+            <Clock size={14} className="text-rose-500" />
+            SLA Breach Tracker
+          </h3>
+          <div className="space-y-3 flex-1 overflow-y-auto">
+            {departmentsList.map(dept => (
+              <div key={dept.name} className="flex justify-between items-center p-3 bg-slate-50 rounded-xl border border-slate-100 hover:border-slate-200 transition-colors">
+                <span className="font-bold text-slate-700 text-xs">{dept.name}</span>
+                <div className="flex gap-2">
+                  {dept.count > 0 && <span className="bg-amber-50 border border-amber-200 text-amber-800 font-bold px-2 py-1 rounded-md text-[10px] shadow-sm">15d+ Flag: {dept.count}</span>}
+                  {dept.red > 0 ? (
+                    <span className="bg-rose-50 border border-rose-200 text-rose-800 font-bold px-2 py-1 rounded-md text-[10px] shadow-sm">21d+ Breach: {dept.red}</span>
+                  ) : (
+                    <span className="bg-emerald-50 border border-emerald-200 text-emerald-800 font-bold px-2 py-1 rounded-md text-[10px] shadow-sm">OK</span>
+                  )}
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>
@@ -463,7 +495,15 @@ export const Overview: React.FC = () => {
                   {recent.map(c => (
                     <React.Fragment key={c.id}>
                       <tr
-                        style={{ cursor: 'pointer' }}
+                        style={{ 
+                          cursor: 'pointer',
+                          background: c.status === 'Pending' ? '#FFFBEB' 
+                            : c.status === 'Active' ? '#EFF6FF' 
+                            : c.status === 'Escalated' ? '#FEF2F2' 
+                            : c.status === 'Resolved' ? '#F0FDF4' 
+                            : undefined,
+                          transition: 'background 0.15s'
+                        }}
                         onClick={() => setExpandedId(expandedId === c.id ? null : c.id)}
                       >
                         <td><span className="ref-id">{c.id}</span></td>
@@ -589,8 +629,8 @@ export const Overview: React.FC = () => {
             <strong>Citizen Charter Commitment (Delhi):</strong> Every citizen has the right to track their grievance status in real time. Complaints not resolved within 30 days are automatically escalated to the Secretary level per Delhi Citizen Charter 2023. RTI requests for grievance data are processed within 30 days per Section 7 of the RTI Act, 2005.
           </div>
 
-          {/* Public tracking widget */}
-          <div className="public-track-box mb-16 bg-white p-5 rounded-2xl border border-slate-205 shadow-sm">
+          <div className="max-w-2xl mx-auto">
+          <div className="public-track-box mb-16 bg-white p-6 rounded-2xl border border-slate-205 shadow-sm">
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
               <Eye size={15} color="var(--primary)" />
               <div>
@@ -640,8 +680,9 @@ export const Overview: React.FC = () => {
               Tracking available at nagarvaani.delhi.gov.in/track · RTI: rtionline.gov.in
             </div>
           </div>
+        </div>
 
-          {/* Per-complaint public status cards */}
+        {/* Per-complaint public status cards */}
           <div className="gov-card">
             <div className="gov-card-header">
               <div className="gov-card-title"><User size={14} /> Citizen-Facing Resolution Status Board</div>

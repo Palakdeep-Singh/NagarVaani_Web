@@ -43,96 +43,76 @@
    ═══════════════════════════════════════════════════════════════ */
 
 :root {
-  /* ── Master Accent: Govt Navy (authority) + Digital Blue (interactive) ── */
-  --primary:          #0B3D62;   /* deep authority navy — headers, emphasis */
-  --primary-dark:     #062742;
-  --primary-mid:      #1768AC;   /* digital govt-tech blue — links, active states, CTAs */
-  --primary-light:    #9FC2DC;
-  --primary-xlight:   #EAF1F8;
-  --primary-xxlight:  #F7FAFC;
-  --accent:           #1768AC;   /* alias used for interactive elements */
-  --accent-strong:    #0E548D;
+  /* ── Master Accent: Govt Navy & Primary Blue ── */
+  --primary:          #2563EB;   /* Primary Blue */
+  --primary-dark:     #1D4ED8;
+  --primary-mid:      #2563EB;
+  --primary-light:    #60A5FA;
+  --primary-xlight:   #EFF6FF;
+  --accent:           #2563EB;
+  --accent-strong:    #1D4ED8;
 
   /* ── Neutrals ────────────────────────────────────────────── */
   --white:            #FFFFFF;
-  --surface-page:     #F4F6F8;
+  --surface-page:     #F8FAFC;
   --surface-card:     #FFFFFF;
-  --surface-header:   #F8FAFC;
-  --surface-row-alt:  #FAFBFC;
-  --surface-hover:    #EFF4F9;
+  --surface-header:   #FFFFFF;
+  --surface-row-alt:  #F9FAFB;
+  --surface-hover:    #F3F4F6;
 
   /* ── Text ────────────────────────────────────────────────── */
-  --text-primary:     #131A24;
-  --text-secondary:   #3D4754;
-  --text-muted:       #67727E;
-  --text-faint:       #97A1AC;
+  --text-primary:     #111827;
+  --text-secondary:   #6B7280;
+  --text-muted:       #9CA3AF;
+  --text-faint:       #D1D5DB;
   --text-inverse:     #FFFFFF;
 
   /* ── Borders ─────────────────────────────────────────────── */
-  --border:           #E2E7EC;
-  --border-light:     #ECEFF2;
-  --border-dark:      #CBD3DB;
+  --border:           #E5E7EB;
+  --border-light:     #F3F4F6;
+  --border-dark:      #D1D5DB;
 
-  /* ── Status — soft tints ───────────────────────────────────── */
-  --status-pending-bg:    #FFF6E6;
-  --status-pending-text:  #8A5D08;
-  --status-pending-border:#F0D699;
-
-  --status-active-bg:     #EAF1F8;
-  --status-active-text:   #0E548D;
-  --status-active-border: #BBD3E6;
-
-  --status-resolved-bg:   #E8F7EF;
-  --status-resolved-text: #0F7A45;
-  --status-resolved-border:#9FDFBC;
-
-  --status-escalated-bg:  #FCEAEA;
-  --status-escalated-text:#B42323;
-  --status-escalated-border:#F0B4B4;
-
-  /* ── Priority tints (booth management etc.) ─────────────────── */
-  --color-priority-high-bg:      #FFF6E6;
-  --color-priority-high-text:    #8A5D08;
-  --color-priority-high-border:  #F0D699;
-
-  --color-priority-emergency-bg:    #FCEAEA;
-  --color-priority-emergency-text:  #B42323;
-  --color-priority-emergency-border:#F0B4B4;
-
-  --color-resolved-bg:    #E8F7EF;
-  --color-resolved-text:  #0F7A45;
-  --color-resolved-border:#9FDFBC;
-
-  --color-active-bg:     #EAF1F8;
-  --color-active-text:   #0E548D;
-  --color-active-border: #BBD3E6;
-
-  /* ── Semantic ────────────────────────────────────────────── */
-  --success: #0F9D58;
-  --warning: #D97706;
+  /* ── Status / Semantic (Solid colors from design system) ── */
+  --success: #16A34A;
+  --warning: #F59E0B;
   --danger:  #DC2626;
+  --info:    #7C3AED;
 
-  /* ── Chart Colors — vivid, used only inside data viz ───────── */
-  --chart-1: #1768AC;
-  --chart-2: #0F9D58;
-  --chart-3: #DC2626;
-  --chart-4: #D97706;
-  --chart-5: #7C3AED;
-  --chart-6: #0891B2;
-  --chart-7: #DB2777;
-  --chart-8: #65A30D;
+  /* Status Tints */
+  --status-pending-bg:    #FFFBEB;
+  --status-pending-text:  #B45309;
+  --status-pending-border:#FEF3C7;
 
-  /* ── Shadows — soft, layered, low-contrast (digital-service feel) ── */
-  --shadow-xs:    0 1px 2px rgba(19,26,36,0.04);
-  --shadow-sm:    0 1px 2px rgba(19,26,36,0.04), 0 2px 6px rgba(19,26,36,0.04);
-  --shadow-md:    0 2px 8px rgba(19,26,36,0.06), 0 8px 24px rgba(19,26,36,0.06);
-  --shadow-lg:    0 8px 24px rgba(19,26,36,0.08), 0 16px 40px rgba(19,26,36,0.10);
-  --shadow-focus: 0 0 0 3px rgba(23,104,172,0.18);
+  --status-active-bg:     #EFF6FF;
+  --status-active-text:   #1D4ED8;
+  --status-active-border: #DBEAFE;
+
+  --status-resolved-bg:   #F0FDF4;
+  --status-resolved-text: #15803D;
+  --status-resolved-border:#DCFCE7;
+
+  --status-escalated-bg:  #FEF2F2;
+  --status-escalated-text:#B91C1C;
+  --status-escalated-border:#FEE2E2;
+
+  /* ── Chart Colors ───────── */
+  --chart-1: #2563EB; /* Blue */
+  --chart-2: #16A34A; /* Green */
+  --chart-3: #F59E0B; /* Amber */
+  --chart-4: #DC2626; /* Red */
+  --chart-5: #7C3AED; /* Purple */
+
+  /* ── Shadows (Soft, enterprise-grade) ── */
+  --shadow-xs:    0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-sm:    0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+  --shadow-md:    0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+  --shadow-lg:    0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+  --shadow-focus: 0 0 0 3px rgba(37, 99, 235, 0.2);
 
   /* ── Shape ───────────────────────────────────────────────── */
   --radius:       10px;
   --radius-lg:    16px;
-  --radius-sm:    7px;
+  --radius-sm:    8px;
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -181,10 +161,10 @@ input, select, textarea, button {
    SIDEBAR — clean white panel, right border, accent only on active item
    ═══════════════════════════════════════════════════════════════ */
 .sidebar {
-  width:           272px;
-  min-width:       272px;
-  background:      #FFFFFF;
-  border-right:    1px solid var(--border);
+  width:           320px;
+  min-width:       320px;
+  background:      #071534;
+  border-right:    1px solid #1E293B;
   display:         flex;
   flex-direction:  column;
   height:          100vh;
@@ -194,12 +174,12 @@ input, select, textarea, button {
   overflow-x:      hidden;
   flex-shrink:     0;
   scrollbar-width: thin;
-  scrollbar-color: var(--border-dark) transparent;
+  scrollbar-color: #334155 #0F172A;
 }
 
 .sidebar-brand {
   padding:        20px 18px 16px;
-  border-bottom:  1px solid var(--border-light);
+  border-bottom:  1px solid #1E293B;
   flex-shrink:    0;
 }
 
@@ -227,33 +207,33 @@ input, select, textarea, button {
   font-family:   var(--font-heading);
   font-size:     1.08rem;
   font-weight:   700;
-  color:         var(--text-primary);
+  color:         #FFFFFF;
   line-height:   1.2;
 }
 
 .sidebar-brand-sub {
   font-size:     0.69rem;
-  color:         var(--text-faint);
+  color:         #38BDF8;
   font-family:   var(--font-mono);
   margin-top:    3px;
   letter-spacing:0.03em;
 }
 
 .sidebar-user-card {
-  background:   var(--surface-header);
-  border:       1px solid var(--border-light);
+  background:   #0F172A;
+  border:       1px solid #1E293B;
   border-radius:var(--radius-sm);
   padding:      10px 12px;
 }
 
 .sidebar-user-name {
-  color:       var(--text-primary);
+  color:       #FFFFFF;
   font-weight: 700;
   font-size:   0.87rem;
 }
 
 .sidebar-user-role {
-  color:      var(--text-muted);
+  color:      #E2E8F0;
   font-size:  0.72rem;
   margin-top: 3px;
   font-family:var(--font-mono);
@@ -263,8 +243,8 @@ input, select, textarea, button {
   font-size:      0.65rem;
   font-weight:    700;
   text-transform: uppercase;
-  letter-spacing: 0.11em;
-  color:          var(--text-faint);
+  letter-spacing: 0.15em;
+  color:          #94A3B8;
   padding:        18px 18px 6px;
   font-family:    var(--font-sans);
 }
@@ -272,30 +252,44 @@ input, select, textarea, button {
 .sidebar-item {
   display:        flex;
   align-items:    center;
-  gap:            11px;
-  margin:         2px 10px;
-  padding:        9px 12px;
+  gap:            12px;
+  margin:         2px 12px;
+  padding:        10px 14px;
   font-size:      0.87rem;
   font-weight:    500;
-  color:          var(--text-secondary);
+  color:          #CBD5E1; /* Inactive Text */
   cursor:         pointer;
-  border-radius:  var(--radius-sm);
-  border-left:    3px solid transparent;
+  border-radius:  12px;
+  border-left:    none;
   transition:     all 0.14s ease;
   white-space:    nowrap;
   overflow:       hidden;
+  text-overflow:  ellipsis;
+}
+
+.sidebar-item svg {
+  color: #94A3B8;
+  transition: all 0.14s ease;
 }
 
 .sidebar-item:hover {
-  background:       var(--surface-hover);
-  color:            var(--text-primary);
+  background:       rgba(37,99,235,0.12);
+  color:            #FFFFFF;
+}
+
+.sidebar-item:hover svg {
+  color: #FFFFFF;
 }
 
 .sidebar-item.active {
-  background:        var(--primary-xlight);
-  color:              var(--accent-strong);
-  font-weight:        700;
-  border-left-color:  var(--primary-mid);
+  background:       #2563EB;
+  color:            #FFFFFF;
+  font-weight:      700;
+  box-shadow:       0 0 12px rgba(37,99,235,0.4);
+}
+
+.sidebar-item.active svg {
+  color: #FFFFFF;
 }
 
 .sidebar-badge {
@@ -311,10 +305,10 @@ input, select, textarea, button {
 }
 
 .sidebar-footer {
-  border-top:  1px solid var(--border-light);
+  border-top:  1px solid #1E293B;
   padding:     13px 18px;
   font-size:   0.68rem;
-  color:       var(--text-faint);
+  color:       #94A3B8;
   line-height: 1.8;
   font-family: var(--font-mono);
   flex-shrink: 0;
@@ -421,7 +415,10 @@ input, select, textarea, button {
 /* ═══════════════════════════════════════════════════════════════
    PAGE SHELL
    ═══════════════════════════════════════════════════════════════ */
-.page-shell { padding: 30px 32px 32px; }
+.page-shell { 
+  padding: 0; 
+  width: 100%;
+}
 
 .page-shell-header {
   margin-bottom: 24px;
@@ -767,14 +764,16 @@ input, select, textarea, button {
 .gov-tabs {
   display:       flex;
   border-bottom: 1px solid var(--border);
-  margin-bottom: 20px;
-  gap: 2px;
+  margin-bottom: 24px;
+  gap: 12px;
+  overflow-x:    auto;
+  scrollbar-width: none;
 }
 
 .gov-tab {
-  padding:      10px 17px;
-  font-size:    0.86rem;
-  font-weight:  600;
+  padding:      12px 16px;
+  font-size:    0.88rem;
+  font-weight:  500;
   color:        var(--text-muted);
   cursor:       pointer;
   border-bottom:2px solid transparent;
@@ -783,8 +782,8 @@ input, select, textarea, button {
   white-space:  nowrap;
   font-family:  var(--font-sans);
 }
-.gov-tab:hover        { color: var(--accent-strong); }
-.gov-tab.active       { color: var(--accent-strong); border-bottom-color: var(--primary-mid); font-weight: 700; }
+.gov-tab:hover        { color: var(--primary); }
+.gov-tab.active       { color: var(--primary); border-bottom-color: var(--primary); font-weight: 700; }
 
 /* ═══════════════════════════════════════════════════════════════
    ALERT STRIPS

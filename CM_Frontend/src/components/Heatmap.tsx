@@ -118,10 +118,11 @@ export const Heatmap: React.FC = () => {
             <button
               key={card.name}
               onClick={() => handleDistrictClick(card.name)}
-              className="bg-white relative flex flex-col justify-between p-4 rounded-xl border transition-all duration-300 text-left group hover:scale-[1.02] cursor-pointer shadow-sm hover:shadow-indigo-500/10"
+              className="relative flex flex-col justify-between p-4 rounded-xl border-2 transition-all duration-300 text-left group hover:scale-[1.02] cursor-pointer hover:shadow-lg"
               style={{
-                borderTop: `3px solid ${colors.border}`,
-                borderLeft: stats.score < 60 ? `1.5px solid ${colors.border}` : undefined
+                background: colors.bg,
+                borderColor: colors.border,
+                boxShadow: `0 2px 8px ${colors.border}15`,
               }}
             >
               {/* Card Header */}
@@ -149,19 +150,19 @@ export const Heatmap: React.FC = () => {
 
               {/* Compartment Grid */}
               <div className="grid grid-cols-2 gap-2 mb-3">
-                <div className="bg-slate-50 rounded-lg p-1.5 text-center border border-slate-100">
+                <div className="bg-white/70 rounded-lg p-1.5 text-center border border-white/50">
                   <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wide block">Active</span>
                   <span className="text-xs font-extrabold text-slate-800">{stats.active}</span>
                 </div>
-                <div className="bg-slate-50 rounded-lg p-1.5 text-center border border-slate-100">
+                <div className="bg-white/70 rounded-lg p-1.5 text-center border border-white/50">
                   <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wide block">SLA Alert</span>
                   <span className={`text-xs font-extrabold ${stats.emergency > 0 ? 'text-rose-600' : 'text-slate-800'}`}>{stats.emergency}</span>
                 </div>
-                <div className="bg-slate-50 rounded-lg p-1.5 text-center border border-slate-100">
+                <div className="bg-white/70 rounded-lg p-1.5 text-center border border-white/50">
                   <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wide block">Resolved</span>
                   <span className="text-xs font-extrabold text-emerald-600">{stats.resolved}</span>
                 </div>
-                <div className="bg-slate-50 rounded-lg p-1.5 text-center border border-slate-100">
+                <div className="bg-white/70 rounded-lg p-1.5 text-center border border-white/50">
                   <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wide block">Total</span>
                   <span className="text-xs font-extrabold text-indigo-600">{stats.total}</span>
                 </div>

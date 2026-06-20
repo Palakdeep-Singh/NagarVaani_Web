@@ -6,7 +6,7 @@ import {
   BookOpen, MapPin, Users2, CalendarCheck, DollarSign, FolderLock,
   MessageSquare, Video, Bell, UserCheck, Network,
   LogOut, ShieldCheck, AlertTriangle, RefreshCw,
-  ChevronRight, X, Activity, Building
+  ChevronRight, ChevronDown, X, Activity, Building
 } from 'lucide-react';
 
 interface SidebarItem {
@@ -83,6 +83,18 @@ export const MainLayout: React.FC<Props> = ({ children }) => {
   const [showAI, setShowAI]         = useState(false);
   const unreadCount = NOTIFICATIONS.filter(n => n.unread).length;
 
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({
+    'Command': true,
+    'Field Operations': true,
+    'Departments': true,
+    'Administration': true,
+    'Communications': true,
+  });
+
+  const toggleGroup = (title: string) => {
+    setExpandedGroups(prev => ({ ...prev, [title]: !prev[title] }));
+  };
+
   return (
     <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: 'var(--surface-page)' }}>
       {/* ── SIDEBAR ────────────────────────────────────────── */}
@@ -117,20 +129,33 @@ export const MainLayout: React.FC<Props> = ({ children }) => {
           {NAV_GROUPS.map(group => {
             const visible = group.items.filter(i => i.roles.includes(activeRole as any));
             if (visible.length === 0) return null;
+            const isExpanded = expandedGroups[group.title];
+            
             return (
-              <div key={group.title}>
-                <div className="sidebar-section-label">{group.title}</div>
-                {visible.map(item => (
-                  <div
-                    key={item.id}
-                    className={`sidebar-item ${activeTab === item.id ? 'active' : ''}`}
-                    onClick={() => setActiveTab(item.id)}
-                  >
-                    <item.icon size={17} />
-                    <span style={{ flex: 1 }}>{item.label}</span>
-                    {item.badge && <span className="sidebar-badge">{item.badge}</span>}
+              <div key={group.title} className="mb-2">
+                <div 
+                  className="sidebar-section-label flex justify-between items-center cursor-pointer hover:text-white transition-colors"
+                  onClick={() => toggleGroup(group.title)}
+                >
+                  {group.title}
+                  {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                </div>
+                
+                {isExpanded && (
+                  <div className="space-y-0.5">
+                    {visible.map(item => (
+                      <div
+                        key={item.id}
+                        className={`sidebar-item ${activeTab === item.id ? 'active' : ''}`}
+                        onClick={() => setActiveTab(item.id)}
+                      >
+                        <item.icon size={17} />
+                        <span style={{ flex: 1 }}>{item.label}</span>
+                        {item.badge && <span className="sidebar-badge">{item.badge}</span>}
+                      </div>
+                    ))}
                   </div>
-                ))}
+                )}
               </div>
             );
           })}
@@ -144,19 +169,19 @@ export const MainLayout: React.FC<Props> = ({ children }) => {
       </aside>
 
       {/* ── MAIN AREA ─────────────────────────────────────── */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, height: '100vh', overflow: 'hidden' }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, height: '100vh', overflow: 'hidden', background: '#F8FAFC' }}>
 
         {/* Main header */}
-        <header className="main-header" style={{ position: 'relative' }}>
+        <header className="main-header border-b border-slate-200 bg-white" style={{ position: 'relative', marginLeft: 0 }}>
           <div style={{ minWidth: 0, flex: 1 }}>
             <div
-              className="main-header-breadcrumb"
+              className="main-header-breadcrumb text-slate-500"
               style={{ display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
             >
-              <span>Govt. of NCT of Delhi</span>
+              <span className="font-semibold text-xs tracking-wider uppercase">Govt. of NCT of Delhi</span>
               <ChevronRight size={12} style={{ flexShrink: 0, opacity: 0.45 }} />
-              <strong>
-                {activeTab && activeTab !== 'Overview' ? (activeTab === 'KnowledgeGraph' ? 'Knowledge Graph' : activeTab.replace(/([A-Z])/g, ' $1').trim()) : 'CM Executive Dashboard'}
+              <strong className="text-slate-900 text-sm">
+                {activeTab && activeTab !== 'Overview' ? (activeTab === 'KnowledgeGraph' ? 'Knowledge Graph' : activeTab.replace(/([A-Z])/g, ' $1').trim()) : 'Executive Command Center'}
               </strong>
             </div>
           </div>
@@ -234,8 +259,8 @@ export const MainLayout: React.FC<Props> = ({ children }) => {
         </header>
 
         {/* Main scrollable content */}
-        <main style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden' }}>
-          <div className="fade-in">{children}</div>
+        <main style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: '24px 32px 32px 32px' }}>
+          <div className="fade-in" style={{ maxWidth: 1600, margin: '0 auto', width: '100%' }}>{children}</div>
         </main>
       </div>
 

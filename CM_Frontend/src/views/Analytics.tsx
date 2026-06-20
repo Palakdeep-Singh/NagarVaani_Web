@@ -25,10 +25,10 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 };
 
 const SectionHeader: React.FC<{ title: string; subtitle: string; source?: string }> = ({ title, subtitle, source }) => (
-  <div style={{ padding: '12px 16px', borderBottom: '1px solid #e8edf3', background: '#fafbfc', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+  <div style={{ padding: '16px 20px', borderBottom: '1px solid #E5E7EB', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
     <div>
-      <div style={{ fontFamily: 'var(--font-heading)', fontSize: '0.9rem', fontWeight: 600, color: '#0d1e30' }}>{title}</div>
-      <div style={{ fontSize: '0.78rem', color: '#6b7a8a', marginTop: '2px' }}>{subtitle}</div>
+      <div style={{ fontFamily: 'var(--font-heading)', fontSize: '0.85rem', fontWeight: 700, color: '#111827', letterSpacing: '-0.01em' }}>{title}</div>
+      <div style={{ fontSize: '0.75rem', color: '#6B7280', marginTop: '2px', fontWeight: 500 }}>{subtitle}</div>
     </div>
     {source && (
       <span className="data-source-badge">
@@ -106,45 +106,52 @@ export const Analytics: React.FC = () => {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }} className="animate-slidein">
 
       {/* Header */}
-      <div>
-        <div style={{ fontSize: '0.6rem', color: '#6b7a8a', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '4px' }}>
-          Executive Analytics Module
+      <div className="bg-white rounded-2xl border border-[#E5E7EB] shadow-sm p-6">
+        <div className="flex items-center gap-3 mb-2">
+          <span className="px-2.5 py-1 bg-[#EFF6FF] text-[#2563EB] text-[10px] font-bold uppercase tracking-widest rounded-md border border-[#DBEAFE]">
+            Executive Analytics Module
+          </span>
         </div>
-        <h1 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.4rem', fontWeight: 600, color: '#0d1e30', margin: 0 }}>
+        <h1 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.4rem', fontWeight: 800, color: '#111827', margin: 0, letterSpacing: '-0.02em' }}>
           Intake, Trends & Performance Analytics
         </h1>
-        <p style={{ fontSize: '0.75rem', color: '#6b7a8a', margin: '3px 0 0' }}>
+        <p style={{ fontSize: '0.82rem', color: '#6B7280', margin: '4px 0 0', fontWeight: 500 }}>
           Grievance volume analysis, departmental performance, and SLA compliance metrics.
         </p>
       </div>
 
       {/* KPI strip */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '10px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '16px' }}>
         {[
-          { label: 'Avg. Resolution Time', value: '4.2 days', icon: <Clock style={{ width: 14, height: 14, color: '#1a3a5c' }} />, accent: '#1a3a5c' },
-          { label: 'SLA Breach Rate', value: '23%', icon: <AlertTriangle style={{ width: 14, height: 14, color: '#e8600d' }} />, accent: '#e8600d' },
-          { label: 'Monthly Intake', value: '1,284', icon: <TrendingUp style={{ width: 14, height: 14, color: '#138808' }} />, accent: '#138808' },
-          { label: 'Satisfaction Score', value: '68/100', icon: <CheckCircle2 style={{ width: 14, height: 14, color: '#1a6b8a' }} />, accent: '#1a6b8a' },
+          { label: 'Avg. Resolution Time', value: '4.2 days', icon: <Clock style={{ width: 18, height: 18 }} />, bg: '#EFF6FF', color: '#2563EB' },
+          { label: 'SLA Breach Rate', value: '23%', icon: <AlertTriangle style={{ width: 18, height: 18 }} />, bg: '#FEF2F2', color: '#DC2626' },
+          { label: 'Monthly Intake', value: '1,284', icon: <TrendingUp style={{ width: 18, height: 18 }} />, bg: '#F0FDF4', color: '#16A34A' },
+          { label: 'Satisfaction Score', value: '68/100', icon: <CheckCircle2 style={{ width: 18, height: 18 }} />, bg: '#F3E8FF', color: '#7C3AED' },
         ].map((kpi, i) => (
-          <div key={i} style={{ background: '#fff', border: '1px solid #d4dae3', borderLeft: `3px solid ${kpi.accent}`, borderRadius: '3px', padding: '12px 14px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
-              {kpi.icon}
-              <span style={{ fontSize: '0.74rem', color: '#6b7a8a', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 600 }}>{kpi.label}</span>
+          <div key={i} className="bg-white rounded-2xl border border-[#E5E7EB] shadow-sm p-5 hover:shadow-md transition-all hover:-translate-y-0.5 relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-full h-1" style={{ background: kpi.color }} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
+              <div style={{ padding: '8px', borderRadius: '12px', background: kpi.bg, color: kpi.color, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                {kpi.icon}
+              </div>
             </div>
-            <div style={{ fontFamily: 'var(--font-heading)', fontSize: '1.2rem', fontWeight: 600, color: '#0d1e30' }}>{kpi.value}</div>
+            <div style={{ fontFamily: 'var(--font-heading)', fontSize: '1.6rem', fontWeight: 800, color: '#111827', lineHeight: 1.1 }}>{kpi.value}</div>
+            <div style={{ fontSize: '0.72rem', color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700, marginTop: '6px' }}>{kpi.label}</div>
           </div>
         ))}
       </div>
 
       {/* Tab selector */}
-      <div style={{ display: 'flex', gap: '6px' }}>
+      <div style={{ display: 'flex', gap: '8px' }}>
         {metricBtns.map(btn => (
           <button key={btn.key} onClick={() => setActiveMetric(btn.key as any)}
             style={{
-              padding: '6px 14px', borderRadius: '3px', fontSize: '0.84rem', fontWeight: 600, cursor: 'pointer',
-              background: activeMetric === btn.key ? '#1a3a5c' : '#ffffff',
-              color: activeMetric === btn.key ? '#ffffff' : '#4a5568',
-              border: `1px solid ${activeMetric === btn.key ? '#1a3a5c' : '#d4dae3'}`
+              padding: '8px 18px', borderRadius: '12px', fontSize: '0.82rem', fontWeight: 700, cursor: 'pointer',
+              background: activeMetric === btn.key ? '#2563EB' : '#FFFFFF',
+              color: activeMetric === btn.key ? '#FFFFFF' : '#6B7280',
+              border: `1px solid ${activeMetric === btn.key ? '#2563EB' : '#E5E7EB'}`,
+              transition: 'all 0.15s',
+              boxShadow: activeMetric === btn.key ? '0 2px 8px rgba(37,99,235,0.3)' : 'none'
             }}>
             {btn.label}
           </button>
@@ -152,11 +159,11 @@ export const Analytics: React.FC = () => {
       </div>
 
       {/* Charts row 1 */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
         {/* Daily trends */}
-        <div style={{ background: '#fff', border: '1px solid #d4dae3', borderRadius: '4px', overflow: 'hidden' }}>
+        <div className="bg-white rounded-2xl border border-[#E5E7EB] shadow-sm overflow-hidden">
           <SectionHeader title="Daily Grievance Volume" subtitle="Intake vs Resolved — last 7 days" source="State Portal" />
-          <div style={{ padding: '16px' }}>
+          <div style={{ padding: '20px' }}>
             <ResponsiveContainer width="100%" height={220}>
               <AreaChart data={trendsData} margin={{ top: 8, right: 8, left: -20, bottom: 0 }}>
                 <defs>
@@ -182,9 +189,9 @@ export const Analytics: React.FC = () => {
         </div>
 
         {/* Dept bar chart */}
-        <div style={{ background: '#fff', border: '1px solid #d4dae3', borderRadius: '4px', overflow: 'hidden' }}>
+        <div className="bg-white rounded-2xl border border-[#E5E7EB] shadow-sm overflow-hidden">
           <SectionHeader title="Grievances by Department" subtitle="Total complaints per nodal department" />
-          <div style={{ padding: '16px' }}>
+          <div style={{ padding: '20px' }}>
             <ResponsiveContainer width="100%" height={220}>
               <BarChart data={departmentData.slice(0, 7)} margin={{ top: 8, right: 8, left: -20, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e8edf3" vertical={false} />
@@ -203,11 +210,11 @@ export const Analytics: React.FC = () => {
       </div>
 
       {/* Charts row 2 */}
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '16px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '3fr 2fr', gap: '20px' }}>
         {/* District comparison */}
-        <div style={{ background: '#fff', border: '1px solid #d4dae3', borderRadius: '4px', overflow: 'hidden' }}>
+        <div className="bg-white rounded-2xl border border-[#E5E7EB] shadow-sm overflow-hidden">
           <SectionHeader title="District-wise Complaint Load & Resolution" subtitle="Filed vs resolved per district for current period" />
-          <div style={{ padding: '16px' }}>
+          <div style={{ padding: '20px' }}>
             <ResponsiveContainer width="100%" height={220}>
               <BarChart data={districtData} margin={{ top: 8, right: 8, left: -20, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e8edf3" vertical={false} />
@@ -223,9 +230,9 @@ export const Analytics: React.FC = () => {
         </div>
 
         {/* Priority pie */}
-        <div style={{ background: '#fff', border: '1px solid #d4dae3', borderRadius: '4px', overflow: 'hidden' }}>
+        <div className="bg-white rounded-2xl border border-[#E5E7EB] shadow-sm overflow-hidden">
           <SectionHeader title="By Priority Level" subtitle="Distribution across severity tiers" />
-          <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             <ResponsiveContainer width="100%" height={160}>
               <PieChart>
                 <Pie data={priorityData} cx="50%" cy="50%" innerRadius={45} outerRadius={72} dataKey="value" paddingAngle={3}>
@@ -250,10 +257,10 @@ export const Analytics: React.FC = () => {
       </div>
 
       {/* Hourly intake + SLA */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-        <div style={{ background: '#fff', border: '1px solid #d4dae3', borderRadius: '4px', overflow: 'hidden' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+        <div className="bg-white rounded-2xl border border-[#E5E7EB] shadow-sm overflow-hidden">
           <SectionHeader title="Peak Hour Intake Analysis" subtitle="Complaint filing pattern by time-of-day" />
-          <div style={{ padding: '16px' }}>
+          <div style={{ padding: '20px' }}>
             <ResponsiveContainer width="100%" height={180}>
               <BarChart data={hourlyData} margin={{ top: 8, right: 8, left: -20, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e8edf3" vertical={false} />
@@ -266,9 +273,9 @@ export const Analytics: React.FC = () => {
           </div>
         </div>
 
-        <div style={{ background: '#fff', border: '1px solid #d4dae3', borderRadius: '4px', overflow: 'hidden' }}>
+        <div className="bg-white rounded-2xl border border-[#E5E7EB] shadow-sm overflow-hidden">
           <SectionHeader title="SLA Compliance by Department" subtitle="% within 7-day resolution mandate" />
-          <div style={{ padding: '16px' }}>
+          <div style={{ padding: '20px' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {slaData.map((d, i) => (
                 <div key={i}>
@@ -300,9 +307,9 @@ export const Analytics: React.FC = () => {
       </div>
 
       {/* Data footnote */}
-      <div style={{ background: '#eff5fb', border: '1px solid #9ab8d8', borderRadius: '3px', padding: '10px 14px', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-        <Info style={{ width: 13, height: 13, color: '#1a3a5c', marginTop: '1px', flexShrink: 0 }} />
-        <div style={{ fontSize: '0.80rem', color: '#1a3a5c', lineHeight: 1.5 }}>
+      <div className="bg-[#EFF6FF] border border-[#DBEAFE] rounded-2xl p-5 flex items-start gap-3">
+        <Info style={{ width: 15, height: 15, color: '#2563EB', marginTop: '1px', flexShrink: 0 }} />
+        <div style={{ fontSize: '0.80rem', color: '#1D4ED8', lineHeight: 1.6, fontWeight: 500 }}>
           <strong>Data Integration Note:</strong> All charts currently render synthetic data generated for demonstration purposes. Production integration is planned with CPGRAMS (Central Public Grievance Redress and Monitoring System), State Treasury IFMS, and NIC e-Office for live feeds. Source labels will update on integration.
         </div>
       </div>
