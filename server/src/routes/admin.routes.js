@@ -720,4 +720,237 @@ router.delete('/delete-admin/:id', protect, requireRole('central', 'state', 'dis
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
+// ── GET /api/admin/knowledge-graph ───────────────────────────────────────────
+// Returns nodes (citizens, schemes, officers, complaints) + edges for graph viz
+router.get('/knowledge-graph', protect, requireRole('central', 'state', 'district'), async (req, res) => {
+  try {
+    const role = req.user.role;
+    const adminState = req.user.state;
+    const adminDistrict = req.user.district;
+    const limit = parseInt(req.query.limit) || 60;
+
+    // ── 1. Load officers (admins) ─────────────────────────────────────────────
+    let adminsQ = supabase.from('admins').select('id,name,role,state,district,designation,is_active').eq('is_active', true).limit(30);
+    if (role === 'state') adminsQ = adminsQ.eq('state', adminState);
+    if (role === 'district') adminsQ = adminsQ.eq('district', adminDistrict);
+    const { data: officers } = await adminsQ;
+
+    // ── 2. Load schemes ───────────────────────────────────────────────────────
+    const { data: schemes } = await supabase
+      .from('schemes')
+      .select('id,name,category,benefit_amount,enrolled_count,is_active')
+      .eq('is_active', true)
+      .limit(20);
+
+    // ── 3. Load recent complaints ─────────────────────────────────────────────
+    let compQ = supabase.from('complaints')
+      .select('id,title,category,status,district,state,user_id')
+      .order('created_at', { ascending: false })
+      .limit(25);
+    if (role === 'district') compQ = compQ.eq('district', adminDistrict);
+    else if (role === 'state') compQ = compQ.eq('state', adminState);
+    const { data: complaints } = await compQ;
+
+    // ── 4. Load scheme enrollments for edges ─────────────────────────────────
+    let enrollQ = supabase.from('user_scheme_matches')
+      .select('user_id,scheme_id,status')
+      .in('status', ['applied', 'active', 'completed'])
+      .limit(120);
+    const { data: enrollments } = await enrollQ;
+
+    // ── 5. Load sample citizens (limited) ────────────────────────────────────
+    let citizensQ = supabase.from('users')
+      .select('id,full_name,state,district,ward,category,civic_score')
+      .limit(limit);
+    if (role === 'district') citizensQ = citizensQ.eq('district', adminDistrict);
+    else if (role === 'state') citizensQ = citizensQ.eq('state', adminState);
+    const { data: citizens } = await citizensQ;
+
+    // ── Build node arrays ─────────────────────────────────────────────────────
+    const nodes = [];
+    const edges = [];
+
+    // Add Central Hub (Chief Minister)
+    nodes.push({
+      id: 'hub_main', type: 'hub', label: 'Chief Minister (CM)',
+      sub: 'State Head',
+      meta: { scope: role }
+    });
+
+    // Identify unique districts from officers to create DM nodes
+    const districts = [...new Set((officers || []).filter(o => o.district).map(o => o.district))];
+
+    districts.forEach(d => {
+      nodes.push({
+        id: `dm_${d}`, type: 'dm', label: `DM - ${d}`,
+        sub: 'District Magistrate', meta: { district: d }
+      });
+      edges.push({ source: 'hub_main', target: `dm_${d}`, type: 'commands', label: 'commands' });
+    });
+
+    (officers || []).forEach(o => {
+      nodes.push({
+        id: `officer_${o.id}`, type: 'officer', label: o.name,
+        sub: o.designation || o.role, state: o.state, district: o.district,
+        meta: { role: o.role, designation: o.designation }
+      });
+
+      // State officers connect to CM, district officers connect to DM
+      if (o.role === 'state' || !o.district) {
+        edges.push({ source: 'hub_main', target: `officer_${o.id}`, type: 'reports_to', label: 'reports to' });
+      } else {
+        edges.push({ source: `dm_${o.district}`, target: `officer_${o.id}`, type: 'reports_to', label: 'reports to' });
+      }
+    });
+
+    (schemes || []).forEach(s => {
+      nodes.push({
+        id: `scheme_${s.id}`, type: 'scheme', label: s.name,
+        sub: s.category, meta: { benefit: s.benefit_amount, enrolled: s.enrolled_count || 0 }
+      });
+      edges.push({ source: 'hub_main', target: `scheme_${s.id}`, type: 'administers', label: 'launches' });
+    });
+
+    (complaints || []).forEach(c => {
+      nodes.push({
+        id: `complaint_${c.id}`, type: 'complaint',
+        label: (c.title || 'Complaint').slice(0, 28),
+        sub: c.status, meta: { category: c.category, status: c.status, district: c.district }
+      });
+      if (c.district && districts.includes(c.district)) {
+        edges.push({ source: `dm_${c.district}`, target: `complaint_${c.id}`, type: 'manages', label: 'oversees' });
+      } else {
+        edges.push({ source: 'hub_main', target: `complaint_${c.id}`, type: 'manages', label: 'oversees' });
+      }
+    });
+
+    const citizenMap = {};
+    (citizens || []).forEach(u => {
+      const dec = { ...u }; // Already plain text for graph
+      citizenMap[u.id] = true;
+      nodes.push({
+        id: `citizen_${u.id}`, type: 'citizen',
+        label: (dec.full_name || 'Citizen').slice(0, 20),
+        sub: dec.ward || dec.district || '',
+        meta: { category: dec.category, civic_score: dec.civic_score, district: dec.district }
+      });
+    });
+
+    // ── Build edges ───────────────────────────────────────────────────────────
+    
+    // Citizen → Scheme (enrollment)
+    const schemeIds = new Set((schemes || []).map(s => s.id));
+    (enrollments || []).forEach(e => {
+      if (!citizenMap[e.user_id] || !schemeIds.has(e.scheme_id)) return;
+      edges.push({ source: `citizen_${e.user_id}`, target: `scheme_${e.scheme_id}`, type: 'enrolled', label: e.status });
+    });
+
+    // Citizen → Complaint
+    (complaints || []).forEach(c => {
+      if (!citizenMap[c.user_id]) return;
+      edges.push({ source: `citizen_${c.user_id}`, target: `complaint_${c.id}`, type: 'filed', label: c.status });
+    });
+
+    res.json({
+      nodes,
+      edges: edges.slice(0, 300), // cap for performance
+      meta: {
+        officers: (officers || []).length,
+        schemes: (schemes || []).length,
+        complaints: (complaints || []).length,
+        citizens: (citizens || []).length,
+      }
+    });
+  } catch (err) {
+    console.error('[knowledge-graph CRASH]', err.stack);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── POST /api/admin/bulk-create-admins ────────────────────────────────────────
+// Accepts array of admin records parsed from CSV on client side
+// CSV format: name,email,role,state,district,designation,phone
+router.post('/bulk-create-admins', protect, requireRole('central', 'state'), async (req, res) => {
+  try {
+    const { rows } = req.body; // Array of {name,email,role,state,district,designation,phone}
+    if (!Array.isArray(rows) || rows.length === 0)
+      return res.status(400).json({ error: 'rows array is required' });
+    if (rows.length > 200)
+      return res.status(400).json({ error: 'Maximum 200 rows per batch' });
+
+    const creator = req.user;
+    const results = [];
+
+    for (const row of rows) {
+      const { name, email, role, state, district, designation, phone } = row;
+
+      // Validate required fields
+      if (!name || !email || !role) {
+        results.push({ email: email || '?', status: 'error', reason: 'Missing name, email, or role' });
+        continue;
+      }
+
+      // Validate email format
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        results.push({ email, status: 'error', reason: 'Invalid email format' });
+        continue;
+      }
+
+      // Role permission check
+      if (!canCreate(creator.role, role)) {
+        results.push({ email, status: 'error', reason: `Your role (${creator.role}) cannot create ${role} admins` });
+        continue;
+      }
+
+      // State lock for state admins
+      const targetState = creator.role === 'state' ? creator.state : state;
+
+      // Check for duplicate email
+      const { data: existing } = await supabase.from('admins').select('id').eq('email', email.toLowerCase().trim()).single();
+      if (existing) {
+        results.push({ email, status: 'skipped', reason: 'Email already exists' });
+        continue;
+      }
+
+      try {
+        const plainPassword = generatePassword(role, district, targetState);
+        const password_hash = await bcrypt.hash(plainPassword, 10);
+
+        const { data, error } = await supabase.from('admins').insert({
+          email: email.toLowerCase().trim(),
+          password_hash,
+          name: name.trim(),
+          role,
+          state: role === 'central' ? null : targetState || null,
+          district: role === 'district' ? (district || null) : null,
+          designation: designation || null,
+          phone: phone || null,
+          is_active: true,
+        }).select('id,email,name,role').single();
+
+        if (error) throw new Error(error.message);
+
+        results.push({
+          email: data.email, name: data.name, role: data.role,
+          status: 'created', password: plainPassword
+        });
+      } catch (e) {
+        results.push({ email, status: 'error', reason: e.message });
+      }
+    }
+
+    const summary = {
+      total: rows.length,
+      created: results.filter(r => r.status === 'created').length,
+      skipped: results.filter(r => r.status === 'skipped').length,
+      errors: results.filter(r => r.status === 'error').length,
+    };
+
+    res.json({ success: true, summary, results });
+  } catch (err) {
+    console.error('[bulk-create-admins CRASH]', err.stack);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 export default router;

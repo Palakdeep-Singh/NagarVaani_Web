@@ -2,297 +2,245 @@ import React, { useState } from 'react';
 import { useStore } from '../context/Store';
 import { Chatbot } from '../components/Chatbot';
 import {
-  LayoutDashboard,
-  BarChart2,
-  Award,
-  BrainCircuit,
-  Stethoscope,
-  BookOpen,
-  MapPin,
-  Users2,
-  CalendarCheck,
-  DollarSign,
-  FolderLock,
-  MessageSquare,
-  Video,
-  Menu,
-  Bell,
-  UserCheck,
-  Building,
-  Bot
+  LayoutDashboard, BarChart2, Award, BrainCircuit, Stethoscope,
+  BookOpen, MapPin, Users2, CalendarCheck, DollarSign, FolderLock,
+  MessageSquare, Video, Bell, UserCheck, Network,
+  LogOut, ShieldCheck, AlertTriangle, RefreshCw,
+  ChevronRight, X, Activity, Building
 } from 'lucide-react';
 
 interface SidebarItem {
   id: string;
   label: string;
-  icon: React.ComponentType<{ className?: string }>;
+  icon: React.ComponentType<{ size?: number; color?: string }>;
+  badge?: number | string;
   roles: ('Chief Minister' | 'District Magistrate' | 'Department Head')[];
 }
 
-
 const NAV_GROUPS = [
   {
-    title: 'Dashboard',
+    title: 'Command',
     items: [
-      { id: 'Overview', label: 'Overview Map', icon: LayoutDashboard, roles: ['Chief Minister', 'District Magistrate', 'Department Head'] },
-      { id: 'Analytics', label: 'Analytics Graphs', icon: BarChart2, roles: ['Chief Minister', 'District Magistrate', 'Department Head'] },
-      { id: 'Rankings', label: 'District Rankings', icon: Award, roles: ['Chief Minister', 'District Magistrate', 'Department Head'] },
-      { id: 'Suggestions', label: 'AI Suggestions', icon: BrainCircuit, roles: ['Chief Minister', 'District Magistrate', 'Department Head'] }
-    ] as SidebarItem[]
+      { id: 'Overview',    label: 'Grievance Overview',  icon: LayoutDashboard, roles: ['Chief Minister','District Magistrate','Department Head'] },
+      { id: 'OfficerWorkspace', label: 'Officer Workspace', icon: ShieldCheck,     roles: ['Department Head'] },
+      { id: 'DistrictMinistry', label: 'District Ministry', icon: Building,        roles: ['District Magistrate'] },
+      { id: 'Analytics',  label: 'Analytics & Trends',  icon: BarChart2,        roles: ['Chief Minister','District Magistrate','Department Head'] },
+      { id: 'Rankings',   label: 'District Rankings',   icon: Award,            roles: ['Chief Minister','District Magistrate'] },
+      { id: 'Suggestions',label: 'AI Suggestions',      icon: BrainCircuit,     roles: ['Chief Minister','District Magistrate','Department Head'] },
+    ] as SidebarItem[],
+  },
+  {
+    title: 'Field Operations',
+    items: [
+      { id: 'DM View',    label: 'DM Workspace',        icon: MapPin,           roles: ['Chief Minister','District Magistrate'] },
+      { id: 'Officers',   label: 'Officer Directory',   icon: Users2,           roles: ['Chief Minister','District Magistrate','Department Head'] },
+      { id: 'KnowledgeGraph', label: 'Knowledge Graph', icon: Network,          roles: ['Chief Minister','District Magistrate','Department Head'] },
+    ] as SidebarItem[],
   },
   {
     title: 'Departments',
     items: [
-      { id: 'Health', label: 'Health Department', icon: Stethoscope, roles: ['Chief Minister', 'District Magistrate', 'Department Head'] },
-      { id: 'Education', label: 'Education Department', icon: BookOpen, roles: ['Chief Minister', 'District Magistrate', 'Department Head'] }
-    ] as SidebarItem[]
-  },
-  {
-    title: 'Workspaces',
-    items: [
-      { id: 'DM View', label: 'DM Workspace', icon: MapPin, roles: ['Chief Minister', 'District Magistrate', 'Department Head'] },
-      { id: 'Officers', label: 'Officer Directory', icon: Users2, roles: ['Chief Minister', 'District Magistrate', 'Department Head'] }
-    ] as SidebarItem[]
+      { id: 'Health',     label: 'Health & FW',         icon: Stethoscope,      roles: ['Chief Minister','Department Head'] },
+      { id: 'Education',  label: 'Education Dept.',     icon: BookOpen,         roles: ['Chief Minister','Department Head'] },
+    ] as SidebarItem[],
   },
   {
     title: 'Administration',
     items: [
-      { id: 'Projects', label: 'Project Monitoring', icon: CalendarCheck, roles: ['Chief Minister', 'District Magistrate', 'Department Head'] },
-      { id: 'Funds', label: 'Fund Allocation', icon: DollarSign, roles: ['Chief Minister', 'District Magistrate', 'Department Head'] },
-      { id: 'Files', label: 'File Management', icon: FolderLock, roles: ['Chief Minister', 'District Magistrate', 'Department Head'] }
-    ] as SidebarItem[]
+      { id: 'Projects',   label: 'Project Monitoring',  icon: CalendarCheck,    roles: ['Chief Minister','District Magistrate','Department Head'] },
+      { id: 'Funds',      label: 'Fund Allocation',     icon: DollarSign,       roles: ['Chief Minister'] },
+      { id: 'Files',      label: 'E-File Management',   icon: FolderLock,       roles: ['Chief Minister','District Magistrate','Department Head'] },
+    ] as SidebarItem[],
   },
   {
     title: 'Communications',
     items: [
-      { id: 'Communications', label: 'Internal Chat', icon: MessageSquare, roles: ['Chief Minister', 'District Magistrate', 'Department Head'] },
-      { id: 'VideoCall', label: 'Video Call Room', icon: Video, roles: ['Chief Minister', 'District Magistrate', 'Department Head'] }
-    ] as SidebarItem[]
-  }
+      { id: 'Communications', label: 'Messaging',        icon: MessageSquare,    roles: ['Chief Minister','District Magistrate','Department Head'] },
+      { id: 'VideoCall',      label: 'Video Conference',  icon: Video,            roles: ['Chief Minister','District Magistrate','Department Head'] },
+    ] as SidebarItem[],
+  },
 ];
 
-export const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const {
-    activeRole,
-    activeDistrict,
-    activeDepartment,
-    activeTab,
-    setActiveTab,
-    complaints,
-    files,
-    currentUser,
-    logoutUser,
-    showAIPanel,
-    setShowAIPanel
-  } = useStore();
+const NOTIFICATIONS = [
+  { id: 1, type: 'critical', text: '14 Emergency grievances unresolved > 48 hrs in North East Delhi', time: '09:42 AM', unread: true },
+  { id: 2, type: 'warning',  text: 'PWD & Infrastructure SLA breach rate crossed 35% today', time: '08:15 AM', unread: true },
+  { id: 3, type: 'warning',  text: 'South West Delhi: 8 complaints escalated — DM response pending', time: '07:30 AM', unread: true },
+  { id: 4, type: 'info',     text: 'Scheduled report ready: Weekly Grievance Digest (19 Jun 2026)', time: '06:00 AM', unread: false },
+  { id: 5, type: 'info',     text: 'System backup completed. Data integrity verified.', time: 'Yesterday', unread: false },
+];
 
-  const [showNotificationMenu, setShowNotificationMenu] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+const ROLE_LABELS: Record<string, string> = {
+  'Chief Minister': 'CM Office',
+  'District Magistrate': 'DM Office',
+  'Department Head': 'Dept. Head',
+};
 
-  
-  const pendingFilesCount = files.filter(
-    f => f.currentOwner === (activeRole === 'Chief Minister' ? 'Chief Minister' : activeDepartment) && 
-    f.status === 'Pending Approval'
-  ).length;
-  
-  const emergencyComplaintsCount = complaints.filter(
-    c => c.priority === 'Emergency' && c.status !== 'Resolved'
-  ).length;
+interface Props { children: React.ReactNode; }
 
-  const notifications = [
-    ...(pendingFilesCount > 0 ? [`${pendingFilesCount} E-Files pending signature.`] : []),
-    ...(emergencyComplaintsCount > 0 ? [`CRITICAL: ${emergencyComplaintsCount} emergencies registered.`] : []),
-    "District rankings updated. Shahdara DM flagged for SLA delays.",
-    "Monsoon drainage readiness briefing scheduled for 3:00 PM."
-  ];
+export const MainLayout: React.FC<Props> = ({ children }) => {
+  const { activeTab, setActiveTab, activeRole, activeDistrict, currentUser, logoutUser } = useStore();
+  const [showNotif, setShowNotif]   = useState(false);
+  const [showAI, setShowAI]         = useState(false);
+  const unreadCount = NOTIFICATIONS.filter(n => n.unread).length;
 
   return (
-    <div className="h-screen overflow-hidden flex bg-slate-50 text-slate-800 relative w-screen font-sans">
-            {sidebarOpen && (
-        <div
-          className="fixed inset-0 bg-slate-900/35 z-35 md:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
-            <aside
-        className={`bg-white border-r border-slate-200 flex flex-col transition-all duration-300 z-40 shrink-0 h-full overflow-hidden fixed md:relative inset-y-0 left-0 md:translate-x-0 ${
-          sidebarOpen
-            ? 'translate-x-0 w-64 shadow-xl md:shadow-none'
-            : '-translate-x-full md:translate-x-0 md:w-20'
-        }`}
-      >
-                <div className="h-16 flex items-center px-5 border-b border-slate-200 gap-3 bg-white">
-          <div className="h-9 w-9 rounded-xl bg-indigo-600 flex items-center justify-center shadow-md shadow-indigo-600/10 text-white font-extrabold text-lg">
-            N
+    <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: 'var(--surface-page)' }}>
+      {/* ── SIDEBAR ────────────────────────────────────────── */}
+      <aside className="sidebar">
+        {/* Tricolor top stripe */}
+        <div className="tricolor-stripe" />
+
+        {/* Brand block */}
+        <div className="sidebar-brand">
+          <div className="sidebar-logo-row">
+            <div className="sidebar-logo-icon">
+              <ShieldCheck size={22} color="#fff" />
+            </div>
+            <div>
+              <div className="sidebar-brand-name">NagarVaani</div>
+              <div className="sidebar-brand-sub">GNCT Delhi — CM Portal</div>
+            </div>
           </div>
-          {sidebarOpen && (
-            <div className="leading-none">
-              <span className="text-sm font-extrabold text-slate-800 tracking-wide">
-                NAGARVAANI
-              </span>
-              <div className="text-xs uppercase tracking-widest text-slate-500 font-bold mt-1">
-                Delhi CM Dashboard
+          {/* Logged-in user info */}
+          {currentUser && (
+            <div className="sidebar-user-card">
+              <div className="sidebar-user-name">{currentUser.username}</div>
+              <div className="sidebar-user-role">
+                {ROLE_LABELS[activeRole]}{activeDistrict && activeRole !== 'Chief Minister' ? ` · ${activeDistrict}` : ''}
               </div>
             </div>
           )}
         </div>
 
-                <nav className="flex-1 py-4 px-3 space-y-5 overflow-y-auto bg-white">
-          {NAV_GROUPS.map((group, gIdx) => {
-            const visibleItems = group.items.filter(item => {
-              if (!item.roles.includes(activeRole)) return false;
-              
-              if (currentUser?.role === 'Department Head') {
-                if (item.id === 'Health' && currentUser.department !== 'Public Health') return false;
-                if (item.id === 'Education' && currentUser.department !== 'Education & Schools') return false;
-              }
-              return true;
-            });
-            if (visibleItems.length === 0) return null;
-
+        {/* Nav groups */}
+        <nav style={{ flex: 1, paddingBottom: 12 }}>
+          {NAV_GROUPS.map(group => {
+            const visible = group.items.filter(i => i.roles.includes(activeRole as any));
+            if (visible.length === 0) return null;
             return (
-              <div key={gIdx} className="space-y-1">
-                {sidebarOpen && (
-                  <span className="text-xs uppercase font-bold text-slate-400 tracking-widest px-4 block mb-1.5">
-                    {group.title}
-                  </span>
-                )}
-                {visibleItems.map(item => {
-                  const Icon = item.icon;
-                  const isActive = activeTab === item.id;
-                  return (
-                    <button
-                      key={item.id}
-                      onClick={() => setActiveTab(item.id)}
-                      className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-semibold tracking-wide transition-all group cursor-pointer ${
-                        isActive
-                          ? 'bg-indigo-50 text-indigo-700 border border-indigo-100 shadow-sm'
-                          : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800 border border-transparent'
-                      }`}
-                    >
-                      <Icon className={`h-4.5 w-4.5 shrink-0 ${isActive ? 'text-indigo-600' : 'text-slate-400 group-hover:text-indigo-600 transition-colors'}`} />
-                      {sidebarOpen && <span>{item.label}</span>}
-                    </button>
-                  );
-                })}
+              <div key={group.title}>
+                <div className="sidebar-section-label">{group.title}</div>
+                {visible.map(item => (
+                  <div
+                    key={item.id}
+                    className={`sidebar-item ${activeTab === item.id ? 'active' : ''}`}
+                    onClick={() => setActiveTab(item.id)}
+                  >
+                    <item.icon size={17} />
+                    <span style={{ flex: 1 }}>{item.label}</span>
+                    {item.badge && <span className="sidebar-badge">{item.badge}</span>}
+                  </div>
+                ))}
               </div>
             );
           })}
         </nav>
 
-                <div className="p-4 border-t border-slate-200 bg-slate-50/50">
-          <div className="flex items-center gap-3">
-            <div className="h-9 w-9 rounded-full bg-slate-200 border border-slate-300 flex items-center justify-center font-bold text-xs text-indigo-600 uppercase">
-              {activeRole[0]}
-            </div>
-            {sidebarOpen && (
-              <div className="leading-none overflow-hidden">
-                <div className="text-xs font-extrabold text-slate-800 truncate">{activeRole}</div>
-                <div className="text-xs text-slate-500 mt-1 truncate">
-                  {activeRole === 'District Magistrate' && `Zone: ${activeDistrict}`}
-                  {activeRole === 'Department Head' && `Dept: ${activeDepartment.split(' ')[0]}`}
-                  {activeRole === 'Chief Minister' && 'Delhi Govt Executive'}
-                </div>
-              </div>
-            )}
-          </div>
+        {/* Bottom: compliance note */}
+        <div className="sidebar-footer">
+          NagarVaani v2.0 · GNCT Delhi<br />
+          Protected under IT Act, 2000
         </div>
       </aside>
 
-            <div className="flex-1 flex flex-col h-full overflow-hidden">
-        
-                <header className="h-16 border-b border-slate-200 flex items-center justify-between px-6 bg-white/90 backdrop-blur-md sticky top-0 z-20">
-          <div className="flex items-center gap-4">
+      {/* ── MAIN AREA ─────────────────────────────────────── */}
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, height: '100vh', overflow: 'hidden' }}>
+
+        {/* Main header */}
+        <header className="main-header" style={{ position: 'relative' }}>
+          <div style={{ minWidth: 0, flex: 1 }}>
+            <div
+              className="main-header-breadcrumb"
+              style={{ display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+            >
+              <span>Govt. of NCT of Delhi</span>
+              <ChevronRight size={12} style={{ flexShrink: 0, opacity: 0.45 }} />
+              <strong>
+                {activeTab && activeTab !== 'Overview' ? (activeTab === 'KnowledgeGraph' ? 'Knowledge Graph' : activeTab.replace(/([A-Z])/g, ' $1').trim()) : 'CM Executive Dashboard'}
+              </strong>
+            </div>
+          </div>
+          <div className="main-header-right">
+            {/* Refresh */}
             <button
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="text-slate-500 hover:text-slate-800 p-1.5 rounded-lg hover:bg-slate-50 border border-slate-200 transition-colors cursor-pointer"
+              className="header-notif-btn"
+              title="Refresh data"
+              onClick={() => window.location.reload()}
             >
-              <Menu className="h-4.5 w-4.5" />
+              <RefreshCw size={17} />
             </button>
-            
-            <div className="hidden md:flex items-center gap-3 border-l border-slate-200 pl-4">
-              <span className="text-xs text-slate-500 font-semibold">
-                {new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
-              </span>
+
+            {/* Notifications */}
+            <button
+              className="header-notif-btn"
+              onClick={() => { setShowNotif(!showNotif); }}
+              title="Notifications"
+            >
+              <Bell size={17} />
+              {unreadCount > 0 && <span className="header-notif-dot" />}
+            </button>
+
+            {/* AI assistant */}
+            <button
+              className="gov-btn gov-btn-outline gov-btn-sm"
+              onClick={() => setShowAI(!showAI)}
+            >
+              <BrainCircuit size={15} /> AI Assist
+            </button>
+
+            {/* Role chip */}
+            <div className="header-role-chip">
+              <UserCheck size={15} />
+              {ROLE_LABELS[activeRole]}
             </div>
+
+            {/* Logout */}
+            <button className="header-logout-btn" onClick={logoutUser}>
+              <LogOut size={15} /> Sign Out
+            </button>
           </div>
 
-                    <div className="flex items-center gap-2.5">
-                        <button
-              onClick={() => setShowAIPanel(!showAIPanel)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 hover:border-indigo-400 bg-slate-50 text-xs font-bold text-slate-700 hover:bg-slate-100/50 transition-all cursor-pointer shadow-sm"
-              title="Open NagarVaani AI"
-            >
-              <Bot className="h-4 w-4 text-indigo-600" />
-              <span className="hidden sm:inline">NagarVaani AI</span>
-            </button>
-
-                        {activeRole === 'District Magistrate' && (
-              <div className="bg-slate-50 border border-slate-200 text-xs text-slate-700 px-3 py-1.5 rounded-xl font-bold flex items-center gap-1.5 shadow-sm">
-                <MapPin className="h-3.5 w-3.5 text-indigo-600 shrink-0" />
-                <span>Zone: {activeDistrict}</span>
+          {/* Notification dropdown */}
+          {showNotif && (
+            <div className="notif-panel">
+              <div className="notif-header">
+                <span>System Alerts & Notifications</span>
+                <button
+                  onClick={() => setShowNotif(false)}
+                  style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+                >
+                  <X size={14} />
+                </button>
               </div>
-            )}
-
-                        {activeRole === 'Department Head' && (
-              <div className="bg-slate-50 border border-slate-200 text-xs text-slate-700 px-3 py-1.5 rounded-xl font-bold flex items-center gap-1.5 shadow-sm">
-                <Building className="h-3.5 w-3.5 text-amber-600 shrink-0" />
-                <span>Dept: {activeDepartment === 'Public Health' ? 'Health' : activeDepartment === 'Education & Schools' ? 'Education' : 'PWD'}</span>
-              </div>
-            )}
-
-                        <div className="relative">
-              <button
-                onClick={() => {
-                  setShowNotificationMenu(!showNotificationMenu);
-                }}
-                className="p-2 rounded-xl text-slate-500 hover:text-slate-800 bg-slate-50 border border-slate-200 hover:bg-slate-100/80 transition-all cursor-pointer relative shadow-sm"
-              >
-                <Bell className="h-4.5 w-4.5" />
-                {notifications.length > 0 && (
-                  <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-indigo-600" />
-                )}
-              </button>
-
-              {showNotificationMenu && (
-                <>
-                                    <div
-                    className="fixed inset-0 z-30 cursor-default"
-                    onClick={() => setShowNotificationMenu(false)}
-                  />
-                  <div className="absolute right-0 mt-2.5 w-80 rounded-2xl bg-white border border-slate-200 shadow-xl p-4 z-40 animate-in fade-in slide-in-from-top-2 duration-200">
-                    <h4 className="text-xs font-bold text-slate-900 mb-3 flex items-center gap-1.5 pb-2 border-b border-slate-100">
-                      <Bell className="h-3.5 w-3.5 text-indigo-600" /> Administrative Alerts
-                    </h4>
-                    <div className="space-y-2 max-h-60 overflow-y-auto">
-                      {notifications.map((notif, idx) => (
-                        <div key={idx} className="text-xs leading-relaxed text-slate-600 bg-slate-50 p-2.5 rounded-lg border border-slate-100">
-                          {notif}
-                        </div>
-                      ))}
-                    </div>
+              {NOTIFICATIONS.map(n => (
+                <div key={n.id} className={`notif-item ${n.unread ? 'unread' : ''}`}>
+                  <div className="notif-icon" style={{
+                    background: n.type === 'critical' ? 'var(--status-escalated-bg)' : n.type === 'warning' ? 'var(--status-pending-bg)' : 'var(--status-active-bg)',
+                  }}>
+                    {n.type === 'critical' ? <AlertTriangle size={15} color="#8B3A3A" /> : n.type === 'warning' ? <Bell size={15} color="#9B8030" /> : <Activity size={15} color="var(--primary)" />}
                   </div>
-                </>
-              )}
+                  <div style={{ flex: 1 }}>
+                    <div style={{ color: 'var(--text-primary)', fontSize: '0.84rem' }}>{n.text}</div>
+                    <div style={{ color: 'var(--text-muted)', fontSize: '0.74rem', marginTop: 2, fontFamily: 'var(--font-mono)' }}>{n.time}</div>
+                  </div>
+                  {n.unread && <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--primary)', flexShrink: 0, marginTop: 4 }} />}
+                </div>
+              ))}
+              <div style={{ padding: '8px 16px', background: 'var(--surface-row-alt)', fontSize: '0.78rem', color: 'var(--text-muted)', textAlign: 'center', fontFamily: 'var(--font-mono)' }}>
+                Alerts generated from live complaint data · Refresh every 5 min
+              </div>
             </div>
-
-                        <button
-              onClick={() => logoutUser()}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 hover:border-rose-400 bg-slate-50 hover:bg-rose-50 text-xs font-bold text-slate-700 hover:text-rose-600 transition-all cursor-pointer shadow-sm"
-              title="Log Out Session"
-            >
-              <UserCheck className="h-4 w-4 text-indigo-600" />
-              <span className="hidden sm:inline">Logout</span>
-            </button>
-          </div>
+          )}
         </header>
 
-                <main className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6 scrollbar-thin">
-          {children}
+        {/* Main scrollable content */}
+        <main style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden' }}>
+          <div className="fade-in">{children}</div>
         </main>
       </div>
 
-      <Chatbot />
+      {/* AI Chatbot */}
+      {showAI && <Chatbot onClose={() => setShowAI(false)} />}
     </div>
   );
 };

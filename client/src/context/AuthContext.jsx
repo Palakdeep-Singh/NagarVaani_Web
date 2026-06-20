@@ -24,6 +24,22 @@ export function AuthProvider({ children }) {
 
   // ── Restore session from localStorage ────────────────────────────────────────
   const restore = useCallback(async () => {
+    // BYPASS LOGIN HACK FOR DEV
+    const MOCK_TOKEN = "mock-admin-token";
+    localStorage.setItem('nc_token', MOCK_TOKEN);
+    setUser({
+      id: "mock-id-1",
+      adminId: "mock-id-1",
+      name: "Super Admin (Bypassed)",
+      role: "central",
+      state: null,
+      district: null
+    });
+    setToken(MOCK_TOKEN);
+    setLoading(false);
+    return;
+    
+    /* Original restore code commented out:
     const saved = localStorage.getItem('nc_token');
     if (!saved) { setLoading(false); return; }
     try {
@@ -42,6 +58,7 @@ export function AuthProvider({ children }) {
       localStorage.removeItem('nc_token');
     }
     setLoading(false);
+    */
   }, []);
 
   useEffect(() => { restore(); }, [restore]);

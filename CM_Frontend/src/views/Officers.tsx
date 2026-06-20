@@ -47,6 +47,8 @@ export const Officers: React.FC = () => {
         </p>
       </div>
 
+
+
             <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex flex-wrap items-center justify-between gap-4">
         
                 <div className="flex flex-wrap items-center gap-3">

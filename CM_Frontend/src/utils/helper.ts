@@ -1,4 +1,17 @@
-import type { ComplaintStatus, ComplaintPriority } from '../types';
+import type { ComplaintStatus, ComplaintPriority, UserProfile } from '../types';
+
+
+/** Human-readable role label used as the calling/messaging identity
+ *  (e.g. "Chief Minister", "New Delhi DM", "Director of Education"). */
+export const getRoleLabel = (user: UserProfile | null): string => {
+  if (!user) return 'Unknown';
+  if (user.role === 'Chief Minister') return 'Chief Minister';
+  if (user.role === 'District Magistrate') return `${user.district} DM`;
+  if (user.role === 'Department Head') {
+    return user.department === 'Education & Schools' ? 'Director of Education' : 'Director Health Services';
+  }
+  return user.role;
+};
 
 
 export const formatINR = (value: number): string => {
