@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useStore } from '../context/Store';
 import { Heatmap } from '../components/Heatmap';
 import { getStatusBadgeStyle } from '../utils/helper';
+import { getDynamicAISuggestions } from '../services/aiService';
 import {
   ShieldAlert, CheckCircle2, Clock, FileText, AlertTriangle,
   TrendingUp, Filter, Download, RefreshCw,
@@ -179,12 +180,17 @@ export const Overview: React.FC = () => {
     }
   };
 
-  // Rule-based AI Suggestions List
-  const aiSuggestions = [
-    { rule: 'DOPT OM 43011/2/2014', desc: `${emergency} emergency complaints past 48 hours without action require DM oversight.` },
-    { rule: 'Delhi Citizen Charter Act 2023', desc: `${slaBreachCount} tickets exceed the statutory 21-day DARPG limit. Recommending summons for Department Heads.` },
-    { rule: 'RTI Act 2005 Sec 7', desc: 'SLA breach in South Delhi requires urgent redistribution of field auditors to prevent penalty appeals.' }
-  ];
+  // Dynamic AI Suggestions List
+  const [aiSuggestions, setAiSuggestions] = useState<{ rule: string; desc: string }[]>([]);
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
+
+  useEffect(() => {
+    setLoadingSuggestions(true);
+    getDynamicAISuggestions(complaints)
+      .then(s => setAiSuggestions(s))
+      .catch(err => console.error(err))
+      .finally(() => setLoadingSuggestions(false));
+  }, [complaints]);
 
   // SLA count per department (DARPG 21-day limits)
   const departmentsList = [
@@ -370,12 +376,22 @@ export const Overview: React.FC = () => {
             AI Policy & Suggestions
           </h3>
           <div className="space-y-3">
-            {aiSuggestions.map((s, i) => (
-              <div key={i} className="p-3 bg-indigo-50/50 rounded-xl border border-indigo-100 text-xs">
-                <span className="font-extrabold text-[10px] text-indigo-850 uppercase tracking-wider block">{s.rule}</span>
-                <p className="mt-1 text-slate-700 leading-normal font-medium">{s.desc}</p>
+            {loadingSuggestions ? (
+              <div className="p-4 text-center text-xs text-slate-500 animate-pulse bg-slate-50 rounded-xl border border-slate-100">
+                Analyzing Live Grievances for Policy Suggestions...
               </div>
-            ))}
+            ) : aiSuggestions.length > 0 ? (
+              aiSuggestions.map((s, i) => (
+                <div key={i} className="p-3 bg-indigo-50/50 rounded-xl border border-indigo-100 text-xs">
+                  <span className="font-extrabold text-[10px] text-indigo-850 uppercase tracking-wider block">{s.rule}</span>
+                  <p className="mt-1 text-slate-700 leading-normal font-medium">{s.desc}</p>
+                </div>
+              ))
+            ) : (
+              <div className="p-4 text-center text-xs text-slate-400 bg-slate-50/50 rounded-xl border border-slate-100/50">
+                No policy suggestions available.
+              </div>
+            )}
           </div>
         </div>
       </div>

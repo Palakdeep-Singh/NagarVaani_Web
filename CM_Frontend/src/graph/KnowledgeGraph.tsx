@@ -11,7 +11,7 @@ import { TIER_CFG, buildDelhiGovGraph, resolveId } from './graphEngine';
 import type { NodeTier, GNode, GLink, GraphData } from './graphEngine';
 import { paintNode as _paintNode, paintNodeArea, paintLink as _paintLink } from './painters';
 import { useStore } from '../context/Store';
-import { getNodeAISummary } from '../services/aiService';
+import { getNodeAISummary, getNodeAISummaryLive } from '../services/aiService';
 
 export interface KnowledgeGraphProps { officers?: any[] }
 
@@ -275,6 +275,36 @@ export const KnowledgeGraph: React.FC<KnowledgeGraphProps> = ({ officers: propOf
   const [selectedNode, setSelectedNode] = useState<GNode | null>(null);
   const [hoverNode,    setHoverNode]    = useState<GNode | null>(null);
   const [pulseIds,     setPulseIds]     = useState<Set<string>>(new Set());
+
+  const [aiSummary, setAiSummary] = useState<string>('');
+  const [loadingSummary, setLoadingSummary] = useState<boolean>(false);
+  const summaryCache = useRef<Record<string, string>>({});
+
+  useEffect(() => {
+    if (!selectedNode) {
+      setAiSummary('');
+      return;
+    }
+    const cacheKey = `${selectedNode.type}-${selectedNode.id}`;
+    if (summaryCache.current[cacheKey]) {
+      setAiSummary(summaryCache.current[cacheKey]);
+      return;
+    }
+    setLoadingSummary(true);
+    setAiSummary('Generating live report...');
+    getNodeAISummaryLive(selectedNode.type, selectedNode.label, selectedNode.meta)
+      .then(res => {
+        summaryCache.current[cacheKey] = res;
+        setAiSummary(res);
+      })
+      .catch(err => {
+        console.error(err);
+        setAiSummary(getNodeAISummary(selectedNode.type, selectedNode.label, selectedNode.meta));
+      })
+      .finally(() => {
+        setLoadingSummary(false);
+      });
+  }, [selectedNode]);
 
   const fgRef  = useRef<any>(null);
   const rafRef = useRef<number>(0);
@@ -604,10 +634,10 @@ export const KnowledgeGraph: React.FC<KnowledgeGraphProps> = ({ officers: propOf
                 {/* AI Summary Box */}
                 <div className="p-3.5 rounded-lg border border-cyan-850 bg-cyan-950/20 text-slate-300 text-xs">
                   <div className="text-[9px] font-bold text-cyan-400 uppercase tracking-widest mb-1.5 flex items-center gap-1">
-                    <span>⚡</span> Hansa AI Copilot
+                    <span>⚡</span> Hansa AI Copilot {loadingSummary && <span className="animate-pulse">(Loading...)</span>}
                   </div>
                   <div className="text-[11px] leading-relaxed space-y-1 font-sans">
-                    {getNodeAISummary(selectedNode.type, selectedNode.label, selectedNode.meta).split('\n').map((line, idx) => {
+                    {aiSummary.split('\n').map((line, idx) => {
                       if (line.startsWith('###')) return <h4 key={idx} className="font-extrabold text-slate-100 mt-2 text-xs">{line.replace('###', '')}</h4>;
                       if (line.startsWith('*')) return <div key={idx} className="pl-2 border-l border-cyan-700/60 mt-1">{line.replace('*', '')}</div>;
                       return <p key={idx} className="mt-1">{line}</p>;

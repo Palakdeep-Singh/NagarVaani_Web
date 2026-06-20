@@ -1,30 +1,12 @@
 // ─── AI SERVICE LAYER ─────────────────────────────────────────────────────
 //
-// This is the ONLY file you need to touch when you integrate a real AI API key.
+// Powered by Groq API
 //
-// Right now every function below runs a local, deterministic heuristic over
-// the actual booth/complaint data already in the store, so the dashboard is
-// fully functional and demo-ready with zero external dependency.
-//
-// TO GO LIVE:
-//   1. Put your key in a .env file at the project root:
-//        VITE_AI_API_KEY=sk-xxxxxxxx
-//        VITE_AI_API_URL=https://api.anthropic.com/v1/messages   (or your provider)
-//   2. Flip USE_LIVE_AI to true below.
-//   3. Fill in callLiveAI() with your provider's request/response shape.
-//      (An Anthropic Messages API example is sketched in there already.)
-//
-// Nothing else in the app needs to change — every view calls the functions
-// in this file, never an API directly.
 // ────────────────────────────────────────────────────────────────────────────
 
 import type { Booth, Complaint } from '../types';
 
-const USE_LIVE_AI = false; // ← flip this to true once VITE_AI_API_KEY is set
-
-const AI_API_KEY = import.meta.env.VITE_AI_API_KEY as string | undefined;
-const AI_API_URL = (import.meta.env.VITE_AI_API_URL as string | undefined)
-  ?? 'https://api.anthropic.com/v1/messages';
+const USE_LIVE_AI = true;
 
 export interface AIInsight {
   id: string;
@@ -33,14 +15,57 @@ export interface AIInsight {
   detail: string;
 }
 
+// ─── Helper: General Groq Chat Completion Call ─────────────────────────────
+async function callGroqAPI(systemPrompt: string, userPrompt: string, responseFormatJson: boolean = false): Promise<string> {
+  const apiKey = import.meta.env.VITE_GROQ_API_KEY || import.meta.env.VITE_AI_API_KEY;
+  if (!apiKey) {
+    throw new Error('Groq API Key not configured');
+  }
+
+  const payload: any = {
+    model: 'llama-3.3-70b-versatile',
+    messages: [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: userPrompt }
+    ],
+    temperature: 0.2
+  };
+
+  if (responseFormatJson) {
+    payload.response_format = { type: 'json_object' };
+  }
+
+  const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`
+    },
+    body: JSON.stringify(payload)
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Groq API error: ${response.status} - ${errorText}`);
+  }
+
+  const data = await response.json();
+  return data.choices?.[0]?.message?.content || '';
+}
+
 // ─── Public API used by the UI ─────────────────────────────────────────────
 
 export async function getBoothInsights(booths: Booth[]): Promise<AIInsight[]> {
-  if (USE_LIVE_AI && AI_API_KEY) {
+  if (USE_LIVE_AI) {
     try {
-      return await callLiveAI(buildBoothPrompt(booths));
+      const system = `You are an election-day operations analyst. Given the booth data, analyze and return the top operational risks and recommended actions as JSON.
+Response format MUST be a JSON object with an 'insights' array containing objects with: id, severity (info, watch, critical), title, detail.`;
+      const user = `Booth Data:\n${JSON.stringify(booths.map(b => ({ id: b.id, name: b.name, number: b.boothNumber, district: b.district, status: b.status, turnout: b.turnoutPct, queueMins: b.queueLengthMins, unresolvedIncidents: b.incidents.filter(i => i.status !== 'Resolved').length })))}`;
+      const result = await callGroqAPI(system, user, true);
+      const parsed = JSON.parse(result);
+      return parsed.insights || [];
     } catch (err) {
-      console.error('Live AI call failed, falling back to local heuristics:', err);
+      console.error('getBoothInsights failed, falling back to local:', err);
       return localBoothHeuristics(booths);
     }
   }
@@ -48,11 +73,16 @@ export async function getBoothInsights(booths: Booth[]): Promise<AIInsight[]> {
 }
 
 export async function getComplaintInsights(complaints: Complaint[]): Promise<AIInsight[]> {
-  if (USE_LIVE_AI && AI_API_KEY) {
+  if (USE_LIVE_AI) {
     try {
-      return await callLiveAI(buildComplaintPrompt(complaints));
+      const system = `You are a municipal grievance supervisor. Given the complaint data, summarize systemic patterns and urgent items.
+Response format MUST be a JSON object with an 'insights' array containing objects with: id, severity (info, watch, critical), title, detail.`;
+      const user = `Complaint Data:\n${JSON.stringify(complaints.slice(0, 100).map(c => ({ id: c.id, category: c.category, status: c.status, district: c.district, priority: c.priority, title: c.title })))}${complaints.length > 100 ? `\n(Truncated, total count is ${complaints.length})` : ''}`;
+      const result = await callGroqAPI(system, user, true);
+      const parsed = JSON.parse(result);
+      return parsed.insights || [];
     } catch (err) {
-      console.error('Live AI call failed, falling back to local heuristics:', err);
+      console.error('getComplaintInsights failed, falling back to local:', err);
       return localComplaintHeuristics(complaints);
     }
   }
@@ -60,12 +90,13 @@ export async function getComplaintInsights(complaints: Complaint[]): Promise<AII
 }
 
 export async function askAI(question: string, context: { booths: Booth[]; complaints: Complaint[] }): Promise<string> {
-  if (USE_LIVE_AI && AI_API_KEY) {
+  if (USE_LIVE_AI) {
     try {
-      const insights = await callLiveAI(`${question}\n\nContext:\n${JSON.stringify(context).slice(0, 4000)}`);
-      return insights.map(i => `${i.title}: ${i.detail}`).join('\n');
+      const system = `You are the NagarVaani CM Executive Assistant. Answer questions based on municipal context. Be concise, professional, and reference administrative norms (like DARPG rules) where helpful.`;
+      const user = `Question: ${question}\n\nContext:\n- Total complaints: ${context.complaints.length}\n- Active/Pending/Escalated: ${context.complaints.filter(c => c.status !== 'Resolved').length}\n- Resolved: ${context.complaints.filter(c => c.status === 'Resolved').length}\n- Booths monitored: ${context.booths.length}\nSample complaints:\n${JSON.stringify(context.complaints.slice(0, 20).map(c => ({ id: c.id, title: c.title, status: c.status, district: c.district })))}\n`;
+      return await callGroqAPI(system, user, false);
     } catch (err) {
-      console.error('Live AI call failed, falling back to local answer:', err);
+      console.error('askAI failed, falling back to local:', err);
       return localAnswer(question, context);
     }
   }
@@ -73,14 +104,66 @@ export async function askAI(question: string, context: { booths: Booth[]; compla
 }
 
 export function isLiveAIConnected(): boolean {
-  return USE_LIVE_AI && Boolean(AI_API_KEY);
+  return USE_LIVE_AI;
 }
 
-// ─── Local heuristics (no external calls, fully offline-capable) ──────────
+// ─── Dynamic Live AI Summaries for Knowledge Graph ────────────────────────
+
+export async function getNodeAISummaryLive(type: string, label: string, meta: any): Promise<string> {
+  try {
+    const system = `You are the NagarVaani AI Executive Analyst. Generate a highly analytical, professional performance and intelligence report for a senior government official/politician regarding a specific administrative node.
+Format your response in clean markdown using:
+- Bullet points (* ) for key facts
+- Subheadings (### ) if needed
+- No introduction or conversational filler, start directly with the content.`;
+
+    const user = `Node Type: ${type}
+Node Label: ${label}
+Node Metadata: ${JSON.stringify(meta)}`;
+
+    return await callGroqAPI(system, user, false);
+  } catch (err) {
+    console.error('getNodeAISummaryLive failed, using local static:', err);
+    return getNodeAISummary(type, label, meta);
+  }
+}
+
+// ─── Dynamic AI Policy & Suggestions Generator ────────────────────────────
+
+export async function getDynamicAISuggestions(complaints: Complaint[]): Promise<{ rule: string, desc: string }[]> {
+  try {
+    const system = `You are a Delhi municipal administration policy adviser. You must analyze the list of complaints and generate exactly 3 actionable policy/administrative recommendations.
+Each recommendation must reference a specific governing framework or rule (e.g., DARPG OM on 21-day SLA, Delhi Citizen Charter Act, RTI Act Sec 7, Central Secretariat Manual of Office Procedure, etc.).
+Response format MUST be a JSON object with a 'suggestions' array containing objects with: rule (the regulation/OM name), desc (the contextual recommendation based on current complaint figures).`;
+
+    const unresolved = complaints.filter(c => c.status !== 'Resolved');
+    const escalated = complaints.filter(c => c.status === 'Escalated');
+    const active = complaints.filter(c => c.status === 'Active');
+    const pending = complaints.filter(c => c.status === 'Pending');
+
+    const user = `Active Complaints: ${active.length}
+Pending: ${pending.length}
+Escalated: ${escalated.length}
+Total Unresolved: ${unresolved.length}
+Sample unresolved: ${JSON.stringify(unresolved.slice(0, 10).map(c => ({ id: c.id, title: c.title, category: c.category, district: c.district, daysOpen: Math.floor((Date.now() - new Date(c.dateFiled).getTime()) / 86400000) })))}`;
+
+    const result = await callGroqAPI(system, user, true);
+    const parsed = JSON.parse(result);
+    return parsed.suggestions || [];
+  } catch (err) {
+    console.error('getDynamicAISuggestions failed, returning static fallback:', err);
+    return [
+      { rule: 'DOPT OM 43011/2/2014', desc: `${complaints.filter(c => c.priority === 'Emergency' && c.status !== 'Resolved').length} emergency complaints require immediate DM oversight.` },
+      { rule: 'Delhi Citizen Charter Act 2023', desc: `${complaints.filter(c => c.status !== 'Resolved' && Math.floor((Date.now() - new Date(c.dateFiled).getTime()) / 86400000) > 21).length} tickets exceed the 21-day DARPG limit.` },
+      { rule: 'RTI Act 2005 Sec 7', desc: 'Active complaints require urgent redistribution of resources to prevent penalty appeals.' }
+    ];
+  }
+}
+
+// ─── Local Heuristic Fallbacks (Offline-Capable) ──────────────────────────
 
 function localBoothHeuristics(booths: Booth[]): AIInsight[] {
   const insights: AIInsight[] = [];
-
   const critical = booths.filter(b => b.status === 'Critical');
   if (critical.length > 0) {
     insights.push({
@@ -101,43 +184,6 @@ function localBoothHeuristics(booths: Booth[]): AIInsight[] {
     });
   }
 
-  const districtAvg: Record<string, { total: number; count: number }> = {};
-  booths.forEach(b => {
-    districtAvg[b.district] = districtAvg[b.district] || { total: 0, count: 0 };
-    districtAvg[b.district].total += b.turnoutPct;
-    districtAvg[b.district].count += 1;
-  });
-  const sorted = Object.entries(districtAvg)
-    .map(([d, v]) => ({ district: d, avg: v.total / v.count }))
-    .sort((a, b) => a.avg - b.avg);
-  if (sorted.length > 0) {
-    insights.push({
-      id: 'low-turnout-district',
-      severity: 'info',
-      title: `${sorted[0].district} showing lowest average turnout`,
-      detail: `Average turnout of ${sorted[0].avg.toFixed(1)}% across booths in this district — may warrant a mobilisation push in the remaining hours.`,
-    });
-  }
-
-  const staffShortage = booths.flatMap(b => b.incidents).filter(i => i.type === 'Staff Shortage' && i.status !== 'Resolved');
-  if (staffShortage.length > 0) {
-    insights.push({
-      id: 'staff-shortage',
-      severity: 'watch',
-      title: `${staffShortage.length} open staff shortage incident${staffShortage.length > 1 ? 's' : ''}`,
-      detail: `Unresolved staffing gaps reported — recommend reallocating reserve personnel from nearby booths.`,
-    });
-  }
-
-  if (insights.length === 0) {
-    insights.push({
-      id: 'all-clear',
-      severity: 'info',
-      title: 'All monitored booths operating normally',
-      detail: 'No critical incidents, queue surges, or staffing gaps detected in the current data.',
-    });
-  }
-
   return insights;
 }
 
@@ -152,19 +198,6 @@ function localComplaintHeuristics(complaints: Complaint[]): AIInsight[] {
       detail: `${emergency.slice(0, 3).map(c => c.title).join(', ')} require escalation within the hour.`,
     });
   }
-
-  const byCategory: Record<string, number> = {};
-  complaints.forEach(c => { byCategory[c.category] = (byCategory[c.category] || 0) + 1; });
-  const top = Object.entries(byCategory).sort((a, b) => b[1] - a[1])[0];
-  if (top) {
-    insights.push({
-      id: 'top-category',
-      severity: 'info',
-      title: `${top[0]} is the leading complaint category`,
-      detail: `${top[1]} complaints filed in this category — a systemic pattern worth a departmental review.`,
-    });
-  }
-
   return insights;
 }
 
@@ -176,93 +209,15 @@ function localAnswer(question: string, context: { booths: Booth[]; complaints: C
       ? `Critical booths: ${critical.map(b => `${b.boothNumber} (${b.district})`).join(', ')}.`
       : 'No booths are currently marked critical.';
   }
-  if (q.includes('turnout')) {
-    const avg = context.booths.reduce((a, b) => a + b.turnoutPct, 0) / (context.booths.length || 1);
-    return `Average turnout across monitored booths is ${avg.toFixed(1)}%.`;
-  }
-  return 'Connect a live AI key in src/services/aiService.ts to enable open-ended natural language answers. For now, try asking about "critical booths" or "turnout".';
-}
-
-// ─── Live AI call (fill in once you have a key) ───────────────────────────
-
-function buildBoothPrompt(booths: Booth[]): string {
-  return `You are an election-day operations analyst. Given this booth data, list the top operational risks and recommended actions as JSON insights.\n\n${JSON.stringify(booths).slice(0, 6000)}`;
-}
-
-function buildComplaintPrompt(complaints: Complaint[]): string {
-  return `Summarize systemic patterns and urgent items in this complaint data as JSON insights.\n\n${JSON.stringify(complaints).slice(0, 6000)}`;
-}
-
-async function callLiveAI(prompt: string): Promise<AIInsight[]> {
-  // Example shape for the Anthropic Messages API — adjust to your provider.
-  const response = await fetch(AI_API_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': AI_API_KEY as string,
-      'anthropic-version': '2023-06-01',
-    },
-    body: JSON.stringify({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 1000,
-      messages: [{ role: 'user', content: prompt }],
-    }),
-  });
-
-  if (!response.ok) {
-    throw new Error(`AI API error: ${response.status}`);
-  }
-
-  const data = await response.json();
-  const text = data.content?.map((c: { text?: string }) => c.text || '').join('\n') ?? '';
-
-  try {
-    return JSON.parse(text);
-  } catch {
-    return [{ id: 'live-ai-raw', severity: 'info', title: 'AI Summary', detail: text }];
-  }
+  return 'Please ensure your Groq key is set in .env.';
 }
 
 export function getNodeAISummary(type: string, label: string, meta: any): string {
   if (type === 'cm') {
     return `### 🤖 CM Office AI Intelligence Summary
-*   **Active Supervision**: Tracking all 11 Delhi Districts.
+*   **Active Supervision**: Tracking Delhi Districts.
 *   **Resolution Health**: Overall resolution rate stands at **${meta?.resolutionRate || 88}%**.
-*   **Actionable Advice**: Recommend targeting PWD & Delhi Jal Board bottlenecks in Shahdara and North East districts. Focus resources on pending cases older than 14 days.`;
+*   **Actionable Advice**: Recommend targeting bottlenecks.`;
   }
-  if (type === 'district') {
-    const rate = meta?.resolutionRate || 82;
-    const priority = rate < 75 ? 'CRITICAL REVIEW NEEDED' : rate < 85 ? 'MONITORING' : 'HEALTHY';
-    return `### 🤖 District Performance Summary (${label})
-*   **Magistrate In-Charge**: **${meta?.dmName || 'DM Office'}**
-*   **Performance Band**: **${priority}** (SLA Score: **${rate}%**)
-*   **Load Metrics**: **${meta?.totalComplaints || 120}** total complaints logged.
-*   **Top Issue Category**: **${meta?.topIssue || 'Civic Infrastructure'}** is generating 42% of local escalations. Recommend active inspection rounds in high-density wards.`;
-  }
-  if (type === 'booth') {
-    return `### 🤖 Ward SLA Summary (${label})
-*   **Administrative Ward**: **${meta?.ward || 'General'}**
-*   **Staffing Level**: **${meta?.boothOfficerCount || 2}** municipal officers assigned.
-*   **Grievance Metrics**: **${meta?.totalComplaints || 15}** citizen grievances in this ward.
-*   **System Action**: Recommend assigning field inspectors to check sewage blocks before monsoon SLA breach.`;
-  }
-  if (type === 'officer') {
-    const rate = meta?.resolutionRate || 80;
-    const rating = meta?.rating || 4.2;
-    return `### 🤖 Officer Performance Summary (${label})
-*   **Designation**: **${meta?.designation || 'Ward Officer'}**
-*   **Biometric Activity**: **Online & Active** (Inspection rounds logged today).
-*   **SLA Resolution Rate**: **${rate}%** (Avg. resolution time: **${meta?.avgDays || 3} days**).
-*   **Citizen Satisfaction**: **★ ${rating} / 5.0** (Based on feedback surveys).
-*   **AI Verdict**: ${rate < 70 ? '⚠️ High risk of SLA breach. Enrolment in DOPT Capacity Building suggested.' : '✅ Performance meets Sevottam standard.'}`;
-  }
-  if (type === 'complaint') {
-    return `### 🤖 Grievance Diagnostics (${label})
-*   **Reference ID**: **${meta?.complaintId || 'GR-DEL'}**
-*   **Status**: **${meta?.status || 'Active'}** | Priority: **${meta?.priority || 'Medium'}**
-*   **Assigned Category**: **${meta?.category || 'Civic Infra'}**
-*   **Citizen Reporting**: Filed by **${meta?.citizen || 'Anonymous Citizen'}**
-*   **AI Diagnostic**: Escalated cases of this type usually stem from PWD contractor delays. Recommend checking material dispatch logs.`;
-  }
-  return `Select a node to generate a live AI performance summary.`;
+  return `Select a node to view static summary (${label}).`;
 }
