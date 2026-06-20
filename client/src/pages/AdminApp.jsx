@@ -16,6 +16,7 @@ ChartJS.register(
 );
 
 import Logo from '../components/Logo.jsx';
+import AdminOfficerCSV from './AdminOfficerCSV.jsx';
 
 /* ─── Error Boundary ─────────────────────────────────────────────────────────── */
 import React from 'react';
@@ -51,6 +52,7 @@ const ACCESS = {
   scheme_stats: ['central', 'state', 'district'],
   fund_predictor: ['central', 'state', 'district'],
   manage_admins: ['central', 'state', 'district'],
+  officer_mgmt: ['central', 'state'],
 };
 const can = (role, section) => ACCESS[section]?.includes(role) ?? false;
 
@@ -62,6 +64,7 @@ const SIDEBAR = [
   { id: 'scheme_stats', icon: '📍', label: 'Booth Analyser' },
   { id: 'fund_predictor', icon: '💰', label: 'Fund Predictor' },
   { id: 'manage_admins', icon: '👥', label: 'Manage Admins' },
+  { id: 'officer_mgmt', icon: '📂', label: 'Officer CSV Import' },
 ];
 
 /* ─── Shared Helpers ─────────────────────────────────────────────────────────── */
@@ -287,6 +290,7 @@ export default function AdminApp() {
             {page === 'scheme_stats' && can(role, 'scheme_stats') && <AdminSchemeStats tick={tick} />}
             {page === 'fund_predictor' && can(role, 'fund_predictor') && <AdminFundPredictor tick={tick} />}
             {page === 'manage_admins' && can(role, 'manage_admins') && <AdminManageAdmins role={role} creatorState={state} />}
+            {page === 'officer_mgmt' && can(role, 'officer_mgmt') && <AdminOfficerCSV role={role} creatorState={state} />}
             {!can(role, page) && (
               <div style={{ textAlign: 'center', padding: 80, color: 'var(--t3)' }}>
                 <div style={{ fontSize: 44, marginBottom: 14 }}>🔒</div>

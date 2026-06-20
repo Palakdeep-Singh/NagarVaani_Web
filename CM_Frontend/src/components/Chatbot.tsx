@@ -9,8 +9,13 @@ interface ChatMessage {
   timestamp: string;
 }
 
-export const Chatbot: React.FC = () => {
+interface ChatbotProps {
+  onClose?: () => void;
+}
+
+export const Chatbot: React.FC<ChatbotProps> = ({ onClose }) => {
   const { complaints, files, officers, projects, showAIPanel, setShowAIPanel } = useStore();
+  const handleClose = () => { setShowAIPanel(false); onClose?.(); };
   const [input, setInput] = useState<string>('');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
@@ -179,7 +184,7 @@ export const Chatbot: React.FC = () => {
             {showAIPanel && (
         <div
           className="fixed inset-0 bg-slate-900/35 z-35 md:hidden"
-          onClick={() => setShowAIPanel(false)}
+          onClick={handleClose}
         />
       )}
 
@@ -224,7 +229,7 @@ export const Chatbot: React.FC = () => {
             </div>
           </div>
           <button
-            onClick={() => setShowAIPanel(false)}
+            onClick={handleClose}
             className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-50 border border-slate-200 transition-colors cursor-pointer"
           >
             <X className="h-4 w-4" />

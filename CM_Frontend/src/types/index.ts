@@ -113,6 +113,105 @@ export interface DistrictMetric {
   score: number; 
 }
 
+export type BoothStatus = 'Normal' | 'Watch' | 'Critical' | 'Resolved';
+
+export interface BoothIncident {
+  id: string;
+  time: string;
+  type: 'EVM Issue' | 'Queue Surge' | 'Crowd/Law & Order' | 'Staff Shortage' | 'Voter Complaint' | 'Other';
+  description: string;
+  status: BoothStatus;
+}
+
+export interface Booth {
+  id: string;
+  boothNumber: string;
+  name: string;
+  district: DistrictName;
+  ward: string;
+  presidingOfficer: string;
+  registeredVoters: number;
+  votesCast: number;
+  turnoutPct: number;
+  status: BoothStatus;
+  queueLengthMins: number;
+  lastUpdated: string;
+  incidents: BoothIncident[];
+}
+
+export type ElectionRole =
+  | 'CEO'
+  | 'DEO'
+  | 'Returning Officer'
+  | 'Sector Officer'
+  | 'Presiding Officer'
+  | 'Polling Officer'
+  | 'Chief Minister';
+
+export type EVMStatus = 'Warehouse' | 'In Transit' | 'At Booth' | 'Sealed Post-Poll' | 'Returned to Warehouse';
+
+export interface EVMScanEvent {
+  id: string;
+  time: string;
+  scannedBy: string;
+  location: string;
+  gpsLat: number;
+  gpsLng: number;
+  qrCode: string;
+  note: string;
+}
+
+export interface EVMUnit {
+  id: string;
+  serialNumber: string;
+  type: 'Control Unit' | 'Ballot Unit' | 'VVPAT';
+  status: EVMStatus;
+  assignedBoothNumber: string;
+  district: DistrictName;
+  custodyOfficer: string;
+  history: EVMScanEvent[];
+}
+
+export interface MockPollChecklistItem {
+  id: string;
+  label: string;
+  checked: boolean;
+}
+
+export interface MockPollSession {
+  id: string;
+  boothNumber: string;
+  district: DistrictName;
+  scheduledTime: string;
+  status: 'Scheduled' | 'In Progress' | 'Passed' | 'Failed';
+  conductedBy: string;
+  checklist: MockPollChecklistItem[];
+  remarks: string;
+}
+
+export type EmergencyType = 'Long Queue' | 'EVM Malfunction' | 'Law & Order' | 'Medical Emergency' | 'Violence/Booth Capturing' | 'Staff Shortage' | 'Other';
+export type EmergencySeverity = 'Low' | 'Medium' | 'High' | 'Critical';
+export type EmergencyStatus = 'Open' | 'Acknowledged' | 'Resolving' | 'Resolved';
+
+export interface EmergencyIncident {
+  id: string;
+  boothNumber: string;
+  district: DistrictName;
+  type: EmergencyType;
+  severity: EmergencySeverity;
+  status: EmergencyStatus;
+  reportedAt: string;
+  slaMinutes: number;
+  assignedTo: string;
+  description: string;
+}
+
+export interface TurnoutHourPoint {
+  hour: string;
+  turnoutPct: number;
+  votesCast: number;
+}
+
 export interface UserProfile {
   username: string;
   role: 'Chief Minister' | 'District Magistrate' | 'Department Head';

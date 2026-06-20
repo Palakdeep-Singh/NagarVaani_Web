@@ -9,7 +9,7 @@ export const TIER_CFG: Record<NodeTier, {
 }> = {
   cm:        { color: '#F59E0B', glow: '#FCD34D', radius: 24, ring: '#FDE68A', label: 'Chief Minister'    },
   district:  { color: '#8B5CF6', glow: '#A78BFA', radius: 16, ring: '#DDD6FE', label: 'District'         },
-  booth:     { color: '#14B8A6', glow: '#2DD4BF', radius: 12, ring: '#99F6E4', label: 'Ward / Booth'     },
+  booth:     { color: '#14B8A6', glow: '#2DD4BF', radius: 12, ring: '#99F6E4', label: 'Ward'             },
   officer:   { color: '#3B82F6', glow: '#60A5FA', radius: 10, ring: '#BFDBFE', label: 'Officer'          },
   complaint: { color: '#F97316', glow: '#FB923C', radius:  7, ring: '#FED7AA', label: 'Complaint'        },
 };
@@ -244,7 +244,7 @@ const DISTRICTS_DATA = [
 
 // ── Build graph ────────────────────────────────────────────────────────────────
 export function buildDelhiGovGraph(
-  uploadedOfficers: any[] = [],
+  _uploadedOfficers: any[] = [],
   filters: { district?: string; department?: string } = {}
 ): GraphData {
   const nodes: GNode[] = [];
