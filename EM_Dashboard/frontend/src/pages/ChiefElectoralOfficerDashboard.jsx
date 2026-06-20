@@ -1,4 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
+import { VideoCall } from '../components/VideoCall';
+import { useState, useEffect } from 'react';
 import {
   LayoutDashboard, FileText, Users, Award, ShieldAlert, Cpu, 
   HelpCircle, Settings, PhoneCall, Video, Send, AlertTriangle, 
@@ -207,7 +209,31 @@ export default function ChiefElectoralOfficerDashboard({ user, onLogout }) {
               )}
             </div>
           ))}
+        
+          <div
+            className={`menu-item ${activeMenu === 'Conference Call' ? 'active' : ''}`}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              padding: '10px 14px',
+              borderRadius: '8px',
+              fontSize: '12px',
+              fontWeight: activeMenu === 'Conference Call' ? '700' : '500',
+              cursor: 'pointer',
+              marginBottom: '4px',
+              color: activeMenu === 'Conference Call' ? '#fff' : '#94a3b8',
+              backgroundColor: activeMenu === 'Conference Call' ? '#2563eb' : 'transparent',
+              transition: 'all 0.2s ease'
+            }}
+            onClick={() => setActiveMenu('Conference Call')}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <span style={{ fontSize: '16px' }}>📞</span>
+              <span>Conference Call</span>
+            </div>
+          </div>
         </nav>
+
 
         {/* BOTTOM FIXED SECTION (State Summary & Emergency) */}
         <div style={{ flexShrink: 0, borderTop: '1px solid rgba(255, 255, 255, 0.08)', paddingTop: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -405,6 +431,8 @@ export default function ChiefElectoralOfficerDashboard({ user, onLogout }) {
         {/* WORKSPACE DETAILED VIEWS */}
         {activeMenu === 'Dashboard' && (
           <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px', overflowY: 'auto' }}>
+              
+
             
             {/* KPI CARDS ROW */}
             <section style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '16px' }}>
@@ -1636,6 +1664,15 @@ export default function ChiefElectoralOfficerDashboard({ user, onLogout }) {
               >
                 Disconnect Call
               </button>
+            </div>
+          </div>
+        )}
+
+        
+        {activeMenu === 'Conference Call' && (
+          <div style={{ padding: '24px' }}>
+            <div className="card" style={{ backgroundColor: "#fff", borderRadius: "12px", padding: "24px", boxShadow: "0 4px 6px rgba(0,0,0,0.05)" }}>
+              <VideoCall />
             </div>
           </div>
         )}

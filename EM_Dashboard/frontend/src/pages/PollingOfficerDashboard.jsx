@@ -1,4 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
+import { VideoCall } from '../components/VideoCall';
+import { useState, useEffect } from 'react';
 import {
   LayoutDashboard, Search, UserCheck, Droplets, CheckSquare, 
   Accessibility, AlertTriangle, PhoneCall, List, Check,
@@ -290,7 +292,31 @@ export default function PollingOfficerDashboard({ user, onLogout }) {
               )}
             </div>
           ))}
+        
+          <div
+            className={`menu-item ${activeMenu === 'Conference Call' ? 'active' : ''}`}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              padding: '10px 14px',
+              borderRadius: '8px',
+              fontSize: '12px',
+              fontWeight: activeMenu === 'Conference Call' ? '700' : '500',
+              cursor: 'pointer',
+              marginBottom: '4px',
+              color: activeMenu === 'Conference Call' ? '#fff' : '#94a3b8',
+              backgroundColor: activeMenu === 'Conference Call' ? '#2563eb' : 'transparent',
+              transition: 'all 0.2s ease'
+            }}
+            onClick={() => setActiveMenu('Conference Call')}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <span style={{ fontSize: '16px' }}>📞</span>
+              <span>Conference Call</span>
+            </div>
+          </div>
         </nav>
+
 
         {/* BOTTOM FIXED SECTION (Emergency & Sync) */}
         <div style={{ flexShrink: 0, borderTop: '1px solid rgba(255, 255, 255, 0.08)', paddingTop: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -432,6 +458,8 @@ export default function PollingOfficerDashboard({ user, onLogout }) {
           
           {activeMenu === 'Dashboard' && (
             <>
+              
+
               {/* Main Grid Layout: Row 1 */}
               <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 1.3fr', gap: '24px' }}>
                 
@@ -1637,8 +1665,15 @@ export default function PollingOfficerDashboard({ user, onLogout }) {
             </div>
           )}
 
+        
+          {activeMenu === 'Conference Call' && (
+            <div className="card" style={{ backgroundColor: "#fff", borderRadius: "12px", padding: "24px", boxShadow: "0 4px 6px rgba(0,0,0,0.05)" }}>
+              <VideoCall />
+            </div>
+          )}
         </div>
       </main>
+
     </div>
   );
 }

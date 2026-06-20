@@ -1,4 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
+import { VideoCall } from '../components/VideoCall';
+import { useState, useEffect } from 'react';
 import {
   LayoutDashboard, Activity, Users, Percent, ShieldAlert,
   Cpu, MessageSquare, PhoneCall, FileText, CheckSquare,
@@ -381,7 +383,31 @@ export default function PresidingOfficerDashboard({ user, onLogout, boothIdOverr
               {item.badge && <span className="menu-item-badge">{item.badge}</span>}
             </div>
           ))}
+        
+          <div
+            className={`menu-item ${activeMenu === 'Conference Call' ? 'active' : ''}`}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              padding: '10px 14px',
+              borderRadius: '8px',
+              fontSize: '12px',
+              fontWeight: activeMenu === 'Conference Call' ? '700' : '500',
+              cursor: 'pointer',
+              marginBottom: '4px',
+              color: activeMenu === 'Conference Call' ? '#fff' : '#94a3b8',
+              backgroundColor: activeMenu === 'Conference Call' ? '#2563eb' : 'transparent',
+              transition: 'all 0.2s ease'
+            }}
+            onClick={() => setActiveMenu('Conference Call')}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <span style={{ fontSize: '16px' }}>📞</span>
+              <span>Conference Call</span>
+            </div>
+          </div>
         </nav>
+
 
         <div className="sidebar-footer">
           <button className="emergency-btn" onClick={() => alert("🚨 Emergency broadcast triggered! Sector officer and Security personnel notified.")}>
@@ -554,6 +580,8 @@ export default function PresidingOfficerDashboard({ user, onLogout, boothIdOverr
         <div className="dashboard-body">
           {activeMenu === 'Dashboard' && (
             <>
+              
+
               {/* TOP SUMMARY CARDS */}
           <section className="summary-row">
             {/* Booth Info */}
@@ -2199,6 +2227,15 @@ export default function PresidingOfficerDashboard({ user, onLogout, boothIdOverr
         }}>
           © 2026 NagarVaani Election System. All rights reserved. • Version 1.0.0
         </footer>
+      
+        {activeMenu === 'Conference Call' && (
+          <div style={{ padding: '24px' }}>
+            <div className="card" style={{ backgroundColor: "#fff", borderRadius: "12px", padding: "24px", boxShadow: "0 4px 6px rgba(0,0,0,0.05)" }}>
+              <VideoCall />
+            </div>
+          </div>
+        )}
+
       </main>
     </div>
   );

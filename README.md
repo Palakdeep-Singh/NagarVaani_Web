@@ -15,6 +15,7 @@ NagarVaani is a comprehensive, multi-tiered Election Management System designed 
   - **Chief Electoral Officer (CEO):** Oversees state-wide turnout trends and MCC violations.
   - **Election Commission of India (ECI):** Provides a national command center overview of the entire election.
   - **Voter Portal / User Complaints:** A public-facing portal for citizens to register complaints and view live polling data.
+- **Real-Time Video Calling:** Integrated peer-to-peer WebRTC video calling interface across all 7 dashboards, allowing quick escalation and real-time briefings between officials.
 - **Intuitive UI:** Built with a modern, dark-themed, glassmorphism design for optimal readability during high-stress election operations.
 
 ## 🛠️ Technology Stack
@@ -50,7 +51,18 @@ npm install
 npm run dev
 ```
 
-### 3. Usage
+### 3. Start the WebRTC Signaling Server
+```bash
+cd calling-system/server
+npm install
+
+# Start the WebRTC signaling server (runs on port 5002)
+# Windows PowerShell: $env:PORT=5002; npm start
+# Mac/Linux: PORT=5002 npm start
+PORT=5002 npm start
+```
+
+### 4. Usage
 Open your browser and navigate to `http://localhost:5173`. 
 You will be presented with the main NagarVaani selection menu. Click on any role to begin navigating the hierarchy and accessing the dashboards!
 

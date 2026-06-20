@@ -10,6 +10,8 @@ import ChiefElectoralOfficerDashboard from './pages/ChiefElectoralOfficerDashboa
 import ECIDashboard from './pages/ECIDashboard.jsx';
 import PollingOfficerDashboard from './pages/PollingOfficerDashboard.jsx';
 import HierarchySelector from './components/HierarchySelector.jsx';
+import { CallProvider } from './context/CallContext';
+import { CallOverlay } from './components/CallOverlay';
 
 export default function App() {
   const [token, setToken] = useState(() => localStorage.getItem('em_auth_token'));
@@ -80,9 +82,10 @@ export default function App() {
     };
 
     return (
-      <>
+      <CallProvider selfId={user.id || user.role} selfName={user.name || user.role}>
         {renderDashboard()}
-      </>
+        <CallOverlay />
+      </CallProvider>
     );
   }
 
