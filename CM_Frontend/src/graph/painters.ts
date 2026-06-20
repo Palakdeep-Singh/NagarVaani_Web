@@ -1,6 +1,5 @@
 // ─── painters.ts ──────────────────────────────────────────────────────────────
 import { TIER_CFG, resolveId } from './graphEngine';
-import type { GNode } from './graphEngine';
 
 export interface PaintNodeOptions {
   activeNodes: Set<string> | null;

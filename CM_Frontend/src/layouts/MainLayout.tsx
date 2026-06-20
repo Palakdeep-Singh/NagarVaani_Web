@@ -4,9 +4,9 @@ import { Chatbot } from '../components/Chatbot';
 import {
   LayoutDashboard, BarChart2, Award, BrainCircuit, Stethoscope,
   BookOpen, MapPin, Users2, CalendarCheck, DollarSign, FolderLock,
-  MessageSquare, Video, Bell, UserCheck, Building, Network,
-  Vote, Radio, LogOut, ShieldCheck, AlertTriangle, RefreshCw,
-  ChevronRight, X, Activity, FileSearch
+  MessageSquare, Video, Bell, UserCheck, Network,
+  LogOut, ShieldCheck, AlertTriangle, RefreshCw,
+  ChevronRight, X, Activity
 } from 'lucide-react';
 
 interface SidebarItem {
@@ -32,7 +32,7 @@ const NAV_GROUPS = [
     items: [
       { id: 'DM View',    label: 'DM Workspace',        icon: MapPin,           roles: ['Chief Minister','District Magistrate'] },
       { id: 'Officers',   label: 'Officer Directory',   icon: Users2,           roles: ['Chief Minister','District Magistrate','Department Head'] },
-      { id: 'HierarchyGraph', label: 'Org. Hierarchy',  icon: Network,          roles: ['Chief Minister','District Magistrate','Department Head'] },
+      { id: 'KnowledgeGraph', label: 'Knowledge Graph', icon: Network,          roles: ['Chief Minister','District Magistrate','Department Head'] },
     ] as SidebarItem[],
   },
   {
@@ -55,13 +55,6 @@ const NAV_GROUPS = [
     items: [
       { id: 'Communications', label: 'Messaging',        icon: MessageSquare,    roles: ['Chief Minister','District Magistrate','Department Head'] },
       { id: 'VideoCall',      label: 'Video Conference',  icon: Video,            roles: ['Chief Minister','District Magistrate','Department Head'] },
-    ] as SidebarItem[],
-  },
-  {
-    title: 'Election Phase',
-    items: [
-      { id: 'ElectionCommandCenter', label: 'Election Command', icon: Radio, roles: ['District Magistrate','Department Head'] },
-      { id: 'BoothManagement',       label: 'Booth Management',  icon: Vote,  roles: ['District Magistrate','Department Head'] },
     ] as SidebarItem[],
   },
 ];
@@ -144,8 +137,7 @@ export const MainLayout: React.FC<Props> = ({ children }) => {
         {/* Bottom: compliance note */}
         <div className="sidebar-footer">
           NagarVaani v2.0 · GNCT Delhi<br />
-          Protected under IT Act, 2000<br />
-          ECI Guidelines Compliant
+          Protected under IT Act, 2000
         </div>
       </aside>
 
@@ -162,7 +154,7 @@ export const MainLayout: React.FC<Props> = ({ children }) => {
               <span>Govt. of NCT of Delhi</span>
               <ChevronRight size={12} style={{ flexShrink: 0, opacity: 0.45 }} />
               <strong>
-                {activeTab && activeTab !== 'Overview' ? activeTab.replace(/([A-Z])/g, ' $1').trim() : 'CM Executive Dashboard'}
+                {activeTab && activeTab !== 'Overview' ? (activeTab === 'KnowledgeGraph' ? 'Knowledge Graph' : activeTab.replace(/([A-Z])/g, ' $1').trim()) : 'CM Executive Dashboard'}
               </strong>
             </div>
           </div>

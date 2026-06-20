@@ -18,9 +18,7 @@ import { Files } from './views/Files';
 import { Comm } from './views/Comm';
 import { VideoCall } from './views/VideoCall';
 import { Login } from './views/Login';
-import { HierarchyGraph } from './views/HierarchyGraph';
-import { BoothManagement } from './views/BoothManagement';
-import { ElectionCommandCenter } from './views/election/ElectionCommandCenter';
+import { KnowledgeGraph } from './views/KnowledgeGraph';
 
 
 const DashboardContent: React.FC = () => {
@@ -32,16 +30,12 @@ const DashboardContent: React.FC = () => {
 
   const renderActiveView = () => {
     switch (activeTab) {
-      case 'ElectionCommandCenter':
-        return <ElectionCommandCenter />;
-      case 'BoothManagement':
-        return <BoothManagement />;
       case 'Overview':
         return <Overview />;
       case 'Analytics':
         return <Analytics />;
-      case 'HierarchyGraph':
-        return <HierarchyGraph />;
+      case 'KnowledgeGraph':
+        return <KnowledgeGraph />;
       case 'Rankings':
         return <Rankings />;
       case 'Suggestions':

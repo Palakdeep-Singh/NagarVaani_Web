@@ -1,18 +1,18 @@
-// ─── HierarchyGraph.tsx ────────────────────────────────────────────────────────
-// CM → District → Booth → Officer → Complaint — orbital web layout
+// ─── KnowledgeGraph.tsx ────────────────────────────────────────────────────────
+// CM → District → Ward → Officer → Complaint — orbital web layout
 // ─────────────────────────────────────────────────────────────────────────────
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import ForceGraph2D from 'react-force-graph-2d';
 import {
   X, Search, ChevronRight, Star, Clock, CheckCircle,
-  AlertCircle, AlertTriangle, MapPin, User, FileText, TrendingUp,
+  AlertTriangle, MapPin, User, FileText,
 } from 'lucide-react';
 import { TIER_CFG, buildDelhiGovGraph, resolveId } from './graphEngine';
 import type { NodeTier, GNode, GLink, GraphData } from './graphEngine';
 import { paintNode as _paintNode, paintNodeArea, paintLink as _paintLink } from './painters';
 import { useStore } from '../context/Store';
 
-export interface HierarchyGraphProps { officers?: any[] }
+export interface KnowledgeGraphProps { officers?: any[] }
 
 const DISTRICTS = [
   'All Districts','New Delhi','North Delhi','North West Delhi','West Delhi',
@@ -101,7 +101,7 @@ function DetailCM({ node }: { node: GNode }) {
       </div>
       <p className="text-[11px] text-slate-400 leading-relaxed">
         Showing live command web across <strong className="text-white">all 11 Delhi districts</strong>, 
-        their ward booths, assigned officers, and active grievances filed by citizens.
+        their administrative wards, assigned officers, and active grievances filed by citizens.
       </p>
     </div>
   );
@@ -149,7 +149,7 @@ function DetailDistrict({ node }: { node: GNode }) {
     </div>
   );
 }
-function DetailBooth({ node }: { node: GNode }) {
+function DetailWard({ node }: { node: GNode }) {
   const m = node.meta!;
   return (
     <div className="space-y-4">
@@ -262,7 +262,7 @@ function DetailComplaint({ node }: { node: GNode }) {
 }
 
 // ── Main component ─────────────────────────────────────────────────────────────
-export const HierarchyGraph: React.FC<HierarchyGraphProps> = ({ officers: propOfficers }) => {
+export const KnowledgeGraph: React.FC<KnowledgeGraphProps> = ({ officers: propOfficers }) => {
   const storeData   = useStore();
   const allOfficers = propOfficers ?? storeData.officers ?? [];
 
@@ -396,7 +396,7 @@ export const HierarchyGraph: React.FC<HierarchyGraphProps> = ({ officers: propOf
 
   const stats = useMemo(() => ({
     districts: graphData.nodes.filter(n => n.type === 'district').length,
-    booths:    graphData.nodes.filter(n => n.type === 'booth').length,
+    wards:     graphData.nodes.filter(n => n.type === 'booth').length,
     officers:  graphData.nodes.filter(n => n.type === 'officer').length,
     complaints:graphData.nodes.filter(n => n.type === 'complaint').length,
     total:     graphData.nodes.length,
@@ -410,7 +410,7 @@ export const HierarchyGraph: React.FC<HierarchyGraphProps> = ({ officers: propOf
       {/* Top bar */}
       <div className="flex items-center gap-3 px-5 py-2.5 bg-[#080F22] border-b border-[#1A2540] shrink-0">
         <div className="shrink-0">
-          <div className="text-[11px] font-bold text-white tracking-widest uppercase">CM Command Web</div>
+          <div className="text-[11px] font-bold text-white tracking-widest uppercase">Knowledge Graph</div>
           <div className="text-[9px] text-slate-500 mt-0.5">Delhi Governance · {stats.total} nodes live</div>
         </div>
 
@@ -443,7 +443,7 @@ export const HierarchyGraph: React.FC<HierarchyGraphProps> = ({ officers: propOf
         <div className="hidden xl:flex items-center gap-2 shrink-0">
           {[
             { label: 'Districts', v: stats.districts,  c: '#8B5CF6' },
-            { label: 'Booths',    v: stats.booths,     c: '#14B8A6' },
+            { label: 'Wards',     v: stats.wards,      c: '#14B8A6' },
             { label: 'Officers',  v: stats.officers,   c: '#3B82F6' },
             { label: 'Complaints',v: stats.complaints, c: '#F97316' },
           ].map(s => (
@@ -483,7 +483,7 @@ export const HierarchyGraph: React.FC<HierarchyGraphProps> = ({ officers: propOf
           {!selectedNode && !hoverNode && !search && (
             <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 pointer-events-none">
               <div className="bg-[#080F22]/90 border border-[#1A2540] rounded-full px-4 py-1.5 text-[10px] text-slate-500 flex items-center gap-2">
-                <span>🖱</span> Click any node — CM · Districts · Booths · Officers · Complaints
+                <span>🖱</span> Click any node — CM · Districts · Wards · Officers · Complaints
               </div>
             </div>
           )}
@@ -537,7 +537,7 @@ export const HierarchyGraph: React.FC<HierarchyGraphProps> = ({ officers: propOf
                   {[
                     { icon: '🟡', label: 'Chief Minister', desc: 'Centre node — citywide stats' },
                     { icon: '🟣', label: 'Districts (11)',  desc: 'DM name, resolution rate' },
-                    { icon: '🟢', label: 'Ward / Booths',  desc: 'Officers & complaint count' },
+                    { icon: '🟢', label: 'Wards',          desc: 'Officers & complaint count' },
                     { icon: '🔵', label: 'Officers',       desc: 'Individual KPIs, ratings' },
                     { icon: '🟠', label: 'Complaints',     desc: 'Status, priority, citizen' },
                   ].map(r => (
@@ -596,7 +596,7 @@ export const HierarchyGraph: React.FC<HierarchyGraphProps> = ({ officers: propOf
               <div className="px-4 py-4 flex-1">
                 {selectedNode.type === 'cm'        && <DetailCM        node={selectedNode} />}
                 {selectedNode.type === 'district'  && <DetailDistrict  node={selectedNode} />}
-                {selectedNode.type === 'booth'     && <DetailBooth     node={selectedNode} />}
+                {selectedNode.type === 'booth'     && <DetailWard      node={selectedNode} />}
                 {selectedNode.type === 'officer'   && <DetailOfficer   node={selectedNode} />}
                 {selectedNode.type === 'complaint' && <DetailComplaint node={selectedNode} />}
               </div>
@@ -649,4 +649,4 @@ export const HierarchyGraph: React.FC<HierarchyGraphProps> = ({ officers: propOf
   );
 };
 
-export default HierarchyGraph;
+export default KnowledgeGraph;

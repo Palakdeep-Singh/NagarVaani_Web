@@ -136,48 +136,44 @@ export const Login: React.FC = () => {
                 {loading ? 'Authenticating…' : 'Sign In to Portal'}
               </button>
 
-<<<<<<< Updated upstream
-        {/* Fast Dev Bypass Authorization */}
-        <div className="mt-6 pt-4 border-t border-slate-200/80">
-          <div className="text-xs font-extrabold text-amber-600 uppercase tracking-wider mb-2 flex items-center justify-center gap-1">
-            ⚡ Fast Authorization Access (Dev Mode)
-          </div>
-          <div className="grid grid-cols-3 gap-2">
-            <button
-              onClick={() => loginUser('cm', 'cm123')}
-              className="py-2 bg-amber-50 hover:bg-amber-100/80 border border-amber-200 text-amber-700 font-bold rounded-xl text-[10px] transition-colors cursor-pointer text-center"
-            >
-              👑 CM View
-            </button>
-            <button
-              onClick={() => loginUser('newdelhidm', 'dm123')}
-              className="py-2 bg-amber-50 hover:bg-amber-100/80 border border-amber-200 text-amber-700 font-bold rounded-xl text-[10px] transition-colors cursor-pointer text-center"
-            >
-              🏢 DM View
-            </button>
-            <button
-              onClick={() => loginUser('healthhead', 'dept123')}
-              className="py-2 bg-amber-50 hover:bg-amber-100/80 border border-amber-200 text-amber-700 font-bold rounded-xl text-[10px] transition-colors cursor-pointer text-center"
-            >
-              💼 Dept Nodal
-            </button>
-          </div>
-        </div>
-
-        <div className="mt-6 pt-5 border-t border-slate-100 text-xs text-slate-500 bg-slate-50/50 -mx-6 -mb-6 p-6 rounded-b-2xl border-t border-slate-200">
-          <div className="font-bold text-slate-700 mb-2 flex items-center gap-1">
-            <Sparkles className="h-3.5 w-3.5 text-indigo-500 shrink-0" />
-            Evaluation Credentials:
-=======
               <div className="login-terms">
                 By signing in you agree to the Government of India&apos;s<br />
                 Acceptable Use Policy for Official IT Systems (2019)
               </div>
             </form>
->>>>>>> Stashed changes
           </div>
 
-          <div className="login-footer">
+          {/* Fast Dev Bypass Authorization */}
+          <div className="mt-4 pt-4 border-t border-slate-200/80">
+            <div className="text-xs font-extrabold text-amber-600 uppercase tracking-wider mb-2 flex items-center justify-center gap-1">
+              ⚡ Fast Authorization Access (Dev Mode)
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              <button
+                type="button"
+                onClick={() => loginUser('cm', 'cm123')}
+                className="py-2 bg-amber-50 hover:bg-amber-100/80 border border-amber-200 text-amber-700 font-bold rounded-xl text-[10px] transition-colors cursor-pointer text-center"
+              >
+                👑 CM View
+              </button>
+              <button
+                type="button"
+                onClick={() => loginUser('newdelhidm', 'dm123')}
+                className="py-2 bg-amber-50 hover:bg-amber-100/80 border border-amber-200 text-amber-700 font-bold rounded-xl text-[10px] transition-colors cursor-pointer text-center"
+              >
+                🏢 DM View
+              </button>
+              <button
+                type="button"
+                onClick={() => loginUser('healthhead', 'dept123')}
+                className="py-2 bg-amber-50 hover:bg-amber-100/80 border border-amber-200 text-amber-700 font-bold rounded-xl text-[10px] transition-colors cursor-pointer text-center"
+              >
+                💼 Dept Nodal
+              </button>
+            </div>
+          </div>
+
+          <div className="login-footer mt-6">
             NagarVaani v2.0 · National Informatics Centre (NIC)<br />
             Ministry of Electronics &amp; Information Technology, GoI<br />
             IT Act 2000 · RTI Act 2005 · ECI Model Code Compliant

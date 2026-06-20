@@ -1,12 +1,12 @@
-// ─── INTEGRATION GUIDE: HierarchyGraph in Other Dashboards ───────────────────
+// ─── INTEGRATION GUIDE: KnowledgeGraph in Other Dashboards ───────────────────
 //
-// The graph/HierarchyGraph component is a self-contained, role-aware widget.
+// The graph/KnowledgeGraph component is a self-contained, role-aware widget.
 // It connects to the store automatically (reads `officers` array).
 // You can override or filter officers via props for scoped views.
 //
-// ─── 1. CM DASHBOARD (already integrated via views/HierarchyGraph.tsx) ────────
+// ─── 1. CM DASHBOARD (already integrated via views/KnowledgeGraph.tsx) ────────
 //
-//   Tab: 'HierarchyGraph' → views/HierarchyGraph.tsx → wraps GraphComponent
+//   Tab: 'KnowledgeGraph' → views/KnowledgeGraph.tsx → wraps GraphComponent
 //   No extra props needed — shows full Delhi network.
 //
 //
@@ -14,7 +14,7 @@
 //
 // Add a "My Network" tab inside DMView that shows only that DM's district.
 //
-//   import { HierarchyGraph } from '../graph/HierarchyGraph';
+//   import { KnowledgeGraph } from '../graph/KnowledgeGraph';
 //   import { useStore } from '../context/Store';
 //
 //   // Inside DMView component:
@@ -22,7 +22,7 @@
 //
 //   // Anywhere in JSX where you want the graph panel:
 //   <div style={{ height: '500px', borderRadius: '16px', overflow: 'hidden' }}>
-//     <HierarchyGraph
+//     <KnowledgeGraph
 //       filterDistrict={activeDistrict}
 //       hubLabel={`${activeDistrict} Network`}
 //       hubSub="District View"
@@ -33,13 +33,13 @@
 //
 // ─── 3. DEPARTMENT HEAD DASHBOARD ─────────────────────────────────────────────
 //
-//   import { HierarchyGraph } from '../graph/HierarchyGraph';
+//   import { KnowledgeGraph } from '../graph/KnowledgeGraph';
 //   import { useStore } from '../context/Store';
 //
 //   const { activeDepartment } = useStore();
 //
 //   <div style={{ height: '480px', borderRadius: '16px', overflow: 'hidden' }}>
-//     <HierarchyGraph
+//     <KnowledgeGraph
 //       filterDepartment={activeDepartment}
 //       hubLabel={activeDepartment}
 //       hubSub="Department Network"
@@ -57,7 +57,7 @@
 //       department: 'Elections' },
 //   ];
 //
-//   <HierarchyGraph
+//   <KnowledgeGraph
 //     officers={myOfficers}
 //     hubLabel="South Delhi"
 //     hubSub="District Administration"
@@ -67,10 +67,10 @@
 // ─── 5. FULL-PAGE VIEW (like the CM tab) ──────────────────────────────────────
 //
 //   Wrap in a container that gives the exact height and escapes any parent
-//   padding. Copy the pattern from views/HierarchyGraph.tsx:
+//   padding. Copy the pattern from views/KnowledgeGraph.tsx:
 //
 //   <div style={{ margin: '-24px', height: 'calc(100vh - 64px)', overflow: 'hidden' }}>
-//     <HierarchyGraph hubLabel="My View" />
+//     <KnowledgeGraph hubLabel="My View" />
 //   </div>
 //
 //

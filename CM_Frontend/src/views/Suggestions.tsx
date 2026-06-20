@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useStore } from '../context/Store';
-import { GovPageShell, GovCard } from '../components/GovPageShell';
-import { BrainCircuit, AlertTriangle, TrendingUp, CheckCircle2, Clock, RefreshCw, ChevronRight, Info, ShieldCheck } from 'lucide-react';
+import { GovPageShell } from '../components/GovPageShell';
+import { AlertTriangle, TrendingUp, CheckCircle2, Clock, RefreshCw, ChevronRight, ShieldCheck } from 'lucide-react';
 
 interface AIInsight {
   id: number;

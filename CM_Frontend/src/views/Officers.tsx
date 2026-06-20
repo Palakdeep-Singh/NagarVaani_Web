@@ -3,7 +3,6 @@ import { useStore } from '../context/Store';
 import {
   ShieldAlert, Timer, Star, Search, ShieldCheck
 } from 'lucide-react';
-import { OfficerUpload } from '../components/OfficerUpload';
 
 export const Officers: React.FC = () => {
   const { officers } = useStore();
@@ -48,10 +47,7 @@ export const Officers: React.FC = () => {
         </p>
       </div>
 
-      <OfficerUpload onUploadSuccess={() => {
-        // The store's officers array is updated automatically by importOfficersFromCSV,
-        // which triggers a React re-render of this component and the HierarchyGraph.
-      }} />
+
 
             <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex flex-wrap items-center justify-between gap-4">
         

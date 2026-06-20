@@ -1,7 +1,7 @@
 import React from 'react';
 import { useStore } from '../context/Store';
 import { GovPageShell, GovCard } from '../components/GovPageShell';
-import { Award, TrendingUp, TrendingDown, Minus, ShieldCheck, AlertTriangle, Info } from 'lucide-react';
+import { TrendingUp, TrendingDown, Minus, ShieldCheck, AlertTriangle } from 'lucide-react';
 
 const getScoreStyle = (score: number): { ring: string; color: string; label: string } => {
   if (score >= 80) return { ring: 'good', color: 'var(--primary-light)',   label: 'Performing' };

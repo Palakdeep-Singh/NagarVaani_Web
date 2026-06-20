@@ -6,7 +6,7 @@ import {
   TrendingUp, TrendingDown, Filter, Download, RefreshCw,
   Info, Activity, Eye, ChevronRight, User
 } from 'lucide-react';
-import { formatINR } from '../utils/helper';
+
 
 const DISTRICTS = [
   'Central','East','New Delhi','North','North East','North West',
@@ -52,7 +52,7 @@ const StatCard: React.FC<StatCardProps> = ({ label, value, sub, accent, icon, tr
 );
 
 export const Overview: React.FC = () => {
-  const { complaints, files, projects, activeRole, activeDistrict, activeDepartment, updateComplaintStatus } = useStore();
+  const { complaints, files, activeRole, activeDistrict, activeDepartment, updateComplaintStatus } = useStore();
   const [filterDistrict, setFilterDistrict]   = useState('All');
   const [filterStatus, setFilterStatus]       = useState('All');
   const [filterPriority, setFilterPriority]   = useState('All');

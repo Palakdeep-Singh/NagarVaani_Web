@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import { useStore } from '../context/Store';
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  BarChart, Bar, Cell, LineChart, Line, Legend, PieChart, Pie
+  BarChart, Bar, Cell, Legend, PieChart, Pie
 } from 'recharts';
-import { BarChart2, Info, TrendingUp, Clock, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { Info, TrendingUp, Clock, AlertTriangle, CheckCircle2 } from 'lucide-react';
 
 const GOV_COLORS = ['#2563EB', '#16A34A', '#DC2626', '#D97706', '#7C3AED', '#0891B2', '#DB2777', '#65A30D'];
 
