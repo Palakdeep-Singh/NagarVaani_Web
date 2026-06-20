@@ -2160,10 +2160,6 @@ function AdminManageAdmins({ role, creatorState }) {
                   <input className="form-input" value={form.state} onChange={e => setForm(f => ({ ...f, state: e.target.value }))} placeholder="e.g. Maharashtra, Gujarat" />
                 )}</div>
             )}
-            {form.role === 'district' && (
-              <div className="form-group"><label className="form-label">District *</label>
-                <input className="form-input" value={form.district} onChange={e => setForm(f => ({ ...f, district: e.target.value }))} placeholder="e.g. Pune, Surat, Nashik" /></div>
-            )}
             <div className="form-group"><label className="form-label">Phone</label>
               <input className="form-input" value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} placeholder="Official contact number" /></div>
           </div>
