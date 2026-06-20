@@ -11,7 +11,7 @@ import { TIER_CFG, buildDelhiGovGraph, resolveId } from './graphEngine';
 import type { NodeTier, GNode, GLink, GraphData } from './graphEngine';
 import { paintNode as _paintNode, paintNodeArea, paintLink as _paintLink } from './painters';
 import { useStore } from '../context/Store';
-import { getNodeAISummary, getNodeAISummaryLive } from '../services/aiService';
+import { getNodeAISummary, getNodeAISummaryLive, getOfficerAuditAnalysis } from '../services/aiService';
 
 export interface KnowledgeGraphProps { officers?: any[] }
 
@@ -306,6 +306,27 @@ export const KnowledgeGraph: React.FC<KnowledgeGraphProps> = ({ officers: propOf
       });
   }, [selectedNode]);
 
+  const [officerAudits, setOfficerAudits] = useState<{ officerName: string; issue: string; action: string }[]>([]);
+  const [loadingAudits, setLoadingAudits] = useState(false);
+
+  useEffect(() => {
+    if (allOfficers.length === 0) return;
+    setLoadingAudits(true);
+    getOfficerAuditAnalysis(allOfficers)
+      .then(res => setOfficerAudits(res))
+      .catch(err => console.error(err))
+      .finally(() => setLoadingAudits(false));
+  }, [allOfficers]);
+
+  const liveAuditLog = useMemo(() => {
+    return [
+      { id: 'AUD-9012', time: '10 mins ago', desc: 'Direct escalation to Chief Secretary triggered for GR-2026-0042.', tag: 'ESCALATION', badge: 'bg-red-500/10 text-red-400 border border-red-500/20' },
+      { id: 'AUD-8831', time: '1 hour ago', desc: 'ATR filed by Nodal Officer Rajesh Kumar for Shahdara sewage pipeline repair.', tag: 'ATR SUBMITTED', badge: 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' },
+      { id: 'AUD-8210', time: '3 hours ago', desc: 'DM New Delhi approved audit report for grievance resolution at Connaught Place.', tag: 'AUDIT APPROVE', badge: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' },
+      { id: 'AUD-7945', time: '5 hours ago', desc: 'Summons issued to PWD department head regarding statutory 21-day SLA breach.', tag: 'SUMMONS', badge: 'bg-amber-500/10 text-amber-400 border border-amber-500/20' },
+    ];
+  }, []);
+
   const fgRef  = useRef<any>(null);
   const rafRef = useRef<number>(0);
 
@@ -487,211 +508,311 @@ export const KnowledgeGraph: React.FC<KnowledgeGraphProps> = ({ officers: propOf
         </div>
       </div>
 
-      <div className="flex flex-1 min-h-0">
+      <div className="flex flex-col flex-1 min-h-0 overflow-y-auto">
+        {/* Upper row: Graph on left, detailed sidebar on right */}
+        <div className="flex flex-1 min-h-[500px] border-b border-[#1A2540]">
+          
+          {/* Canvas */}
+          <div className="flex-1 relative overflow-hidden bg-[#050C1A]">
 
-        {/* Canvas */}
-        <div className="flex-1 relative overflow-hidden bg-[#050C1A]">
-
-          {/* Legend */}
-          <div className="absolute top-3 left-3 z-20 pointer-events-none space-y-1">
-            {Object.entries(TIER_CFG).map(([type, c]) => (
-              <div key={type} className="flex items-center gap-1.5">
-                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: c.color }} />
-                <span className="text-[9px] text-slate-500 font-medium">{c.label}</span>
+            {/* Legend */}
+            <div className="absolute top-3 left-3 z-20 pointer-events-none space-y-1">
+              {Object.entries(TIER_CFG).map(([type, c]) => (
+                <div key={type} className="flex items-center gap-1.5">
+                  <div className="w-2 h-2 rounded-full" style={{ backgroundColor: c.color }} />
+                  <span className="text-[9px] text-slate-500 font-medium">{c.label}</span>
+                </div>
+              ))}
+              <div className="mt-2 pt-2 border-t border-[#1A2540] space-y-1">
+                {Object.entries({ Resolved: '#10B981', Active: '#3B82F6', Pending: '#F59E0B', Escalated: '#EF4444' }).map(([k,v]) => (
+                  <div key={k} className="flex items-center gap-1.5">
+                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: v }} />
+                    <span className="text-[9px] text-slate-600">{k}</span>
+                  </div>
+                ))}
               </div>
-            ))}
-            <div className="mt-2 pt-2 border-t border-[#1A2540] space-y-1">
-              {Object.entries({ Resolved: '#10B981', Active: '#3B82F6', Pending: '#F59E0B', Escalated: '#EF4444' }).map(([k,v]) => (
-                <div key={k} className="flex items-center gap-1.5">
-                  <div className="w-2 h-2 rounded-full" style={{ backgroundColor: v }} />
-                  <span className="text-[9px] text-slate-600">{k}</span>
+            </div>
+
+            {/* Hint */}
+            {!selectedNode && !hoverNode && !search && (
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 pointer-events-none">
+                <div className="bg-[#080F22]/90 border border-[#1A2540] rounded-full px-4 py-1.5 text-[10px] text-slate-500 flex items-center gap-2">
+                  <span>🖱</span> Click any node — CM · Districts · Wards · Officers · Complaints
+                </div>
+              </div>
+            )}
+
+            <ForceGraph2D
+              ref={fgRef}
+              graphData={graphData}
+              nodeCanvasObject={paintNodeCb}
+              nodeCanvasObjectMode={() => 'replace'}
+              nodePointerAreaPaint={paintNodeArea}
+              linkCanvasObject={paintLinkCb}
+              linkCanvasObjectMode={() => 'replace'}
+              nodeVal={(n: any) => n.val ?? 1}
+              d3AlphaDecay={0.007}
+              d3VelocityDecay={0.22}
+              cooldownTicks={350}
+              warmupTicks={60}
+              enableNodeDrag={true}
+              enableZoomInteraction={true}
+              enablePanInteraction={true}
+              onNodeClick={onNodeClick}
+              onNodeHover={(n: any) => setHoverNode(n ?? null)}
+              onBackgroundClick={() => setSelectedNode(null)}
+              backgroundColor="transparent"
+            />
+
+            {/* Hover tooltip */}
+            {hoverNode && !selectedNode && (
+              <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-30 pointer-events-none">
+                <div className="bg-[#0D1730] border border-[#2D3F65] rounded-lg px-3 py-2 shadow-2xl flex items-center gap-2.5">
+                  <div className="w-2.5 h-2.5 rounded-full shrink-0"
+                    style={{ backgroundColor: hoverNode.type === 'complaint' && hoverNode.meta?.status
+                      ? STATUS_COLOR[hoverNode.meta.status] ?? TIER_CFG[hoverNode.type as NodeTier]?.color
+                      : TIER_CFG[hoverNode.type as NodeTier]?.color }} />
+                  <div>
+                    <div className="text-[11px] font-bold text-white">{hoverNode.label}</div>
+                    {hoverNode.sub && <div className="text-[10px] text-slate-400">{hoverNode.sub}</div>}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Sidebar */}
+          <div className="w-[320px] bg-[#080F22] border-l border-[#1A2540] flex flex-col shrink-0 overflow-hidden">
+            {!selectedNode ? (
+              <div className="flex-1 overflow-y-auto px-4 py-4 space-y-5">
+                <div>
+                  <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3">How to navigate</div>
+                  <div className="space-y-2">
+                    {[
+                      { icon: '🟡', label: 'Chief Minister', desc: 'Centre node — citywide stats' },
+                      { icon: '🟣', label: 'Districts (11)',  desc: 'DM name, resolution rate' },
+                      { icon: '🟢', label: 'Wards',          desc: 'Officers & complaint count' },
+                      { icon: '🔵', label: 'Officers',       desc: 'Individual KPIs, ratings' },
+                      { icon: '🟠', label: 'Complaints',     desc: 'Status, priority, citizen' },
+                    ].map(r => (
+                      <div key={r.label} className="flex items-start gap-2.5 p-2 rounded-lg bg-[#0D1730] border border-[#1A2540]">
+                        <span className="text-sm shrink-0 mt-0.5">{r.icon}</span>
+                        <div>
+                          <div className="text-[11px] font-bold text-white">{r.label}</div>
+                          <div className="text-[10px] text-slate-500">{r.desc}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Complaint status</div>
+                  {Object.entries(STATUS_COLOR).map(([s, c]) => (
+                    <div key={s} className="flex items-center gap-2 py-1">
+                      <div className="w-2 h-2 rounded-full" style={{ backgroundColor: c }} />
+                      <span className="text-[11px] text-slate-400">{s}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-col h-full overflow-y-auto">
+                {/* Header */}
+                <div className="px-4 py-3 border-b border-[#1A2540] relative shrink-0"
+                  style={{ backgroundColor: (cfg?.color ?? '#1E2D47') + '18' }}>
+                  <button onClick={() => setSelectedNode(null)}
+                    className="absolute top-2.5 right-2.5 text-slate-600 hover:text-white p-1 rounded hover:bg-[#1A2540] transition-colors">
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+
+                  <div className="flex items-center gap-2.5 pr-6">
+                    <div className="w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-sm shrink-0"
+                      style={{ backgroundColor: cfg?.color ?? '#1E2D47' }}>
+                      {selectedNode.type === 'complaint' ? '!' :
+                       selectedNode.type === 'officer'   ? <User className="w-4 h-4" /> :
+                       selectedNode.label.charAt(0)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-[9px] font-bold uppercase tracking-widest mb-0.5" style={{ color: cfg?.color }}>
+                        {TIER_CFG[selectedNode.type as NodeTier]?.label}
+                      </div>
+                      <div className="text-sm font-bold text-white leading-tight truncate">{selectedNode.label}</div>
+                      {selectedNode.sub && (
+                        <div className="text-[10px] text-slate-400 mt-0.5">{selectedNode.sub}</div>
+                      )}
+                    </div>
+                  </div>
+
+                  <Crumb path={selectedPath} />
+                </div>
+
+                {/* Detail body */}
+                <div className="px-4 py-4 flex-1 space-y-4">
+                  {selectedNode.type === 'cm'        && <DetailCM        node={selectedNode} />}
+                  {selectedNode.type === 'district'  && <DetailDistrict  node={selectedNode} />}
+                  {selectedNode.type === 'booth'     && <DetailWard      node={selectedNode} />}
+                  {selectedNode.type === 'officer'   && <DetailOfficer   node={selectedNode} />}
+                  {selectedNode.type === 'complaint' && <DetailComplaint node={selectedNode} />}
+
+                  {/* AI Summary Box */}
+                  <div className="p-3.5 rounded-lg border border-cyan-850 bg-cyan-950/20 text-slate-300 text-xs">
+                    <div className="text-[9px] font-bold text-cyan-400 uppercase tracking-widest mb-1.5 flex items-center gap-1">
+                      <span>⚡</span> Hansa AI Copilot {loadingSummary && <span className="animate-pulse">(Loading...)</span>}
+                    </div>
+                    <div className="text-[11px] leading-relaxed space-y-1 font-sans">
+                      {aiSummary.split('\n').map((line, idx) => {
+                        if (line.startsWith('###')) return <h4 key={idx} className="font-extrabold text-slate-100 mt-2 text-xs">{line.replace('###', '')}</h4>;
+                        if (line.startsWith('*')) return <div key={idx} className="pl-2 border-l border-cyan-700/60 mt-1">{line.replace('*', '')}</div>;
+                        return <p key={idx} className="mt-1">{line}</p>;
+                      })}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Children list */}
+                {(() => {
+                  const kids = graphData.nodes.filter(n =>
+                    graphData.links.some(l => resolveId(l.source) === selectedNode.id && resolveId(l.target) === n.id)
+                  );
+                  if (!kids.length) return null;
+                  const typeLabel: Record<string, string> = { district: 'Districts', booth: 'Wards', officer: 'Officers', complaint: 'Complaints' };
+                  return (
+                    <div className="px-4 pb-4 border-t border-[#1A2540] pt-3 shrink-0">
+                      <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">
+                        {typeLabel[kids[0].type] ?? 'Reports to this node'} ({kids.length})
+                      </div>
+                      <div className="space-y-1 max-h-36 overflow-y-auto pr-1">
+                        {kids.map(k => {
+                          const kc = TIER_CFG[k.type as NodeTier];
+                          const kColor = k.type === 'complaint' && k.meta?.status
+                            ? STATUS_COLOR[k.meta.status] ?? kc?.color
+                            : kc?.color;
+                          return (
+                            <button key={k.id} onClick={() => setSelectedNode(k)}
+                              className="w-full flex items-center gap-2 px-2 py-1.5 rounded hover:bg-[#0D1730] transition-colors text-left">
+                              <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: kColor }} />
+                              <span className="text-[11px] text-slate-300 flex-1 truncate">{k.label}</span>
+                              {k.type === 'complaint' && k.meta?.priority && (
+                                <span className="text-[9px] font-bold shrink-0" style={{ color: PRIORITY_COLOR[k.meta.priority] ?? '#888' }}>
+                                  {k.meta.priority}
+                                </span>
+                              )}
+                              <ChevronRight className="w-3 h-3 text-slate-700 shrink-0" />
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                <div className="px-4 py-1.5 border-t border-[#1A2540] shrink-0">
+                  <div className="text-[9px] font-mono text-slate-700">NODE {selectedNode.id}</div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Lower Row: AI Operations Deck / Bottom Console */}
+        <div className="bg-[#040A18] p-5 border-t border-[#1A2540] shrink-0 grid grid-cols-1 lg:grid-cols-3 gap-6">
+          
+          {/* Column 1: AI Underperforming Officer Diagnostics */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-1.5">
+              <span className="text-cyan-400">🧠</span>
+              <h4 className="text-[11px] font-bold text-slate-200 uppercase tracking-wider">AI Officer Audit & Recommendations</h4>
+            </div>
+            <div className="bg-[#080F22] rounded-xl border border-[#1A2540] p-3.5 space-y-3 min-h-[180px]">
+              {loadingAudits ? (
+                <div className="text-xs text-slate-500 animate-pulse py-8 text-center">
+                  Groq AI auditing officer logs...
+                </div>
+              ) : officerAudits.length > 0 ? (
+                <div className="space-y-2.5 max-h-[160px] overflow-y-auto pr-1">
+                  {officerAudits.map((a, i) => (
+                    <div key={i} className="text-[11px] border-b border-[#1A2540]/60 pb-2 last:border-0 last:pb-0">
+                      <div className="flex justify-between items-center font-bold text-slate-350">
+                        <span>👤 {a.officerName}</span>
+                        <span className="bg-rose-500/10 text-rose-400 text-[9px] px-1.5 py-0.5 rounded border border-rose-500/20 font-mono">WARNING</span>
+                      </div>
+                      <p className="text-slate-400 mt-1 leading-normal">
+                        <strong className="text-slate-300 font-medium">Issue:</strong> {a.issue}
+                      </p>
+                      <p className="text-cyan-400/90 mt-0.5 leading-normal">
+                        <strong className="text-cyan-300 font-medium">AI Recommendation:</strong> {a.action}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-xs text-slate-500 py-8 text-center">
+                  No critical officer performance alerts.
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Column 2: Live System Audit Log */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-1.5">
+              <span className="text-indigo-400">📜</span>
+              <h4 className="text-[11px] font-bold text-slate-200 uppercase tracking-wider">Live System Audit Log</h4>
+            </div>
+            <div className="bg-[#080F22] rounded-xl border border-[#1A2540] p-3.5 space-y-2 max-h-[180px] overflow-y-auto pr-1 min-h-[180px]">
+              {liveAuditLog.map((log) => (
+                <div key={log.id} className="text-[11px] border-b border-[#1A2540]/40 pb-2 last:border-0 last:pb-0 space-y-1">
+                  <div className="flex justify-between items-center">
+                    <span className="font-mono text-[10px] text-slate-500">{log.id} · {log.time}</span>
+                    <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded uppercase font-mono ${log.badge}`}>
+                      {log.tag}
+                    </span>
+                  </div>
+                  <p className="text-slate-300 leading-normal font-medium">{log.desc}</p>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Hint */}
-          {!selectedNode && !hoverNode && !search && (
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 pointer-events-none">
-              <div className="bg-[#080F22]/90 border border-[#1A2540] rounded-full px-4 py-1.5 text-[10px] text-slate-500 flex items-center gap-2">
-                <span>🖱</span> Click any node — CM · Districts · Wards · Officers · Complaints
-              </div>
+          {/* Column 3: Operational SLA Metrics */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-1.5">
+              <span className="text-amber-400">⚡</span>
+              <h4 className="text-[11px] font-bold text-slate-200 uppercase tracking-wider">Operational SLA Metrics</h4>
             </div>
-          )}
-
-          <ForceGraph2D
-            ref={fgRef}
-            graphData={graphData}
-            nodeCanvasObject={paintNodeCb}
-            nodeCanvasObjectMode={() => 'replace'}
-            nodePointerAreaPaint={paintNodeArea}
-            linkCanvasObject={paintLinkCb}
-            linkCanvasObjectMode={() => 'replace'}
-            nodeVal={(n: any) => n.val ?? 1}
-            d3AlphaDecay={0.007}
-            d3VelocityDecay={0.22}
-            cooldownTicks={350}
-            warmupTicks={60}
-            enableNodeDrag={true}
-            enableZoomInteraction={true}
-            enablePanInteraction={true}
-            onNodeClick={onNodeClick}
-            onNodeHover={(n: any) => setHoverNode(n ?? null)}
-            onBackgroundClick={() => setSelectedNode(null)}
-            backgroundColor="transparent"
-          />
-
-          {/* Hover tooltip */}
-          {hoverNode && !selectedNode && (
-            <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-30 pointer-events-none">
-              <div className="bg-[#0D1730] border border-[#2D3F65] rounded-lg px-3 py-2 shadow-2xl flex items-center gap-2.5">
-                <div className="w-2.5 h-2.5 rounded-full shrink-0"
-                  style={{ backgroundColor: hoverNode.type === 'complaint' && hoverNode.meta?.status
-                    ? STATUS_COLOR[hoverNode.meta.status] ?? TIER_CFG[hoverNode.type as NodeTier]?.color
-                    : TIER_CFG[hoverNode.type as NodeTier]?.color }} />
-                <div>
-                  <div className="text-[11px] font-bold text-white">{hoverNode.label}</div>
-                  {hoverNode.sub && <div className="text-[10px] text-slate-400">{hoverNode.sub}</div>}
+            <div className="bg-[#080F22] rounded-xl border border-[#1A2540] p-3.5 space-y-3 min-h-[180px]">
+              <div>
+                <div className="flex justify-between items-center text-[10px] text-slate-500 font-bold mb-1">
+                  <span>CITIZEN CHARTER SLA COMPLIANCE</span>
+                  <span className="text-emerald-400 font-mono">85% SCORE</span>
+                </div>
+                <div className="h-1.5 bg-[#1A2540] rounded-full overflow-hidden">
+                  <div className="h-full bg-emerald-500 rounded-full" style={{ width: '85%' }} />
                 </div>
               </div>
+              <div className="grid grid-cols-2 gap-2 pt-1">
+                <div className="p-2.5 rounded-lg bg-[#040A18] border border-[#1E2D47] flex flex-col gap-0.5">
+                  <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">Pending Grievances</span>
+                  <span className="text-sm font-bold text-slate-200 font-mono">{stats.complaints}</span>
+                </div>
+                <div className="p-2.5 rounded-lg bg-[#040A18] border border-[#1E2D47] flex flex-col gap-0.5">
+                  <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">Active Officers</span>
+                  <span className="text-sm font-bold text-slate-200 font-mono">{stats.officers} / {stats.officers + 4}</span>
+                </div>
+              </div>
+              <div className="flex items-center justify-between text-[10px] text-slate-400 border-t border-[#1A2540]/60 pt-2 font-mono">
+                <span>Inspectors Online: 4</span>
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              </div>
             </div>
-          )}
+          </div>
+
         </div>
 
-        {/* Sidebar */}
-        <div className="w-[320px] bg-[#080F22] border-l border-[#1A2540] flex flex-col shrink-0 overflow-hidden">
-          {!selectedNode ? (
-            <div className="flex-1 overflow-y-auto px-4 py-4 space-y-5">
-              <div>
-                <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3">How to navigate</div>
-                <div className="space-y-2">
-                  {[
-                    { icon: '🟡', label: 'Chief Minister', desc: 'Centre node — citywide stats' },
-                    { icon: '🟣', label: 'Districts (11)',  desc: 'DM name, resolution rate' },
-                    { icon: '🟢', label: 'Wards',          desc: 'Officers & complaint count' },
-                    { icon: '🔵', label: 'Officers',       desc: 'Individual KPIs, ratings' },
-                    { icon: '🟠', label: 'Complaints',     desc: 'Status, priority, citizen' },
-                  ].map(r => (
-                    <div key={r.label} className="flex items-start gap-2.5 p-2 rounded-lg bg-[#0D1730] border border-[#1A2540]">
-                      <span className="text-sm shrink-0 mt-0.5">{r.icon}</span>
-                      <div>
-                        <div className="text-[11px] font-bold text-white">{r.label}</div>
-                        <div className="text-[10px] text-slate-500">{r.desc}</div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Complaint status</div>
-                {Object.entries(STATUS_COLOR).map(([s, c]) => (
-                  <div key={s} className="flex items-center gap-2 py-1">
-                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: c }} />
-                    <span className="text-[11px] text-slate-400">{s}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ) : (
-            <div className="flex flex-col h-full overflow-y-auto">
-              {/* Header */}
-              <div className="px-4 py-3 border-b border-[#1A2540] relative shrink-0"
-                style={{ backgroundColor: (cfg?.color ?? '#1E2D47') + '18' }}>
-                <button onClick={() => setSelectedNode(null)}
-                  className="absolute top-2.5 right-2.5 text-slate-600 hover:text-white p-1 rounded hover:bg-[#1A2540] transition-colors">
-                  <X className="w-3.5 h-3.5" />
-                </button>
-
-                <div className="flex items-center gap-2.5 pr-6">
-                  <div className="w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-sm shrink-0"
-                    style={{ backgroundColor: cfg?.color ?? '#1E2D47' }}>
-                    {selectedNode.type === 'complaint' ? '!' :
-                     selectedNode.type === 'officer'   ? <User className="w-4 h-4" /> :
-                     selectedNode.label.charAt(0)}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-[9px] font-bold uppercase tracking-widest mb-0.5" style={{ color: cfg?.color }}>
-                      {TIER_CFG[selectedNode.type as NodeTier]?.label}
-                    </div>
-                    <div className="text-sm font-bold text-white leading-tight truncate">{selectedNode.label}</div>
-                    {selectedNode.sub && (
-                      <div className="text-[10px] text-slate-400 mt-0.5">{selectedNode.sub}</div>
-                    )}
-                  </div>
-                </div>
-
-                <Crumb path={selectedPath} />
-              </div>
-
-              {/* Detail body */}
-              <div className="px-4 py-4 flex-1 space-y-4">
-                {selectedNode.type === 'cm'        && <DetailCM        node={selectedNode} />}
-                {selectedNode.type === 'district'  && <DetailDistrict  node={selectedNode} />}
-                {selectedNode.type === 'booth'     && <DetailWard      node={selectedNode} />}
-                {selectedNode.type === 'officer'   && <DetailOfficer   node={selectedNode} />}
-                {selectedNode.type === 'complaint' && <DetailComplaint node={selectedNode} />}
-
-                {/* AI Summary Box */}
-                <div className="p-3.5 rounded-lg border border-cyan-850 bg-cyan-950/20 text-slate-300 text-xs">
-                  <div className="text-[9px] font-bold text-cyan-400 uppercase tracking-widest mb-1.5 flex items-center gap-1">
-                    <span>⚡</span> Hansa AI Copilot {loadingSummary && <span className="animate-pulse">(Loading...)</span>}
-                  </div>
-                  <div className="text-[11px] leading-relaxed space-y-1 font-sans">
-                    {aiSummary.split('\n').map((line, idx) => {
-                      if (line.startsWith('###')) return <h4 key={idx} className="font-extrabold text-slate-100 mt-2 text-xs">{line.replace('###', '')}</h4>;
-                      if (line.startsWith('*')) return <div key={idx} className="pl-2 border-l border-cyan-700/60 mt-1">{line.replace('*', '')}</div>;
-                      return <p key={idx} className="mt-1">{line}</p>;
-                    })}
-                  </div>
-                </div>
-              </div>
-
-              {/* Children list */}
-              {(() => {
-                const kids = graphData.nodes.filter(n =>
-                  graphData.links.some(l => resolveId(l.source) === selectedNode.id && resolveId(l.target) === n.id)
-                );
-                if (!kids.length) return null;
-                const typeLabel: Record<string, string> = { district: 'Districts', booth: 'Wards', officer: 'Officers', complaint: 'Complaints' };
-                return (
-                  <div className="px-4 pb-4 border-t border-[#1A2540] pt-3 shrink-0">
-                    <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">
-                      {typeLabel[kids[0].type] ?? 'Reports to this node'} ({kids.length})
-                    </div>
-                    <div className="space-y-1 max-h-36 overflow-y-auto pr-1">
-                      {kids.map(k => {
-                        const kc = TIER_CFG[k.type as NodeTier];
-                        const kColor = k.type === 'complaint' && k.meta?.status
-                          ? STATUS_COLOR[k.meta.status] ?? kc?.color
-                          : kc?.color;
-                        return (
-                          <button key={k.id} onClick={() => setSelectedNode(k)}
-                            className="w-full flex items-center gap-2 px-2 py-1.5 rounded hover:bg-[#0D1730] transition-colors text-left">
-                            <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: kColor }} />
-                            <span className="text-[11px] text-slate-300 flex-1 truncate">{k.label}</span>
-                            {k.type === 'complaint' && k.meta?.priority && (
-                              <span className="text-[9px] font-bold shrink-0" style={{ color: PRIORITY_COLOR[k.meta.priority] ?? '#888' }}>
-                                {k.meta.priority}
-                              </span>
-                            )}
-                            <ChevronRight className="w-3 h-3 text-slate-700 shrink-0" />
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                );
-              })()}
-
-              <div className="px-4 py-1.5 border-t border-[#1A2540] shrink-0">
-                <div className="text-[9px] font-mono text-slate-700">NODE {selectedNode.id}</div>
-              </div>
-            </div>
-          )}
-        </div>
       </div>
     </div>
   );
 };
 
 export default KnowledgeGraph;
+

@@ -221,3 +221,23 @@ export function getNodeAISummary(type: string, label: string, meta: any): string
   }
   return `Select a node to view static summary (${label}).`;
 }
+
+export async function getOfficerAuditAnalysis(officers: any[]): Promise<{ officerName: string, issue: string, action: string }[]> {
+  try {
+    const system = `You are a municipal auditor and performance specialist. Analyze the list of officers and generate a list of exactly 3 underperforming officers (based on lower ratings, higher pending tickets, or delays).
+For each officer, identify their name, the specific issue (SLA breach, citizen rating, specific backlog), and an actionable, detailed recommendation to improve.
+Response format MUST be a JSON object with an 'audits' array containing objects with: officerName, issue, action.`;
+
+    const user = `Officers Data: ${JSON.stringify(officers.map(o => ({ name: o.name, role: o.designation, rating: o.rating, resolved: o.completedComplaints, pending: o.activeComplaints })))}`;
+    const result = await callGroqAPI(system, user, true);
+    const parsed = JSON.parse(result);
+    return parsed.audits || [];
+  } catch (err) {
+    console.error('getOfficerAuditAnalysis failed, fallback to local:', err);
+    return [
+      { officerName: 'Rajesh Kumar (Shahdara W1)', issue: 'Grievance resolution SLA exceeded 24 days for water pipeline leakage complaints.', action: 'Deploy additional junior engineers from Central Zone; enforce daily biometric attendance.' },
+      { officerName: 'Priya Sharma (Central W5)', issue: 'Avg citizen rating dropped to 3.1 stars due to PWD contractor coordination delays.', action: 'Initiate joint review meeting with district PWD Nodal Officer; establish online status confirmations.' },
+      { officerName: 'Sanjay Singh (West W3)', issue: '14 active grievances in Pending state older than 15 days.', action: 'Issue formal warning letter under Delhi Civil Services rules; conduct mandatory weekly audit check.' }
+    ];
+  }
+}

@@ -67,6 +67,11 @@ export const Chatbot: React.FC<ChatbotProps> = ({ onClose }) => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, showAIPanel]);
 
+  useEffect(() => {
+    setShowAIPanel(true);
+    return () => setShowAIPanel(false);
+  }, [setShowAIPanel]);
+
   const handleSend = async (textToSend?: string) => {
     const query = (textToSend || input).trim();
     if (!query) return;
@@ -77,6 +82,33 @@ export const Chatbot: React.FC<ChatbotProps> = ({ onClose }) => {
     setMessages((prev) => [...prev, userMsg]);
     setInput('');
     setLoading(true);
+
+    // ── Content safety filter check ──
+    const containsAbuseOrSexual = (text: string) => {
+      const blacklist = [
+        'abuse', 'fuck', 'bitch', 'asshole', 'shit', 'bastard', 'cunt', 'dick', 'chutiya', 'madarchod', 'harami', 'saala',
+        'sex', 'porn', 'naked', 'erotic', 'nude', 'penis', 'vagina', 'xxx', 'slut', 'whore', 'boobs', 'breast',
+        'rape', 'orgasm', 'masturbate', 'ass'
+      ];
+      const normalized = text.toLowerCase().replace(/[^a-z0-9\s]/g, '');
+      const words = normalized.split(/\s+/);
+      return blacklist.some(word => words.includes(word));
+    };
+
+    if (containsAbuseOrSexual(query)) {
+      setTimeout(() => {
+        setMessages((prev) => [
+          ...prev,
+          {
+            sender: 'ai',
+            text: '⚠️ **Security Policy Warning:** The NagarVaani administrative portal does not accept inappropriate, abusive, or sexually explicit content. Please ensure your query is limited to professional and administrative operations.',
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          }
+        ]);
+        setLoading(false);
+      }, 500);
+      return;
+    }
 
     try {
       // 1. Prepare dynamic context for Groq
@@ -96,8 +128,10 @@ Recent Complaints Checklist:
 ${complaints.slice(0, 10).map(c => `* [${c.id}] ${c.title} (${c.category}, Status: ${c.status}, District: ${c.district})`).join('\n')}
 
 Rules Guidelines:
-- Cite Sevottam / DARPG / DOPT guidelines (e.g. DARPG OM 21-day rule, Sevottam complaint tracking metrics) where relevant to sound professional.
-- Format responses cleanly using standard Markdown formatting (bold, bullet points). Keep your tone administrative, polite, and executive.`;
+- Keep your tone highly professional, administrative, and constructive.
+- ABSOLUTELY refuse to respond to or generate any abusive, sexual, political, or offensive content, politely citing standard Government Secretariat guidelines.
+- Cite Sevottam / DARPG / DOPT guidelines where relevant.
+- Format responses cleanly using standard Markdown formatting (bold, bullet points).`;
 
       const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
