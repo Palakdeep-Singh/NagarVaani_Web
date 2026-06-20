@@ -29,6 +29,8 @@ interface CallContextType {
   hangupCall: () => void;
   toggleMute: () => void;
   toggleVideo: () => void;
+  permissionModalPartner: CallParticipant | null;
+  setPermissionModalPartner: (p: CallParticipant | null) => void;
 }
 
 const CallContext = createContext<CallContextType | undefined>(undefined);
@@ -137,6 +139,7 @@ export const CallProvider: React.FC<{ selfId: string; selfName: string; children
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoOff, setIsVideoOff] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
+  const [permissionModalPartner, setPermissionModalPartner] = useState<CallParticipant | null>(null);
 
   const socketRef = useRef<Socket | null>(null);
   const pcRef = useRef<RTCPeerConnection | null>(null);
@@ -351,6 +354,13 @@ export const CallProvider: React.FC<{ selfId: string; selfName: string; children
   // ── Public actions ──────────────────────────────────────────────────────
 
   const startCall = (partner: CallParticipant, type: CallType) => {
+    const isLowerLevel = selfId.includes('Director') || selfId.includes('Nodal') || selfId.includes('Officer');
+    const isHigherLevel = partner.id === 'Chief Minister' || partner.id.includes('DM');
+    if (isLowerLevel && isHigherLevel) {
+      setPermissionModalPartner(partner);
+      return;
+    }
+
     setCallType(type);
     setActiveCallPartner(partner);
     setCallState('dialing');
@@ -444,6 +454,8 @@ export const CallProvider: React.FC<{ selfId: string; selfName: string; children
         hangupCall,
         toggleMute,
         toggleVideo,
+        permissionModalPartner,
+        setPermissionModalPartner,
       }}
     >
       {children}

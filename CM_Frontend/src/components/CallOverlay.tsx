@@ -16,9 +16,87 @@ export const CallOverlay: React.FC = () => {
     callState, callType, activeCallPartner, callDuration,
     isMuted, isVideoOff, localVideoRef, remoteVideoRef,
     acceptCall, rejectCall, hangupCall, toggleMute, toggleVideo,
+    permissionModalPartner, setPermissionModalPartner
   } = useCall();
 
   const [notes, setNotes] = useState('');
+  const [scheduleTime, setScheduleTime] = useState('');
+  const [schedulePurpose, setSchedulePurpose] = useState('');
+  const [submitted, setSubmitted] = useState(false);
+
+  if (permissionModalPartner) {
+    return (
+      <div className="fixed inset-0 z-[1000] bg-slate-950/80 backdrop-blur-md flex items-center justify-center animate-in fade-in duration-200">
+        <div className="bg-white border border-slate-200 w-[90%] max-w-md rounded-3xl shadow-2xl p-6 flex flex-col gap-4">
+          <div className="text-center space-y-2">
+            <div className="mx-auto h-12 w-12 rounded-full bg-rose-50 border border-rose-200 flex items-center justify-center text-rose-600 font-extrabold text-lg">
+              🔒
+            </div>
+            <h3 className="text-sm font-extrabold text-slate-800 uppercase tracking-wider">Call Permission Required</h3>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              Direct hotlines to **{permissionModalPartner.name}** are restricted for lower-level operational safety. Please request call authorization or schedule a meeting slot.
+            </p>
+          </div>
+
+          {submitted ? (
+            <div className="bg-emerald-50 border border-emerald-250 p-4 rounded-2xl text-center space-y-2 animate-in zoom-in duration-200">
+              <span className="text-2xl">✅</span>
+              <h4 className="text-xs font-bold text-emerald-800 uppercase">Request Dispatched</h4>
+              <p className="text-[11px] text-emerald-600 leading-relaxed">
+                Your request to schedule a briefing on **"{schedulePurpose}"** for **{scheduleTime || 'earliest availability'}** has been sent to the CM/DM Office.
+              </p>
+              <button
+                onClick={() => { setPermissionModalPartner(null); setSubmitted(false); setSchedulePurpose(''); }}
+                className="mt-2 w-full py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold hover:bg-emerald-500 cursor-pointer transition-colors"
+              >
+                Close Window
+              </button>
+            </div>
+          ) : (
+            <form onSubmit={(e) => { e.preventDefault(); setSubmitted(true); }} className="space-y-3 pt-2">
+              <div>
+                <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Briefing Purpose</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="E.g., Urgently report PWD flyover SLA delay details"
+                  value={schedulePurpose}
+                  onChange={e => setSchedulePurpose(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-indigo-500 mt-1"
+                />
+              </div>
+              <div>
+                <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Proposed Time Slot</label>
+                <input
+                  type="datetime-local"
+                  required
+                  value={scheduleTime}
+                  onChange={e => setScheduleTime(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-750 focus:outline-none focus:border-indigo-500 mt-1"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setPermissionModalPartner(null)}
+                  className="py-2.5 rounded-xl border border-slate-200 text-slate-650 hover:bg-slate-50 text-xs font-bold cursor-pointer transition-colors text-center"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold cursor-pointer transition-colors text-center shadow-md shadow-indigo-600/10"
+                >
+                  Request Call
+                </button>
+              </div>
+            </form>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   if (callState === 'idle' || !activeCallPartner) return null;
 

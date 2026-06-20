@@ -19,6 +19,8 @@ import { Comm } from './views/Comm';
 import { VideoCall } from './views/VideoCall';
 import { Login } from './views/Login';
 import { KnowledgeGraph } from './views/KnowledgeGraph';
+import { OfficerWorkspace } from './views/OfficerWorkspace';
+import { DistrictMinistryDashboard } from './views/DistrictMinistryDashboard';
 
 
 const DashboardContent: React.FC = () => {
@@ -36,6 +38,10 @@ const DashboardContent: React.FC = () => {
         return <Analytics />;
       case 'KnowledgeGraph':
         return <KnowledgeGraph />;
+      case 'OfficerWorkspace':
+        return <OfficerWorkspace />;
+      case 'DistrictMinistry':
+        return <DistrictMinistryDashboard />;
       case 'Rankings':
         return <Rankings />;
       case 'Suggestions':

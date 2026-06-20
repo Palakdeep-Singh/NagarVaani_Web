@@ -125,10 +125,8 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     const savedUser = localStorage.getItem('nagarvaani_user');
     if (savedUser) {
       const parsed = JSON.parse(savedUser) as UserProfile;
-      if (parsed.role === 'District Magistrate') return 'DM View';
-      if (parsed.role === 'Department Head') {
-        return parsed.department === 'Public Health' ? 'Health' : 'Education';
-      }
+      if (parsed.role === 'District Magistrate') return 'DistrictMinistry';
+      if (parsed.role === 'Department Head') return 'OfficerWorkspace';
     }
     return 'Overview';
   });
@@ -973,10 +971,10 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       setActiveRole(account.profile.role);
       if (account.profile.district) {
         setActiveDistrict(account.profile.district);
-        setActiveTab('DM View');
+        setActiveTab('DistrictMinistry');
       } else if (account.profile.department) {
         setActiveDepartment(account.profile.department);
-        setActiveTab(account.profile.department === 'Public Health' ? 'Health' : 'Education');
+        setActiveTab('OfficerWorkspace');
       } else {
         setActiveTab('Overview');
       }

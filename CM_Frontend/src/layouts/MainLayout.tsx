@@ -6,7 +6,7 @@ import {
   BookOpen, MapPin, Users2, CalendarCheck, DollarSign, FolderLock,
   MessageSquare, Video, Bell, UserCheck, Network,
   LogOut, ShieldCheck, AlertTriangle, RefreshCw,
-  ChevronRight, X, Activity
+  ChevronRight, X, Activity, Building
 } from 'lucide-react';
 
 interface SidebarItem {
@@ -22,6 +22,8 @@ const NAV_GROUPS = [
     title: 'Command',
     items: [
       { id: 'Overview',    label: 'Grievance Overview',  icon: LayoutDashboard, roles: ['Chief Minister','District Magistrate','Department Head'] },
+      { id: 'OfficerWorkspace', label: 'Officer Workspace', icon: ShieldCheck,     roles: ['Department Head'] },
+      { id: 'DistrictMinistry', label: 'District Ministry', icon: Building,        roles: ['District Magistrate'] },
       { id: 'Analytics',  label: 'Analytics & Trends',  icon: BarChart2,        roles: ['Chief Minister','District Magistrate','Department Head'] },
       { id: 'Rankings',   label: 'District Rankings',   icon: Award,            roles: ['Chief Minister','District Magistrate'] },
       { id: 'Suggestions',label: 'AI Suggestions',      icon: BrainCircuit,     roles: ['Chief Minister','District Magistrate','Department Head'] },
