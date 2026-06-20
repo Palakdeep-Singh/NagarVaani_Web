@@ -118,13 +118,14 @@ export default function LandingPage({ onCitizen, onAdmin }) {
           >Citizen Login</button>
           
           <button onClick={onAdmin} style={{
-            background: '#0F172A', color: '#fff', border: 'none',
+            background: 'linear-gradient(135deg, #FF6B35, #FF9500)', color: '#fff', border: 'none',
             borderRadius: 30, padding: '9px 24px', fontSize: 13, fontWeight: 700, cursor: 'pointer',
-            boxShadow: '0 4px 14px rgba(15,23,42,0.3)', transition: 'all .25s', letterSpacing: '.02em',
+            boxShadow: '0 4px 14px rgba(255,107,53,0.35)', transition: 'all .25s', letterSpacing: '.02em',
+            display: 'flex', alignItems: 'center', gap: 6,
           }}
-            onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 20px rgba(15,23,42,0.4)'; }}
-            onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = '0 4px 14px rgba(15,23,42,0.3)'; }}
-          >Admin Login →</button>
+            onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 20px rgba(255,107,53,0.5)'; }}
+            onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = '0 4px 14px rgba(255,107,53,0.35)'; }}
+          >👑 CM Dashboard →</button>
         </div>
       </nav>
 
@@ -223,16 +224,16 @@ export default function LandingPage({ onCitizen, onAdmin }) {
             <button
               onClick={onAdmin}
               style={{
-                background: 'rgba(255,255,255,0.05)', color: '#fff',
-                border: '1px solid rgba(255,255,255,0.2)', borderRadius: 30, padding: '18px 40px',
+                background: 'linear-gradient(135deg, rgba(255,107,53,0.2), rgba(255,149,0,0.2))', color: '#fff',
+                border: '1px solid rgba(255,107,53,0.4)', borderRadius: 30, padding: '18px 40px',
                 fontSize: 15, fontWeight: 800, cursor: 'pointer',
                 backdropFilter: 'blur(10px)',
                 transition: 'all .3s', display: 'flex', alignItems: 'center', gap: 12,
               }}
-              onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; }}
-              onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; }}
+              onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255,107,53,0.35), rgba(255,149,0,0.35))'; }}
+              onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255,107,53,0.2), rgba(255,149,0,0.2))'; }}
             >
-               Officer Login
+              👑 CM Dashboard Portal
             </button>
           </div>
         </div>

@@ -71,7 +71,7 @@ export default function App() {
           <span
             onClick={() => { setPortalChoice('admin'); switchToAdmin(); }}
             style={{ color: 'var(--sf)', fontWeight: 700, cursor: 'pointer', textDecoration: 'underline' }}
-          >Admin Login →</span>
+          >👑 CM Dashboard →</span>
         </span>
       )}
       {portalChoice === 'admin' && (
