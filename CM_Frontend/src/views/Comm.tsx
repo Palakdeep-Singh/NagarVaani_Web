@@ -2,9 +2,10 @@ import React, { useState } from 'react';
 import { useStore } from '../context/Store';
 import { MessageSquare, Send, Phone, Video } from 'lucide-react';
 import { useCall } from '../context/CallContext';
+import { getRoleLabel } from '../utils/helper';
 
 export const Comm: React.FC = () => {
-  const { messages, addMessage, activeRole, activeDistrict, activeDepartment } = useStore();
+  const { messages, addMessage, officers, currentUser } = useStore();
   const { startCall, callState, activeCallPartner } = useCall();
 
   
@@ -20,17 +21,35 @@ export const Comm: React.FC = () => {
   };
 
   
-  let userRoleLabel = activeRole as string;
-  if (activeRole === 'District Magistrate') userRoleLabel = `${activeDistrict} DM`;
-  if (activeRole === 'Department Head') userRoleLabel = activeDepartment === 'Education & Schools' ? 'Director of Education' : 'Director Health Services';
+  const userRoleLabel = getRoleLabel(currentUser);
+
+  const getOfficerRoleLabel = (off: any): string => {
+    if (off.designation === 'District Magistrate') return `${off.district} DM`;
+    if (off.designation === 'Director Health Services' || off.department === 'Health & Family Welfare' || off.department === 'Public Health') return 'Director Health Services';
+    if (off.designation === 'Director of Education' || off.department === 'Education Department' || off.department === 'Education & Schools') return 'Director of Education';
+    if (off.designation === 'Chief Engineer' || off.department === 'PWD & Infrastructure') return 'Chief Engineer';
+    return off.designation;
+  };
+
+  const getOfficerDisplayName = (off: any): string => {
+    if (off.designation === 'District Magistrate') return `${off.name} (${off.district} DM)`;
+    if (off.designation === 'Director Health Services' || off.department === 'Health & Family Welfare' || off.department === 'Public Health') return `${off.name} (Director Health)`;
+    if (off.designation === 'Director of Education' || off.department === 'Education Department' || off.department === 'Education & Schools') return `${off.name} (Director Education)`;
+    if (off.designation === 'Chief Engineer' || off.department === 'PWD & Infrastructure') return `${off.name} (Chief Engineer PWD)`;
+    return `${off.name} (${off.designation})`;
+  };
 
   const contactList = [
-    { role: 'Chief Minister', name: 'Office of Chief Minister' },
-    { role: 'New Delhi DM', name: 'Alice Vaz (New Delhi DM)' },
-    { role: 'West Delhi DM', name: 'Amit Kumar (West Delhi DM)' },
-    { role: 'Director of Education', name: 'Himanshu Gupta (IAS)' },
-    { role: 'Director Health Services', name: 'Dr. Shalini Gupta' }
-  ].filter(c => c.role !== userRoleLabel);
+    ...(userRoleLabel !== 'Chief Minister' ? [{ role: 'Chief Minister', name: 'Office of Chief Minister' }] : []),
+    ...officers.map(off => ({
+      role: getOfficerRoleLabel(off),
+      name: getOfficerDisplayName(off)
+    }))
+  ].filter((c, index, self) => 
+    c.role !== userRoleLabel && 
+    self.findIndex(t => t.role === c.role) === index
+  );
+
 
   
   const threadMessages = messages.filter(

@@ -4,7 +4,7 @@ import { getStatusBadgeStyle, getPriorityBadgeStyle, formatDate } from '../utils
 import { GraduationCap, BookOpen } from 'lucide-react';
 
 export const EducationDept: React.FC = () => {
-  const { complaints, updateComplaintStatus } = useStore();
+  const { complaints, updateComplaintStatus, schoolSmartBoards, generalMetrics } = useStore();
   const [remarkInput, setRemarkInput] = useState<Record<string, string>>({});
 
   
@@ -16,16 +16,11 @@ export const EducationDept: React.FC = () => {
   };
 
   
-  const schoolUpgrades = [
-    { school: 'SKV School, Shahdara', zone: 'Shahdara', boards: '15/15', progress: 100, status: 'Completed' },
-    { school: 'GGSSS, Vikas Puri', zone: 'West Delhi', boards: '12/20', progress: 60, status: 'Active' },
-    { school: 'Sarvodaya Vidyalaya, Dwarka', zone: 'South West Delhi', boards: '8/18', progress: 44, status: 'Active' },
-    { school: 'MCD Model School, Lajpat Nagar', zone: 'South Delhi', boards: '0/10', progress: 0, status: 'Delayed' }
-  ];
+  const schoolUpgrades = schoolSmartBoards;
 
   return (
     <div className="space-y-6">
-            <div>
+      <div>
         <h2 className="text-xl font-extrabold text-slate-800 tracking-tight flex items-center gap-2">
           <BookOpen className="h-5 w-5 text-indigo-600" />
           Education Department Command
@@ -35,12 +30,12 @@ export const EducationDept: React.FC = () => {
         </p>
       </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="bg-white p-5 rounded-2xl border-l-4 border-indigo-500 shadow-sm border border-slate-200/60">
           <span className="text-xs uppercase font-bold text-slate-400 tracking-wider">Model Smart Schools</span>
           <div className="flex items-baseline gap-2 mt-1">
-            <h3 className="text-xl font-extrabold text-slate-800">49/100</h3>
-            <span className="text-xs text-indigo-600 font-bold">49% Completed</span>
+            <h3 className="text-xl font-extrabold text-slate-800">{generalMetrics.education_smart_schools_count || '49'}/100</h3>
+            <span className="text-xs text-indigo-600 font-bold">{generalMetrics.education_smart_schools_count || '49'}% Completed</span>
           </div>
           <p className="text-xs text-slate-400 mt-1 font-medium">Campus digital classroom audits</p>
         </div>
@@ -48,7 +43,7 @@ export const EducationDept: React.FC = () => {
         <div className="bg-white p-5 rounded-2xl border-l-4 border-emerald-500 shadow-sm border border-slate-200/60">
           <span className="text-xs uppercase font-bold text-slate-400 tracking-wider">Student-Teacher Ratio</span>
           <div className="flex items-baseline gap-2 mt-1">
-            <h3 className="text-xl font-extrabold text-slate-800">28 : 1</h3>
+            <h3 className="text-xl font-extrabold text-slate-800">{generalMetrics.education_student_teacher_ratio || '28 : 1'}</h3>
             <span className="text-xs text-emerald-600 font-bold">Target met</span>
           </div>
           <p className="text-xs text-slate-400 mt-1 font-medium">Delhi state average (National: 30:1)</p>
@@ -72,30 +67,36 @@ export const EducationDept: React.FC = () => {
           Model Smart Board Deployments
         </h3>
         <div className="space-y-4">
-          {schoolUpgrades.map((school, idx) => (
-            <div key={idx} className="space-y-1 bg-slate-50/40 p-3 rounded-xl border border-slate-100/50">
-              <div className="flex justify-between items-center text-xs font-semibold">
-                <span className="text-slate-700">{school.school}</span>
-                <span className="text-slate-450 text-xs">
-                  Smart boards: <strong className="text-slate-800">{school.boards}</strong> ({school.progress}%)
-                </span>
-              </div>
-              <div className="w-full bg-slate-200 rounded-full h-1.5 overflow-hidden border border-slate-300/30">
-                <div
-                  className={`h-full rounded-full transition-all duration-300 ${
-                    school.progress === 100 ? 'bg-emerald-500' : school.progress > 0 ? 'bg-indigo-500' : 'bg-rose-500'
-                  }`}
-                  style={{ width: `${school.progress}%` }}
-                />
-              </div>
-              <div className="flex justify-between text-xs text-slate-455 font-medium">
-                <span>Zone: {school.zone}</span>
-                <span className={`font-bold uppercase ${
-                  school.status === 'Completed' ? 'text-emerald-500' : school.status === 'Delayed' ? 'text-rose-500' : 'text-indigo-600'
-                }`}>{school.status}</span>
-              </div>
+          {schoolUpgrades.length === 0 ? (
+            <div className="text-center py-6 text-xs text-slate-400 font-medium bg-slate-50/20 rounded-xl border border-slate-100">
+              No smart board deployments active in database.
             </div>
-          ))}
+          ) : (
+            schoolUpgrades.map((school, idx) => (
+              <div key={idx} className="space-y-1 bg-slate-50/40 p-3 rounded-xl border border-slate-100/50">
+                <div className="flex justify-between items-center text-xs font-semibold">
+                  <span className="text-slate-700">{school.school}</span>
+                  <span className="text-slate-450 text-xs">
+                    Smart boards: <strong className="text-slate-800">{school.boards}</strong> ({school.progress}%)
+                  </span>
+                </div>
+                <div className="w-full bg-slate-200 rounded-full h-1.5 overflow-hidden border border-slate-300/30">
+                  <div
+                    className={`h-full rounded-full transition-all duration-300 ${
+                      school.progress === 100 ? 'bg-emerald-500' : school.progress > 0 ? 'bg-indigo-500' : 'bg-rose-500'
+                    }`}
+                    style={{ width: `${school.progress}%` }}
+                  />
+                </div>
+                <div className="flex justify-between text-xs text-slate-455 font-medium">
+                  <span>Zone: {school.zone}</span>
+                  <span className={`font-bold uppercase ${
+                    school.status === 'Completed' ? 'text-emerald-500' : school.status === 'Delayed' ? 'text-rose-500' : 'text-indigo-600'
+                  }`}>{school.status}</span>
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </div>
 

@@ -29,8 +29,8 @@ export const Login: React.FC = () => {
           // Only use if fresh (within 30 seconds)
           if (Date.now() - auth.timestamp < 30000) {
             setAutoLoginMsg(`⚡ Fast auth from NagarVaani Portal — logging in as ${role || 'CM'}…`);
-            setTimeout(() => {
-              loginUser(auth.username, auth.password);
+            setTimeout(async () => {
+              await loginUser(auth.username, auth.password);
               localStorage.removeItem('cm_quick_auth');
             }, 600);
             return;
@@ -46,7 +46,7 @@ export const Login: React.FC = () => {
       const cred = role ? roleMap[role] : roleMap['cm'];
       if (cred) {
         setAutoLoginMsg(`⚡ Fast auth from NagarVaani Portal — logging in…`);
-        setTimeout(() => loginUser(cred.u, cred.p), 600);
+        setTimeout(async () => await loginUser(cred.u, cred.p), 600);
       }
     }
   }, [loginUser]);
@@ -57,7 +57,7 @@ export const Login: React.FC = () => {
     if (!username.trim() || !password) { setError('Please enter your credentials.'); return; }
     setLoading(true);
     await new Promise(r => setTimeout(r, 700));
-    const success = loginUser(username.trim(), password);
+    const success = await loginUser(username.trim(), password);
     setLoading(false);
     if (!success) setError('Invalid credentials. Contact your System Administrator (NIC Help Desk: 1800-111-555).');
   };
@@ -66,9 +66,10 @@ export const Login: React.FC = () => {
     setFastAuthLoading(label);
     setError('');
     await new Promise(r => setTimeout(r, 450));
-    loginUser(u, p);
+    await loginUser(u, p);
     setFastAuthLoading(null);
   };
+
 
   const fastRoles = [
     { label: 'CM Office',    icon: '👑', u: 'cm',          p: 'cm123',   color: '#F59E0B' },

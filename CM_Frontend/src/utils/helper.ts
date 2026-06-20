@@ -8,7 +8,10 @@ export const getRoleLabel = (user: UserProfile | null): string => {
   if (user.role === 'Chief Minister') return 'Chief Minister';
   if (user.role === 'District Magistrate') return `${user.district} DM`;
   if (user.role === 'Department Head') {
-    return user.department === 'Education & Schools' ? 'Director of Education' : 'Director Health Services';
+    if (user.department === 'Education & Schools') return 'Director of Education';
+    if (user.department === 'Public Health') return 'Director Health Services';
+    if (user.department === 'PWD & Infrastructure') return 'Chief Engineer';
+    return user.department || 'Department Head';
   }
   return user.role;
 };

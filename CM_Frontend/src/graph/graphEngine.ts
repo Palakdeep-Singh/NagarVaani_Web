@@ -67,272 +67,198 @@ export const resolveId = (v: unknown): string => {
 };
 
 // ── Static Delhi data ──────────────────────────────────────────────────────
-const DISTRICTS_DATA = [
-  {
-    id: 'D_NEWDELHI', label: 'New Delhi', dmName: 'Smt. Alice Vaz (IAS)',
-    resolved: 240, pending: 12, escalated: 3, topIssue: 'Civic Infrastructure',
-    booths: [
-      {
-        id: 'B_CP', label: 'Connaught Place Ward', ward: 'Ward 1',
-        officers: [
-          { id: 'O_CP1', name: 'Rajesh Sharma', designation: 'Ward Officer', phone: '9810001001', active: 4,  done: 58, avgDays: 2.1, rating: 4.7 },
-          { id: 'O_CP2', name: 'Priya Nair',    designation: 'Field Inspector', phone: '9810001002', active: 2, done: 41, avgDays: 1.8, rating: 4.9 },
-        ],
-        complaints: [
-          { id: 'C_CP1', title: 'Open manhole near school gate', status: 'Escalated', priority: 'Emergency', category: 'Civic Infrastructure', date: '2026-06-17', citizen: 'Karan Johar' },
-          { id: 'C_CP2', title: 'Broken footpath at Janpath', status: 'Active',    priority: 'Medium',    category: 'Civic Infrastructure', date: '2026-06-15', citizen: 'Meena Kumari' },
-        ],
-      },
-      {
-        id: 'B_CHANAKYAPURI', label: 'Chanakyapuri Ward', ward: 'Ward 2',
-        officers: [
-          { id: 'O_CHP1', name: 'Amit Sehgal', designation: 'Ward Officer', phone: '9810002001', active: 3, done: 67, avgDays: 2.5, rating: 4.6 },
-        ],
-        complaints: [
-          { id: 'C_CHP1', title: 'Waterlogging at diplomatic enclave', status: 'Active', priority: 'High', category: 'Water & Sewage', date: '2026-06-14', citizen: 'Ravi Menon' },
-        ],
-      },
-    ],
-  },
-  {
-    id: 'D_SOUTHDELHI', label: 'South Delhi', dmName: 'Smt. Cheshta Yadav (IAS)',
-    resolved: 280, pending: 28, escalated: 5, topIssue: 'Transport & Roads',
-    booths: [
-      {
-        id: 'B_HAUZ', label: 'Hauz Khas Ward', ward: 'Ward 14',
-        officers: [
-          { id: 'O_HK1', name: 'Sunita Verma',  designation: 'Ward Officer',   phone: '9810003001', active: 7,  done: 89, avgDays: 3.2, rating: 4.4 },
-          { id: 'O_HK2', name: 'Deepak Tiwari', designation: 'Sanitation Insp', phone: '9810003002', active: 5, done: 72, avgDays: 4.0, rating: 4.1 },
-        ],
-        complaints: [
-          { id: 'C_HK1', title: 'Lajpat Nagar flyover waterlogging', status: 'Active',  priority: 'High',    category: 'Civic Infrastructure', date: '2026-06-10', citizen: 'Amit Sharma' },
-          { id: 'C_HK2', title: 'Potholes on Aurobindo Marg',        status: 'Pending', priority: 'Medium',  category: 'Transport & Roads',    date: '2026-06-16', citizen: 'Neha Gupta' },
-          { id: 'C_HK3', title: 'Stray dog menace near market',      status: 'Active',  priority: 'Medium',  category: 'Public Health',        date: '2026-06-13', citizen: 'Vijay Rao'  },
-        ],
-      },
-      {
-        id: 'B_SAKET', label: 'Saket Ward', ward: 'Ward 15',
-        officers: [
-          { id: 'O_SK1', name: 'Rohit Mehta', designation: 'Ward Officer', phone: '9810004001', active: 3, done: 94, avgDays: 2.8, rating: 4.8 },
-        ],
-        complaints: [
-          { id: 'C_SK1', title: 'Street light out on Main Saket Rd', status: 'Resolved', priority: 'Low',  category: 'Electricity & Power', date: '2026-06-08', citizen: 'Pooja Iyer' },
-          { id: 'C_SK2', title: 'Garbage dump near school',          status: 'Active',   priority: 'High', category: 'Civic Infrastructure', date: '2026-06-17', citizen: 'Nisha Rani' },
-        ],
-      },
-    ],
-  },
-  {
-    id: 'D_NORTHDELHI', label: 'North Delhi', dmName: 'Shri Rajesh Yadav (IAS)',
-    resolved: 195, pending: 38, escalated: 8, topIssue: 'Water & Sewage',
-    booths: [
-      {
-        id: 'B_KASHMERE', label: 'Kashmere Gate Ward', ward: 'Ward 20',
-        officers: [
-          { id: 'O_KG1', name: 'Suresh Chandra', designation: 'Ward Officer',   phone: '9810005001', active: 9,  done: 55, avgDays: 5.1, rating: 3.7 },
-          { id: 'O_KG2', name: 'Lata Bhatt',     designation: 'Field Inspector', phone: '9810005002', active: 7, done: 48, avgDays: 4.8, rating: 3.9 },
-        ],
-        complaints: [
-          { id: 'C_KG1', title: 'Water supply disrupted for 3 days', status: 'Escalated', priority: 'Emergency', category: 'Water & Sewage',       date: '2026-06-15', citizen: 'Gaurav Kumar'  },
-          { id: 'C_KG2', title: 'Illegal parking on Old Delhi Road',  status: 'Pending',   priority: 'Medium',    category: 'Transport & Roads',    date: '2026-06-16', citizen: 'Mohd. Arif'   },
-          { id: 'C_KG3', title: 'Open sewer near bus stand',          status: 'Active',    priority: 'High',      category: 'Civic Infrastructure', date: '2026-06-14', citizen: 'Rekha Devi'   },
-        ],
-      },
-    ],
-  },
-  {
-    id: 'D_WESTDELHI', label: 'West Delhi', dmName: 'Shri Amit Kumar (IAS)',
-    resolved: 310, pending: 45, escalated: 6, topIssue: 'Water & Sewage',
-    booths: [
-      {
-        id: 'B_VIKASPURI', label: 'Vikas Puri Ward', ward: 'Ward 28',
-        officers: [
-          { id: 'O_VP1', name: 'Manish Sharma', designation: 'Ward Officer',    phone: '9810006001', active: 11, done: 120, avgDays: 3.9, rating: 4.2 },
-          { id: 'O_VP2', name: 'Ritu Kapoor',   designation: 'Sanitation Insp', phone: '9810006002', active: 8,  done: 85,  avgDays: 4.5, rating: 3.8 },
-        ],
-        complaints: [
-          { id: 'C_VP1', title: 'Muddy contaminated water supply',    status: 'Active',   priority: 'High',    category: 'Water & Sewage',       date: '2026-06-12', citizen: 'Manpreet Singh' },
-          { id: 'C_VP2', title: 'Potholes causing accidents near mkt', status: 'Active',  priority: 'High',    category: 'Transport & Roads',    date: '2026-06-14', citizen: 'Rahul Gupta'    },
-          { id: 'C_VP3', title: 'School boundary wall encroachment',   status: 'Pending', priority: 'Medium',  category: 'Civic Infrastructure', date: '2026-06-15', citizen: 'Pooja Sharma'   },
-        ],
-      },
-      {
-        id: 'B_JANAKPURI', label: 'Janakpuri Ward', ward: 'Ward 29',
-        officers: [
-          { id: 'O_JP1', name: 'Vivek Anand', designation: 'Ward Officer', phone: '9810007001', active: 6, done: 98, avgDays: 3.1, rating: 4.5 },
-        ],
-        complaints: [
-          { id: 'C_JP1', title: 'Transformer blast near market',     status: 'Resolved', priority: 'Emergency', category: 'Electricity & Power',  date: '2026-06-05', citizen: 'Suresh Iyer'   },
-          { id: 'C_JP2', title: 'Drain overflow in block E housing', status: 'Active',   priority: 'High',      category: 'Water & Sewage',       date: '2026-06-13', citizen: 'Seema Malhotra' },
-        ],
-      },
-    ],
-  },
-  {
-    id: 'D_SHAHDARA', label: 'Shahdara', dmName: 'Shri Anil Bankar (IAS)',
-    resolved: 125, pending: 62, escalated: 14, topIssue: 'Public Health',
-    booths: [
-      {
-        id: 'B_GTB', label: 'GTB Nagar Ward', ward: 'Ward 45',
-        officers: [
-          { id: 'O_GTB1', name: 'Ramesh Pal',   designation: 'Ward Officer',   phone: '9810008001', active: 18, done: 40, avgDays: 7.5, rating: 3.0 },
-          { id: 'O_GTB2', name: 'Kavya Singh',  designation: 'Health Insp',    phone: '9810008002', active: 12, done: 35, avgDays: 6.8, rating: 3.2 },
-          { id: 'O_GTB3', name: 'Mohd. Salman', designation: 'Field Inspector', phone: '9810008003', active: 15, done: 28, avgDays: 8.1, rating: 2.9 },
-        ],
-        complaints: [
-          { id: 'C_GTB1', title: 'GTB Hospital ICU bed shortage',    status: 'Escalated', priority: 'Emergency', category: 'Public Health',        date: '2026-06-14', citizen: 'Priya Mehra' },
-          { id: 'C_GTB2', title: 'Medicine shortage at clinic',      status: 'Escalated', priority: 'Emergency', category: 'Public Health',        date: '2026-06-14', citizen: 'Sanjay Das'  },
-          { id: 'C_GTB3', title: 'Shahdara drain overflow',          status: 'Active',    priority: 'High',      category: 'Water & Sewage',       date: '2026-06-15', citizen: 'Geeta Rani'  },
-          { id: 'C_GTB4', title: 'Illegal construction blocking road', status: 'Pending', priority: 'Medium',    category: 'Civic Infrastructure', date: '2026-06-16', citizen: 'Arjun Tomar' },
-        ],
-      },
-    ],
-  },
-  {
-    id: 'D_NEDELHI', label: 'North East Delhi', dmName: 'Shri Vikram Singh (IAS)',
-    resolved: 140, pending: 51, escalated: 10, topIssue: 'Civic Infrastructure',
-    booths: [
-      {
-        id: 'B_SEELAMPUR', label: 'Seelampur Ward', ward: 'Ward 52',
-        officers: [
-          { id: 'O_SL1', name: 'Nasreen Begum', designation: 'Ward Officer',   phone: '9810009001', active: 13, done: 52, avgDays: 6.2, rating: 3.4 },
-          { id: 'O_SL2', name: 'Tarun Bhatt',   designation: 'Field Inspector', phone: '9810009002', active: 10, done: 44, avgDays: 5.8, rating: 3.6 },
-        ],
-        complaints: [
-          { id: 'C_SL1', title: 'E-rickshaw chaos at metro exit',   status: 'Resolved', priority: 'Medium', category: 'Transport & Roads',    date: '2026-06-03', citizen: 'Mohd. Sajid'   },
-          { id: 'C_SL2', title: 'Mohalla Clinic doctor absenteeism', status: 'Active',  priority: 'Medium', category: 'Public Health',        date: '2026-06-13', citizen: 'Sohan Lal'     },
-          { id: 'C_SL3', title: 'No street lights for 1 km stretch', status: 'Active',  priority: 'High',   category: 'Electricity & Power', date: '2026-06-11', citizen: 'Kirti Devi'    },
-        ],
-      },
-    ],
-  },
-  {
-    id: 'D_CENTRALDELHI', label: 'Central Delhi', dmName: 'Smt. Isha Khosla (IAS)',
-    resolved: 198, pending: 15, escalated: 2, topIssue: 'Transport & Roads',
-    booths: [
-      {
-        id: 'B_KAROL', label: 'Karol Bagh Ward', ward: 'Ward 8',
-        officers: [
-          { id: 'O_KB1', name: 'Sanjeev Patel', designation: 'Ward Officer', phone: '9810010001', active: 5, done: 88, avgDays: 2.3, rating: 4.7 },
-        ],
-        complaints: [
-          { id: 'C_KB1', title: 'Potholes causing accidents near market', status: 'Active',   priority: 'High',   category: 'Transport & Roads', date: '2026-06-14', citizen: 'Rahul Gupta'  },
-          { id: 'C_KB2', title: 'Overcrowded parking at Ajmal Khan Rd',  status: 'Pending',  priority: 'Medium', category: 'Transport & Roads', date: '2026-06-17', citizen: 'Deepa Sinha'  },
-        ],
-      },
-    ],
-  },
-  {
-    id: 'D_EASTDELHI', label: 'East Delhi', dmName: 'Shri Pradeep Kumar (IAS)',
-    resolved: 176, pending: 42, escalated: 7, topIssue: 'Civic Infrastructure',
-    booths: [
-      {
-        id: 'B_LAXMI', label: 'Laxmi Nagar Ward', ward: 'Ward 35',
-        officers: [
-          { id: 'O_LN1', name: 'Girish Pandey', designation: 'Ward Officer',    phone: '9810011001', active: 10, done: 62, avgDays: 5.3, rating: 3.6 },
-          { id: 'O_LN2', name: 'Anita Bose',    designation: 'Sanitation Insp', phone: '9810011002', active: 8,  done: 54, avgDays: 4.9, rating: 3.8 },
-        ],
-        complaints: [
-          { id: 'C_LN1', title: 'Yamuna flood plain encroachment',  status: 'Pending',  priority: 'High',   category: 'Civic Infrastructure', date: '2026-06-12', citizen: 'Ajay Ghosh'   },
-          { id: 'C_LN2', title: 'Laxmi Nagar traffic jam daily',    status: 'Active',   priority: 'Medium', category: 'Transport & Roads',    date: '2026-06-15', citizen: 'Ravi Mathur'  },
-          { id: 'C_LN3', title: 'Garbage dump near MCD school',     status: 'Active',   priority: 'Medium', category: 'Civic Infrastructure', date: '2026-06-17', citizen: 'Nisha Rani'   },
-        ],
-      },
-    ],
-  },
-];
+// DISTRICTS_DATA removed as Delhi gov graph is now built dynamically from live collections
 
 // ── Build graph ────────────────────────────────────────────────────────────────
+// ── Build graph ────────────────────────────────────────────────────────────────
 export function buildDelhiGovGraph(
-  _uploadedOfficers: any[] = [],
+  officers: any[] = [],
+  complaints: any[] = [],
   filters: { district?: string; department?: string } = {}
 ): GraphData {
   const nodes: GNode[] = [];
   const links: GLink[] = [];
   const ids = new Set<string>();
 
-  const add = (n: GNode) => { if (!ids.has(n.id)) { nodes.push(n); ids.add(n.id); } };
-  const link = (s: string, t: string, label = '', w = 1) => {
-    if (s && t && ids.has(s) && ids.has(t)) links.push({ source: s, target: t, label, weight: w });
+  const add = (n: GNode) => {
+    if (!ids.has(n.id)) {
+      nodes.push(n);
+      ids.add(n.id);
+    }
   };
 
-  // CM node
-  const totalResolved = DISTRICTS_DATA.reduce((a, d) => a + d.resolved, 0);
-  const totalPending  = DISTRICTS_DATA.reduce((a, d) => a + d.pending,  0);
-  const totalEsc      = DISTRICTS_DATA.reduce((a, d) => a + d.escalated, 0);
+  const link = (s: string, t: string, label = '', w = 1) => {
+    if (s && t && ids.has(s) && ids.has(t)) {
+      links.push({ source: s, target: t, label, weight: w });
+    }
+  };
+
+  // 1. CM node
+  const totalResolved = complaints.filter(c => c.status === 'Resolved').length;
+  const totalPending  = complaints.filter(c => c.status !== 'Resolved').length;
+  const totalEsc      = complaints.filter(c => c.status === 'Escalated').length;
+  const totalComplaints = complaints.length;
   add({
     id: 'CM', label: 'Chief Minister', type: 'cm', sub: 'NCT Delhi', val: 5,
     meta: {
-      resolved: totalResolved, pending: totalPending, escalated: totalEsc,
-      totalComplaints: totalResolved + totalPending + totalEsc,
-      resolutionRate: Math.round((totalResolved / (totalResolved + totalPending + totalEsc)) * 100),
+      resolved: totalResolved,
+      pending: totalPending,
+      escalated: totalEsc,
+      totalComplaints,
+      resolutionRate: totalComplaints > 0 ? Math.round((totalResolved / totalComplaints) * 100) : 100,
     }
   });
 
-  let filteredDistricts = DISTRICTS_DATA;
+  // 2. Department Heads (State Level)
+  const deptHeads = officers.filter(o => o.designation !== 'District Magistrate');
+  deptHeads.forEach(dh => {
+    if (filters.department && filters.department !== 'All Departments') {
+      if (!dh.department.toLowerCase().includes(filters.department.toLowerCase())) return;
+    }
+    const rate = dh.completedComplaints + dh.activeComplaints > 0
+      ? Math.round((dh.completedComplaints / (dh.completedComplaints + dh.activeComplaints)) * 100)
+      : dh.resolutionRate;
+    add({
+      id: dh.id, label: dh.name, type: 'officer', sub: dh.designation, val: 1.2,
+      meta: {
+        name: dh.name, designation: dh.designation, phone: dh.phone,
+        activeComplaints: dh.activeComplaints, completedComplaints: dh.completedComplaints,
+        avgDays: dh.avgResolutionTime, rating: dh.rating,
+        resolutionRate: rate
+      }
+    });
+    link('CM', dh.id, 'coordinates', 1);
+  });
+
+  // 3. Districts
+  const DISTRICT_NAMES = [
+    'New Delhi', 'North Delhi', 'North West Delhi', 'West Delhi',
+    'South West Delhi', 'South Delhi', 'South East Delhi', 'Central Delhi',
+    'East Delhi', 'Shahdara', 'North East Delhi'
+  ];
+
+  let filteredDistricts = DISTRICT_NAMES;
   if (filters.district && filters.district !== 'All Districts') {
-    filteredDistricts = DISTRICTS_DATA.filter(d =>
-      d.label.toLowerCase().includes(filters.district!.toLowerCase())
+    filteredDistricts = DISTRICT_NAMES.filter(d =>
+      d.toLowerCase().includes(filters.district!.toLowerCase())
     );
   }
 
-  filteredDistricts.forEach(dist => {
-    const total = dist.resolved + dist.pending + dist.escalated;
-    const rate  = Math.round((dist.resolved / total) * 100);
+  filteredDistricts.forEach(distName => {
+    const distComplaints = complaints.filter(c => c.district === distName);
+    const resolved = distComplaints.filter(c => c.status === 'Resolved').length;
+    const pending = distComplaints.filter(c => c.status !== 'Resolved').length;
+    const escalated = distComplaints.filter(c => c.status === 'Escalated').length;
+    const total = distComplaints.length;
+    const rate = total > 0 ? Math.round((resolved / total) * 100) : 100;
 
+    // Find DM officer for this district
+    const dmOfficer = officers.find(o => o.district === distName && o.designation === 'District Magistrate');
+    const dmName = dmOfficer ? dmOfficer.name : `DM ${distName}`;
+
+    // Get Top issue category
+    const categoryCounts: Record<string, number> = {};
+    distComplaints.forEach(c => {
+      categoryCounts[c.category] = (categoryCounts[c.category] || 0) + 1;
+    });
+    let topIssue = 'None';
+    let maxCount = 0;
+    for (const [cat, cnt] of Object.entries(categoryCounts)) {
+      if (cnt > maxCount) {
+        maxCount = cnt;
+        topIssue = cat;
+      }
+    }
+
+    const distId = `D_${distName.toUpperCase().replace(/\s+/g, '')}`;
     add({
-      id: dist.id, label: dist.label, type: 'district', sub: dist.dmName, val: 2.5,
+      id: distId, label: distName, type: 'district', sub: dmName, val: 2.5,
       meta: {
-        dmName: dist.dmName, resolved: dist.resolved, pending: dist.pending,
-        escalated: dist.escalated, totalComplaints: total, resolutionRate: rate,
-        topIssue: dist.topIssue,
+        dmName, resolved, pending, escalated, totalComplaints: total, resolutionRate: rate, topIssue
       }
     });
-    link('CM', dist.id, 'commands', 1);
+    link('CM', distId, 'commands', 1);
 
-    dist.booths.forEach(booth => {
-      const boothTotal    = booth.complaints.length;
-      const boothResolved = booth.complaints.filter(c => c.status === 'Resolved').length;
+    // Link DM officer to District node
+    if (dmOfficer) {
+      const dmRate = dmOfficer.completedComplaints + dmOfficer.activeComplaints > 0
+        ? Math.round((dmOfficer.completedComplaints / (dmOfficer.completedComplaints + dmOfficer.activeComplaints)) * 100)
+        : dmOfficer.resolutionRate;
+      add({
+        id: dmOfficer.id, label: dmOfficer.name, type: 'officer', sub: dmOfficer.designation, val: 1.2,
+        meta: {
+          name: dmOfficer.name, designation: dmOfficer.designation, phone: dmOfficer.phone,
+          activeComplaints: dmOfficer.activeComplaints, completedComplaints: dmOfficer.completedComplaints,
+          avgDays: dmOfficer.avgResolutionTime, rating: dmOfficer.rating,
+          resolutionRate: dmRate
+        }
+      });
+      link(distId, dmOfficer.id, 'magistrate', 1);
+    }
+
+    // Wards based on categories of complaints in this district
+    const categories = Array.from(new Set(distComplaints.map(c => c.category)));
+    categories.forEach((cat) => {
+      if (filters.department && filters.department !== 'All Departments') {
+        const mappings: Record<string, string> = {
+          'Civic Infrastructure': 'PWD & Infrastructure',
+          'Water & Sewage': 'Delhi Jal Board',
+          'Electricity & Power': 'Power Department',
+          'Public Health': 'Health & Family Welfare',
+          'Education & Schools': 'Education Department',
+          'Law & Policing': 'Delhi Police',
+          'Transport & Roads': 'Transport Department',
+          'Social Welfare': 'Social Welfare Department'
+        };
+        const dept = mappings[cat] || '';
+        if (!dept.toLowerCase().includes(filters.department.toLowerCase())) return;
+      }
+
+      const catComplaints = distComplaints.filter(c => c.category === cat);
+      const wardId = `W_${distName.toUpperCase().replace(/\s+/g, '')}_${cat.toUpperCase().replace(/[^A-Z0-9]/g, '')}`;
+      const wardName = `${cat} Ward`;
+
+      // Count officers overseeing this ward category
+      const mappings: Record<string, string> = {
+        'Civic Infrastructure': 'PWD & Infrastructure',
+        'Water & Sewage': 'Delhi Jal Board',
+        'Electricity & Power': 'Power Department',
+        'Public Health': 'Health & Family Welfare',
+        'Education & Schools': 'Education Department',
+        'Law & Policing': 'Delhi Police',
+        'Transport & Roads': 'Transport Department',
+        'Social Welfare': 'Social Welfare Department'
+      };
+      const dept = mappings[cat] || '';
+      const matchingDeptHead = deptHeads.find(dh => dh.department === dept);
 
       add({
-        id: booth.id, label: booth.label, type: 'booth', sub: booth.ward, val: 1.5,
+        id: wardId, label: wardName, type: 'booth', sub: `District Division`, val: 1.5,
         meta: {
-          ward: booth.ward,
-          boothOfficerCount: booth.officers.length,
-          totalComplaints: boothTotal,
-          resolved: boothResolved,
-          pending: boothTotal - boothResolved,
+          ward: wardName,
+          boothOfficerCount: matchingDeptHead ? 2 : 1, // DM and/or Dept Head
+          totalComplaints: catComplaints.length,
+          resolved: catComplaints.filter(c => c.status === 'Resolved').length,
+          pending: catComplaints.filter(c => c.status !== 'Resolved').length,
         }
       });
-      link(dist.id, booth.id, 'sub', 1);
+      link(distId, wardId, 'supervises', 1);
 
-      booth.officers.forEach(off => {
-        add({
-          id: off.id, label: off.name, type: 'officer', sub: off.designation, val: 1.2,
-          meta: {
-            name: off.name, designation: off.designation, phone: off.phone,
-            activeComplaints: off.active, completedComplaints: off.done,
-            avgDays: off.avgDays, rating: off.rating,
-            resolutionRate: Math.round((off.done / (off.done + off.active)) * 100),
-          }
-        });
-        link(booth.id, off.id, 'sub', 1);
-      });
+      if (matchingDeptHead) {
+        link(matchingDeptHead.id, wardId, 'oversees', 1);
+      }
 
-      booth.complaints.forEach(c => {
-        // Optional: filter by dept/category
-        if (filters.department && filters.department !== 'All Departments') {
-          if (!c.category.toLowerCase().includes(filters.department.toLowerCase())) return;
-        }
+      // Add complaints of this category
+      catComplaints.forEach(c => {
         add({
           id: c.id, label: c.title.slice(0, 28) + (c.title.length > 28 ? '…' : ''), type: 'complaint',
           sub: c.status, val: 0.8,
           meta: {
             complaintId: c.id, status: c.status as any, priority: c.priority as any,
-            category: c.category, dateFiled: c.date, citizen: c.citizen,
+            category: c.category, dateFiled: c.dateFiled, citizen: c.citizenName,
           }
         });
-        link(booth.id, c.id, 'complaint', 1);
+        link(wardId, c.id, 'grieve', 1);
       });
     });
   });
@@ -342,5 +268,5 @@ export function buildDelhiGovGraph(
 
 // Legacy compat
 export const NODE_CFG = TIER_CFG;
-export const buildGraph = (officers: any[], _a: any, _b: any, _c: any) =>
-  buildDelhiGovGraph(officers);
+export const buildGraph = (officers: any[], complaints: any[] = []) =>
+  buildDelhiGovGraph(officers, complaints);

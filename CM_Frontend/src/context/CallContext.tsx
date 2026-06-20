@@ -37,7 +37,7 @@ const CallContext = createContext<CallContextType | undefined>(undefined);
 
 // Signaling server URL — override with VITE_SIGNALING_URL in a .env file if
 // the relay server runs elsewhere. See /server in the project root.
-const SIGNALING_URL = import.meta.env?.VITE_SIGNALING_URL || 'http://localhost:5001';
+const SIGNALING_URL = import.meta.env?.VITE_SIGNALING_URL || 'http://localhost:5000';
 
 // ─── Lightweight ring/dial tone helper (Web Audio API, no audio files) ──────
 class PhoneAudio {

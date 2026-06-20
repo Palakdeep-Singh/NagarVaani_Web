@@ -130,7 +130,7 @@ export const DistrictMinistryDashboard: React.FC = () => {
   // Escalate to Department Secretary
   const handleEscalateToSecretary = (id: string, dept: string) => {
     const note = remarkText[id] || `Escalated directly to Principal Secretary of ${dept} due to SLA breach.`;
-    updateComplaintStatus(id, 'Escalated', `🚨 DM Direct Escalation: ${note}`, `${district} DM`);
+    updateComplaintStatus(id, 'Escalated', `DM Direct Escalation: ${note}`, `${district} DM`);
     setRemarkText(prev => ({ ...prev, [id]: '' }));
     alert(`Complaint ${id} escalated directly to the Secretary of ${dept}`);
   };

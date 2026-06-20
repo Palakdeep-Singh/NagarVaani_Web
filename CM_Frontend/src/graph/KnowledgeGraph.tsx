@@ -5,7 +5,7 @@ import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import ForceGraph2D from 'react-force-graph-2d';
 import {
   X, Search, ChevronRight, Star, Clock, CheckCircle,
-  AlertTriangle, MapPin, User, FileText,
+  AlertTriangle, MapPin, User, FileText, Sparkles, Zap, Brain
 } from 'lucide-react';
 import { TIER_CFG, buildDelhiGovGraph, resolveId } from './graphEngine';
 import type { NodeTier, GNode, GLink, GraphData } from './graphEngine';
@@ -255,8 +255,8 @@ function DetailComplaint({ node }: { node: GNode }) {
           <div className="w-2 h-2 rounded-full" style={{ backgroundColor: sc }} />
           <span className="text-[11px] font-bold" style={{ color: sc }}>Status: {m.status}</span>
         </div>
-        {m.status === 'Escalated' && <p className="text-[10px] text-red-300 mt-1">⚠ This complaint has been escalated and requires immediate CM-level attention.</p>}
-        {m.status === 'Resolved'  && <p className="text-[10px] text-emerald-300 mt-1">✓ Complaint resolved successfully by the assigned ward officer.</p>}
+        {m.status === 'Escalated' && <p className="text-[10px] text-red-300 mt-1">Escalated: This complaint requires immediate attention.</p>}
+        {m.status === 'Resolved'  && <p className="text-[10px] text-emerald-300 mt-1">Resolved: Complaint resolved successfully.</p>}
       </div>
     </div>
   );
@@ -332,13 +332,13 @@ export const KnowledgeGraph: React.FC<KnowledgeGraphProps> = ({ officers: propOf
 
   // Build
   useEffect(() => {
-    const gd = buildDelhiGovGraph(allOfficers, {
+    const gd = buildDelhiGovGraph(allOfficers, storeData.complaints, {
       district:   distFilter !== 'All Districts'   ? distFilter   : undefined,
       department: deptFilter !== 'All Departments' ? deptFilter   : undefined,
     });
     setGraphData(gd);
     setSelectedNode(null);
-  }, [allOfficers, distFilter, deptFilter]);
+  }, [allOfficers, storeData.complaints, distFilter, deptFilter]);
 
   // Force: orbital web, CM pinned at centre
   useEffect(() => {
@@ -537,7 +537,7 @@ export const KnowledgeGraph: React.FC<KnowledgeGraphProps> = ({ officers: propOf
             {!selectedNode && !hoverNode && !search && (
               <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 pointer-events-none">
                 <div className="bg-[#080F22]/90 border border-[#1A2540] rounded-full px-4 py-1.5 text-[10px] text-slate-500 flex items-center gap-2">
-                  <span>🖱</span> Click any node — CM · Districts · Wards · Officers · Complaints
+                  <MapPin className="w-3.5 h-3.5 text-cyan-500" /> Click any node — CM · Districts · Wards · Officers · Complaints
                 </div>
               </div>
             )}
@@ -589,14 +589,14 @@ export const KnowledgeGraph: React.FC<KnowledgeGraphProps> = ({ officers: propOf
                   <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3">How to navigate</div>
                   <div className="space-y-2">
                     {[
-                      { icon: '🟡', label: 'Chief Minister', desc: 'Centre node — citywide stats' },
-                      { icon: '🟣', label: 'Districts (11)',  desc: 'DM name, resolution rate' },
-                      { icon: '🟢', label: 'Wards',          desc: 'Officers & complaint count' },
-                      { icon: '🔵', label: 'Officers',       desc: 'Individual KPIs, ratings' },
-                      { icon: '🟠', label: 'Complaints',     desc: 'Status, priority, citizen' },
+                      { color: '#F59E0B', label: 'Chief Minister', desc: 'Centre node — citywide stats' },
+                      { color: '#8B5CF6', label: 'Districts (11)',  desc: 'DM name, resolution rate' },
+                      { color: '#14B8A6', label: 'Wards',          desc: 'Officers & complaint count' },
+                      { color: '#3B82F6', label: 'Officers',       desc: 'Individual KPIs, ratings' },
+                      { color: '#F97316', label: 'Complaints',     desc: 'Status, priority, citizen' },
                     ].map(r => (
                       <div key={r.label} className="flex items-start gap-2.5 p-2 rounded-lg bg-[#0D1730] border border-[#1A2540]">
-                        <span className="text-sm shrink-0 mt-0.5">{r.icon}</span>
+                        <span className="w-2 h-2 rounded-full shrink-0 mt-1.5" style={{ backgroundColor: r.color }} />
                         <div>
                           <div className="text-[11px] font-bold text-white">{r.label}</div>
                           <div className="text-[10px] text-slate-500">{r.desc}</div>
@@ -657,7 +657,7 @@ export const KnowledgeGraph: React.FC<KnowledgeGraphProps> = ({ officers: propOf
                   {/* AI Summary Box */}
                   <div className="p-3.5 rounded-lg border border-cyan-850 bg-cyan-950/20 text-slate-300 text-xs">
                     <div className="text-[9px] font-bold text-cyan-400 uppercase tracking-widest mb-1.5 flex items-center gap-1">
-                      <span>⚡</span> Hansa AI Copilot {loadingSummary && <span className="animate-pulse">(Loading...)</span>}
+                      <Sparkles className="w-3.5 h-3.5 text-cyan-400" /> Hansa AI Copilot {loadingSummary && <span className="animate-pulse">(Loading...)</span>}
                     </div>
                     <div className="text-[11px] leading-relaxed space-y-1 font-sans">
                       {aiSummary.split('\n').map((line, idx) => {
@@ -720,7 +720,7 @@ export const KnowledgeGraph: React.FC<KnowledgeGraphProps> = ({ officers: propOf
           {/* Column 1: AI Underperforming Officer Diagnostics */}
           <div className="space-y-3">
             <div className="flex items-center gap-1.5">
-              <span className="text-cyan-400">🧠</span>
+              <Brain className="w-3.5 h-3.5 text-cyan-400" />
               <h4 className="text-[11px] font-bold text-slate-200 uppercase tracking-wider">AI Officer Audit & Recommendations</h4>
             </div>
             <div className="bg-[#080F22] rounded-xl border border-[#1A2540] p-3.5 space-y-3 min-h-[180px]">
@@ -733,7 +733,7 @@ export const KnowledgeGraph: React.FC<KnowledgeGraphProps> = ({ officers: propOf
                   {officerAudits.map((a, i) => (
                     <div key={i} className="text-[11px] border-b border-[#1A2540]/60 pb-2 last:border-0 last:pb-0">
                       <div className="flex justify-between items-center font-bold text-slate-350">
-                        <span>👤 {a.officerName}</span>
+                        <span className="flex items-center gap-1"><User className="w-3 h-3 text-slate-400" /> {a.officerName}</span>
                         <span className="bg-rose-500/10 text-rose-400 text-[9px] px-1.5 py-0.5 rounded border border-rose-500/20 font-mono">WARNING</span>
                       </div>
                       <p className="text-slate-400 mt-1 leading-normal">
@@ -756,7 +756,7 @@ export const KnowledgeGraph: React.FC<KnowledgeGraphProps> = ({ officers: propOf
           {/* Column 2: Live System Audit Log */}
           <div className="space-y-3">
             <div className="flex items-center gap-1.5">
-              <span className="text-indigo-400">📜</span>
+              <FileText className="w-3.5 h-3.5 text-indigo-400" />
               <h4 className="text-[11px] font-bold text-slate-200 uppercase tracking-wider">Live System Audit Log</h4>
             </div>
             <div className="bg-[#080F22] rounded-xl border border-[#1A2540] p-3.5 space-y-2 max-h-[180px] overflow-y-auto pr-1 min-h-[180px]">
@@ -777,7 +777,7 @@ export const KnowledgeGraph: React.FC<KnowledgeGraphProps> = ({ officers: propOf
           {/* Column 3: Operational SLA Metrics */}
           <div className="space-y-3">
             <div className="flex items-center gap-1.5">
-              <span className="text-amber-400">⚡</span>
+              <Zap className="w-3.5 h-3.5 text-amber-400" />
               <h4 className="text-[11px] font-bold text-slate-200 uppercase tracking-wider">Operational SLA Metrics</h4>
             </div>
             <div className="bg-[#080F22] rounded-xl border border-[#1A2540] p-3.5 space-y-3 min-h-[180px]">
