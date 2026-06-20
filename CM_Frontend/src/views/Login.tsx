@@ -1,240 +1,142 @@
 import React, { useState } from 'react';
 import { useStore } from '../context/Store';
-import type { DistrictName } from '../types';
-import { ShieldCheck, Lock, User, Sparkles, Building, MapPin, AlertCircle } from 'lucide-react';
+import { ShieldCheck, Lock, User, Eye, EyeOff, AlertCircle, Info } from 'lucide-react';
 
 export const Login: React.FC = () => {
-  const { loginUser, registerUser } = useStore();
-  const [activeTab, setActiveTab] = useState<'signin' | 'signup'>('signin');
+  const { loginUser } = useStore();
+  const [username, setUsername]   = useState('');
+  const [password, setPassword]   = useState('');
+  const [showPwd, setShowPwd]     = useState(false);
+  const [error, setError]         = useState('');
+  const [loading, setLoading]     = useState(false);
 
-  
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [errorMsg, setErrorMsg] = useState('');
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    if (!username.trim() || !password) { setError('Please enter your credentials.'); return; }
+    setLoading(true);
+    await new Promise(r => setTimeout(r, 700));
+    const success = loginUser(username.trim(), password);
+    setLoading(false);
+    if (!success) setError('Invalid credentials. Contact your System Administrator (NIC Help Desk: 1800-111-555).');
+  };
 
-  
-  const [role, setRole] = useState<'Chief Minister' | 'District Magistrate' | 'Department Head'>('District Magistrate');
-  const [district, setDistrict] = useState<DistrictName>('New Delhi');
-  const [department, setDepartment] = useState<'Education & Schools' | 'Public Health' | 'PWD & Infrastructure'>('Public Health');
+  const today = new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
 
-  const districts: DistrictName[] = [
-    'New Delhi', 'North Delhi', 'North West Delhi', 'West Delhi',
-    'South West Delhi', 'South Delhi', 'South East Delhi', 'Central Delhi',
-    'East Delhi', 'Shahdara', 'North East Delhi'
+  const demoCreds = [
+    { label: 'CM Office',  u: 'cm',   p: 'cm123' },
+    { label: 'DM Office',  u: 'dm',   p: 'dm123' },
+    { label: 'Dept. Head', u: 'dept', p: 'dept123' },
   ];
 
-  const handleSignIn = (e: React.FormEvent) => {
-    e.preventDefault();
-    setErrorMsg('');
-    if (!username.trim() || !password) {
-      setErrorMsg('Please enter both username and password.');
-      return;
-    }
-    const success = loginUser(username, password);
-    if (!success) {
-      setErrorMsg('Invalid username or password.');
-    }
-  };
-
-  const handleSignUp = (e: React.FormEvent) => {
-    e.preventDefault();
-    setErrorMsg('');
-    if (!username.trim() || !password) {
-      setErrorMsg('Please fill in all credentials fields.');
-      return;
-    }
-    if (password.length < 4) {
-      setErrorMsg('Password should be at least 4 characters long.');
-      return;
-    }
-    const success = registerUser(
-      username,
-      password,
-      role,
-      role === 'District Magistrate' ? district : undefined,
-      role === 'Department Head' ? department : undefined
-    );
-    if (!success) {
-      setErrorMsg('Username is already taken.');
-    }
-  };
-
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-slate-50 p-4 relative overflow-hidden font-sans">
-            <div className="absolute top-[-20%] left-[-10%] h-[600px] w-[600px] rounded-full bg-indigo-100/40 blur-[120px]" />
-      <div className="absolute bottom-[-20%] right-[-10%] h-[600px] w-[600px] rounded-full bg-teal-100/30 blur-[120px]" />
+    <div className="login-page">
+      <div className="login-tricolor" />
 
-      <div className="w-full max-w-md bg-white border border-slate-200/80 rounded-2xl shadow-xl p-6 md:p-8 z-10 relative">
-                <div className="text-center mb-6">
-          <div className="mx-auto h-12 w-12 rounded-2xl bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-600/10 text-white font-extrabold text-xl mb-3">
-            N
-          </div>
-          <h2 className="text-2xl font-extrabold text-slate-800 tracking-tight">NAGARVAANI</h2>
-          <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">Delhi CM Grievance Portal</p>
+      <div className="login-govbar">
+        <div className="login-govbar-left">
+          <span style={{ fontSize: '1.05rem' }}>🇮🇳</span>
+          <span>Government of National Capital Territory of Delhi</span>
         </div>
+        <span className="login-govbar-right">Classification: RESTRICTED · {today}</span>
+      </div>
 
-                <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200 mb-6">
-          <button
-            onClick={() => {
-              setActiveTab('signin');
-              setErrorMsg('');
-            }}
-            className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-              activeTab === 'signin' ? 'bg-white text-slate-800 shadow-sm border border-slate-200/50' : 'text-slate-500 hover:text-slate-800'
-            }`}
-          >
-            Sign In
-          </button>
-          <button
-            onClick={() => {
-              setActiveTab('signup');
-              setErrorMsg('');
-            }}
-            className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-              activeTab === 'signup' ? 'bg-white text-slate-800 shadow-sm border border-slate-200/50' : 'text-slate-500 hover:text-slate-800'
-            }`}
-          >
-            Create Account
-          </button>
-        </div>
+      <div className="login-main">
+        <div className="login-box fade-in">
 
-                {errorMsg && (
-          <div className="mb-4 bg-rose-50 border border-rose-100 p-3 rounded-xl flex items-start gap-2.5 text-xs text-rose-700 font-medium">
-            <AlertCircle className="h-4.5 w-4.5 text-rose-500 shrink-0" />
-            <span>{errorMsg}</span>
+          <div className="login-header">
+            <div className="login-logo">
+              <ShieldCheck size={28} color="#fff" />
+            </div>
+            <h1 className="login-title">NagarVaani</h1>
+            <div className="login-subtitle">Chief Minister&apos;s Grievance &amp; Intelligence Portal</div>
+            <div className="login-meta">Powered by NIC · ECI Compliant · GNCT Delhi</div>
           </div>
-        )}
 
-                {activeTab === 'signin' && (
-          <form onSubmit={handleSignIn} className="space-y-4">
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-600 uppercase tracking-wider block">Username</label>
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder="e.g. cm"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-xs text-slate-800 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 font-semibold"
-                />
-                <User className="h-4 w-4 text-slate-400 absolute left-3.5 top-3.5" />
+          <div className="login-notice restricted">
+            <AlertCircle size={14} style={{ flexShrink: 0, marginTop: 1 }} />
+            <div>
+              <strong>RESTRICTED ACCESS</strong> — This portal is for authorised government personnel only.
+              Unauthorized access is a cognizable offence under Section 66 of the IT Act, 2000.
+              All sessions are logged and monitored.
+            </div>
+          </div>
+
+          <div className="login-demo">
+            <div className="login-demo-head">
+              <Info size={14} />
+              Demo Credentials (MVP)
+            </div>
+            {demoCreds.map(c => (
+              <div key={c.u} className="login-demo-row">
+                <span className="login-demo-label">{c.label}</span>
+                <button type="button" className="login-demo-btn" onClick={() => { setUsername(c.u); setPassword(c.p); }}>
+                  {c.u} / {c.p}
+                </button>
               </div>
+            ))}
+          </div>
+
+          <div className="login-card">
+            <div className="login-card-head">
+              <div className="login-card-head-title">Secure Sign In</div>
+              <div className="login-card-head-sub">NIC Single Sign-On · Session duration: 8 hours</div>
             </div>
 
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-600 uppercase tracking-wider block">Password</label>
-              <div className="relative">
-                <input
-                  type="password"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-xs text-slate-800 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 font-semibold"
-                />
-                <Lock className="h-4 w-4 text-slate-400 absolute left-3.5 top-3.5" />
-              </div>
-            </div>
+            <form onSubmit={handleSubmit} className="login-form">
+              {error && (
+                <div className="login-error">
+                  <AlertCircle size={16} style={{ flexShrink: 0, marginTop: 1 }} />
+                  <span>{error}</span>
+                </div>
+              )}
 
-            <button
-              type="submit"
-              className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2.5 rounded-xl text-xs transition-colors shadow-md shadow-indigo-600/10 cursor-pointer flex items-center justify-center gap-1.5"
-            >
-              <ShieldCheck className="h-4 w-4" /> Authenticate Session
-            </button>
-          </form>
-        )}
-
-                {activeTab === 'signup' && (
-          <form onSubmit={handleSignUp} className="space-y-4">
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-600 uppercase tracking-wider block">Choose Username</label>
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder="e.g. westdelhidm"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-xs text-slate-800 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 font-semibold"
-                />
-                <User className="h-4 w-4 text-slate-400 absolute left-3.5 top-3.5" />
-              </div>
-            </div>
-
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-600 uppercase tracking-wider block">Security Password</label>
-              <div className="relative">
-                <input
-                  type="password"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-xs text-slate-800 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 font-semibold"
-                />
-                <Lock className="h-4 w-4 text-slate-400 absolute left-3.5 top-3.5" />
-              </div>
-            </div>
-
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-600 uppercase tracking-wider block">Administrative Role</label>
-              <div className="relative">
-                <select
-                  value={role}
-                  onChange={(e) => setRole(e.target.value as any)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-xs text-slate-800 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 cursor-pointer font-semibold appearance-none"
-                >
-                  <option value="District Magistrate">District Magistrate (DM)</option>
-                  <option value="Department Head">Department Head / Nodal Officer</option>
-                  <option value="Chief Minister">Chief Minister (CM)</option>
-                </select>
-                <Building className="h-4 w-4 text-slate-400 absolute left-3.5 top-3.5" />
-              </div>
-            </div>
-
-                        {role === 'District Magistrate' && (
-              <div className="space-y-1 animate-in slide-in-from-top-1 duration-200">
-                <label className="text-xs font-bold text-slate-600 uppercase tracking-wider block">Assigned District Zone</label>
-                <div className="relative">
-                  <select
-                    value={district}
-                    onChange={(e) => setDistrict(e.target.value as DistrictName)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-xs text-slate-800 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 cursor-pointer font-semibold appearance-none"
-                  >
-                    {districts.map(d => (
-                      <option key={d} value={d}>{d}</option>
-                    ))}
-                  </select>
-                  <MapPin className="h-4 w-4 text-slate-400 absolute left-3.5 top-3.5" />
+              <div className="login-field">
+                <label className="login-label" htmlFor="login-username">Username / Employee ID</label>
+                <div className="login-input-wrap">
+                  <User size={14} className="login-input-icon" />
+                  <input
+                    id="login-username"
+                    type="text"
+                    className="login-input"
+                    value={username}
+                    onChange={e => setUsername(e.target.value)}
+                    placeholder="Enter username"
+                    autoComplete="username"
+                  />
                 </div>
               </div>
-            )}
 
-                        {role === 'Department Head' && (
-              <div className="space-y-1 animate-in slide-in-from-top-1 duration-200">
-                <label className="text-xs font-bold text-slate-600 uppercase tracking-wider block">Assigned Department Portfolio</label>
-                <div className="relative">
-                  <select
-                    value={department}
-                    onChange={(e) => setDepartment(e.target.value as any)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-xs text-slate-800 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 cursor-pointer font-semibold appearance-none"
+              <div className="login-field">
+                <label className="login-label" htmlFor="login-password">Password</label>
+                <div className="login-input-wrap">
+                  <Lock size={14} className="login-input-icon" />
+                  <input
+                    id="login-password"
+                    type={showPwd ? 'text' : 'password'}
+                    className="login-input"
+                    style={{ paddingRight: 38 }}
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    placeholder="Enter password"
+                    autoComplete="current-password"
+                  />
+                  <button
+                    type="button"
+                    className="login-input-toggle"
+                    onClick={() => setShowPwd(!showPwd)}
+                    aria-label={showPwd ? 'Hide password' : 'Show password'}
                   >
-                    <option value="Public Health">Health & Family Welfare</option>
-                    <option value="Education & Schools">Education Department</option>
-                    <option value="PWD & Infrastructure">PWD & Infrastructure</option>
-                  </select>
-                  <Building className="h-4 w-4 text-slate-400 absolute left-3.5 top-3.5" />
+                    {showPwd ? <EyeOff size={14} /> : <Eye size={14} />}
+                  </button>
                 </div>
               </div>
-            )}
 
-            <button
-              type="submit"
-              className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2.5 rounded-xl text-xs transition-colors shadow-md shadow-indigo-600/10 cursor-pointer flex items-center justify-center gap-1.5"
-            >
-              <Sparkles className="h-4 w-4 text-teal-300" /> Register & Authenticate
-            </button>
-          </form>
-        )}
+              <button type="submit" disabled={loading} className="login-submit">
+                {loading ? 'Authenticating…' : 'Sign In to Portal'}
+              </button>
 
+<<<<<<< Updated upstream
         {/* Fast Dev Bypass Authorization */}
         <div className="mt-6 pt-4 border-t border-slate-200/80">
           <div className="text-xs font-extrabold text-amber-600 uppercase tracking-wider mb-2 flex items-center justify-center gap-1">
@@ -266,15 +168,22 @@ export const Login: React.FC = () => {
           <div className="font-bold text-slate-700 mb-2 flex items-center gap-1">
             <Sparkles className="h-3.5 w-3.5 text-indigo-500 shrink-0" />
             Evaluation Credentials:
+=======
+              <div className="login-terms">
+                By signing in you agree to the Government of India&apos;s<br />
+                Acceptable Use Policy for Official IT Systems (2019)
+              </div>
+            </form>
+>>>>>>> Stashed changes
           </div>
-          <div className="space-y-1.5 text-xs leading-tight">
-            <div>• CM: <span className="font-bold text-slate-700 bg-slate-200/50 px-1 rounded">cm</span> / <span className="font-bold text-slate-700 bg-slate-200/50 px-1 rounded">cm123</span></div>
-            <div>• DM: <span className="font-bold text-slate-700 bg-slate-200/50 px-1 rounded">newdelhidm</span> / <span className="font-bold text-slate-700 bg-slate-200/50 px-1 rounded">dm123</span></div>
-            <div>• Dept Nodal: <span className="font-bold text-slate-700 bg-slate-200/50 px-1 rounded">healthhead</span> / <span className="font-bold text-slate-700 bg-slate-200/50 px-1 rounded">dept123</span></div>
+
+          <div className="login-footer">
+            NagarVaani v2.0 · National Informatics Centre (NIC)<br />
+            Ministry of Electronics &amp; Information Technology, GoI<br />
+            IT Act 2000 · RTI Act 2005 · ECI Model Code Compliant
           </div>
         </div>
       </div>
     </div>
   );
 };
-export default Login;

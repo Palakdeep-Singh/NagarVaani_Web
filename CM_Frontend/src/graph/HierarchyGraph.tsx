@@ -64,7 +64,7 @@ function Crumb({ path }: { path: GNode[] }) {
       {path.map((n, i) => (
         <React.Fragment key={n.id}>
           <span className="text-[9px] font-bold px-1.5 py-0.5 rounded text-white"
-            style={{ backgroundColor: TIER_CFG[n.type as NodeTier]?.color + 'BB' ?? '#333' }}>
+            style={{ backgroundColor: (TIER_CFG[n.type as NodeTier]?.color ?? '#333') + 'BB' }}>
             {n.label.length > 14 ? n.label.slice(0,13)+'…' : n.label}
           </span>
           {i < path.length - 1 && <ChevronRight className="w-2.5 h-2.5 text-slate-600 shrink-0" />}

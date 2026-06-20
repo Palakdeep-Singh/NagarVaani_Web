@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { useStore } from '../context/Store';
-import { MessageSquare, Send } from 'lucide-react';
+import { MessageSquare, Send, Phone, Video } from 'lucide-react';
+import { useCall } from '../context/CallContext';
 
 export const Comm: React.FC = () => {
   const { messages, addMessage, activeRole, activeDistrict, activeDepartment } = useStore();
+  const { startCall, callState, activeCallPartner } = useCall();
 
   
   const [chatInput, setChatInput] = useState('');
@@ -78,6 +80,9 @@ export const Comm: React.FC = () => {
                     <div className="text-xs font-semibold text-slate-800">{contact.name}</div>
                     <div className="text-xs text-slate-500 font-bold uppercase mt-0.5 tracking-wider">{contact.role}</div>
                   </div>
+                  {activeCallPartner?.id === contact.role && (
+                    <span className="ml-auto h-2 w-2 rounded-full bg-emerald-500 animate-pulse" title="On call" />
+                  )}
                 </button>
               );
             })}
@@ -97,6 +102,24 @@ export const Comm: React.FC = () => {
                   Secure encrypted government channel
                 </span>
               </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => startCall({ id: selectedContact, name: selectedContact }, 'audio')}
+                disabled={callState !== 'idle'}
+                title="Start audio call"
+                className="h-9 w-9 rounded-xl bg-white border border-slate-200 text-indigo-600 hover:bg-indigo-50 flex items-center justify-center cursor-pointer transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                <Phone className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => startCall({ id: selectedContact, name: selectedContact }, 'video')}
+                disabled={callState !== 'idle'}
+                title="Start video call"
+                className="h-9 w-9 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white flex items-center justify-center cursor-pointer transition-colors shadow-md shadow-indigo-600/10 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                <Video className="h-4 w-4" />
+              </button>
             </div>
           </div>
 

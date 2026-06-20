@@ -1,92 +1,208 @@
-import React from 'react';
-import { BrainCircuit, Sparkles, ArrowUpRight, Info } from 'lucide-react';
+import React, { useState } from 'react';
+import { useStore } from '../context/Store';
+import { GovPageShell, GovCard } from '../components/GovPageShell';
+import { BrainCircuit, AlertTriangle, TrendingUp, CheckCircle2, Clock, RefreshCw, ChevronRight, Info, ShieldCheck } from 'lucide-react';
+
+interface AIInsight {
+  id: number;
+  type: 'critical' | 'warning' | 'opportunity' | 'info';
+  department: string;
+  title: string;
+  detail: string;
+  action: string;
+  rule: string;   // Which govt rule/guideline this is based on
+  priority: number;
+}
+
+const TYPE_META = {
+  critical:    { bg: 'var(--status-escalated-bg)',  color: 'var(--status-escalated-text)',  border: 'var(--status-escalated-border)',  icon: <AlertTriangle size={16} />,   label: 'CRITICAL' },
+  warning:     { bg: 'var(--status-pending-bg)',    color: 'var(--status-pending-text)',    border: 'var(--status-pending-border)',    icon: <Clock size={16} />,           label: 'WARNING' },
+  opportunity: { bg: 'var(--status-resolved-bg)',   color: 'var(--status-resolved-text)',   border: 'var(--status-resolved-border)',   icon: <TrendingUp size={16} />,      label: 'OPPORTUNITY' },
+  info:        { bg: 'var(--status-active-bg)',     color: 'var(--status-active-text)',     border: 'var(--status-active-border)',     icon: <CheckCircle2 size={16} />,    label: 'INFO' },
+};
 
 export const Suggestions: React.FC = () => {
-  
-  const aiInsights = [
+  const { complaints, projects, officers } = useStore();
+  const [loading, setLoading] = useState(false);
+  const [refreshCount, setRefreshCount] = useState(0);
+
+  const emergencyCount  = complaints.filter(c => c.priority === 'Emergency' && c.status !== 'Resolved').length;
+  const escalatedCount  = complaints.filter(c => c.status === 'Escalated').length;
+  const deptCounts      = complaints.reduce((acc: Record<string, number>, c) => {
+    const d = c.department?.replace(' & Family Welfare','').replace(' Department','') || 'Other';
+    acc[d] = (acc[d] || 0) + 1; return acc;
+  }, {});
+  const topDept         = Object.entries(deptCounts).sort((a, b) => b[1] - a[1])[0];
+  const delayedProjects = projects.filter(p => p.status === 'Delayed' || p.status === 'Critical').length;
+  const total           = complaints.length;
+  const resolved        = complaints.filter(c => c.status === 'Resolved').length;
+  const resRate         = total > 0 ? Math.round((resolved / total) * 100) : 0;
+  const pendingOver30   = complaints.filter(c => {
+    const days = Math.floor((Date.now() - new Date(c.dateFiled).getTime()) / 86400000);
+    return days > 30 && c.status !== 'Resolved';
+  }).length;
+
+  const lowOfficers = officers.filter(o => o.resolutionRate < 60).length;
+
+  const insights: AIInsight[] = [
+    ...(emergencyCount > 0 ? [{
+      id: 1, type: 'critical' as const, department: 'Cross-Department',
+      title: `${emergencyCount} Emergency grievances unresolved — immediate DM escalation required`,
+      detail: `${emergencyCount} active emergency-priority complaints have not been resolved. Per Delhi Citizen Charter 2023, emergency grievances must be acknowledged within 2 hours and resolved within 24 hours. Field inspection teams should be deployed immediately.`,
+      action: 'Issue DM Alert — Escalate to Secretary Level',
+      rule: 'Delhi Citizen Charter 2023 · Clause 4.2 — Emergency Grievance Response',
+      priority: 1,
+    }] : []),
+    ...(pendingOver30 > 0 ? [{
+      id: 2, type: 'critical' as const, department: 'Grievance Cell',
+      title: `${pendingOver30} complaints pending beyond 30-day SLA limit`,
+      detail: `These complaints breach the mandatory 30-day resolution window prescribed in DOPT OM No. 43011/2/2014. They must be forwarded to the concerned Secretary within 48 hours with a detailed status report. Failure to act may result in RTI queries and court notices.`,
+      action: 'Generate 30-Day SLA Breach Report & Notify Secretaries',
+      rule: 'DOPT OM No. 43011/2/2014 · Grievance Redressal Policy',
+      priority: 2,
+    }] : []),
+    ...(escalatedCount > 3 ? [{
+      id: 3, type: 'warning' as const, department: 'CM Office',
+      title: `${escalatedCount} grievances escalated — CM-level review may be required`,
+      detail: `High escalation rate indicates systemic departmental bottlenecks. Per the Sevottam framework (BIS IS 15700:2018), repeated escalations in the same department require a root-cause analysis and Standard Operating Procedure revision within 15 working days.`,
+      action: 'Schedule Departmental Review Meeting — Sevottam Framework',
+      rule: 'BIS IS 15700:2018 Sevottam Framework · Section 6.3',
+      priority: 3,
+    }] : []),
+    ...(topDept ? [{
+      id: 4, type: 'warning' as const, department: topDept[0],
+      title: `${topDept[0]} is the highest complaint-volume department (${topDept[1]} cases)`,
+      detail: `Concentrated load on one department suggests structural capacity issues. Recommend: nodal officer capacity audit, inter-department resource sharing proposal to Chief Secretary, and temporary reallocation of personnel per FR-SR Part I Rule 35.`,
+      action: 'Schedule Nodal Officer Capacity Review',
+      rule: 'FR-SR Part I Rule 35 · Temporary Inter-Dept. Transfer',
+      priority: 4,
+    }] : []),
+    ...(delayedProjects > 0 ? [{
+      id: 5, type: 'warning' as const, department: 'Project Monitoring Cell',
+      title: `${delayedProjects} infrastructure projects behind schedule — budget utilisation at risk`,
+      detail: `Delayed projects risk lapse of funds at financial year-end per GFR 2017 Rule 239. A contractor performance review and revised timeline submission should be mandated within 7 working days. Penalty clauses in contractor agreements should be invoked where applicable.`,
+      action: 'Issue Show-Cause Notice — GFR 2017 Rule 239 Review',
+      rule: 'GFR 2017 Rule 239 · Budget Utilisation Guidelines',
+      priority: 5,
+    }] : []),
+    ...(resRate >= 70 ? [{
+      id: 6, type: 'opportunity' as const, department: 'Performance Cell',
+      title: `Resolution rate at ${resRate}% — above target. Opportunity to raise citizen satisfaction.`,
+      detail: `Strong resolution metrics present an opportunity to launch a citizen feedback survey per Sevottam Clause 3.2 — Citizen Charter Feedback Mechanism. Survey results can be used to publish a quarterly transparency report and apply for DARPG's Grievance Excellence Award.`,
+      action: 'Launch Citizen Satisfaction Survey — Sevottam 3.2',
+      rule: 'Sevottam BIS IS 15700:2018 · Clause 3.2 — Citizen Feedback',
+      priority: 6,
+    }] : []),
+    ...(lowOfficers > 0 ? [{
+      id: 7, type: 'warning' as const, department: 'HR / Training',
+      title: `${lowOfficers} officer${lowOfficers > 1 ? 's' : ''} below 60% resolution rate — mandatory training recommended`,
+      detail: `Officers with resolution rates below 60% for 2+ consecutive months require mandatory capacity building per DOPT Training Policy 2012. Recommend: enrolment in IGNOU PGDGOV programme or district-level grievance management workshop within 30 days.`,
+      action: 'Enrol Officers in DOPT Capacity Building Programme',
+      rule: 'DOPT Training Policy 2012 · Mandatory Competency Development',
+      priority: 7,
+    }] : []),
     {
-      topic: 'Monsoon Waterlogging Hotspots Identified',
-      source: 'Auto-grouped from 12 PWD infrastructure complaints',
-      summary: 'Recurring drainage choking detected at Ring Road (Lajpat Nagar) & Outer Ring Road (IIT Flyover). Machine models estimate a 92% flood risk probability for the next heavy rain cycle.',
-      action: 'Direct PWD to initiate desilting verification and execute emergency pump deployment plans.',
-      severity: 'High'
+      id: 8, type: 'info' as const, department: 'RTI Cell',
+      title: 'Weekly RTI disclosure report due — publish grievance statistics',
+      detail: `Under Section 4(1)(b) of the RTI Act 2005, the CM\'s office must proactively disclose grievance resolution statistics monthly. Prepare and publish: total complaints, resolution rate, average resolution time, and departmental breakdown on the Delhi government website.`,
+      action: 'Prepare Section 4(1)(b) RTI Proactive Disclosure Report',
+      rule: 'RTI Act 2005 · Section 4(1)(b) — Proactive Disclosure',
+      priority: 8,
     },
-    {
-      topic: 'Contaminated Water Supplies Seepage Risk',
-      source: 'Auto-grouped from 8 Delhi Jal Board complaints',
-      summary: 'Multiple complaints in West Delhi (Vikas Puri) report blackish water supply. Sewage pipe line crossings are adjacent to drinking mains. Health risk index elevated in Block C/D.',
-      action: 'Direct West Delhi DM to inspect site and schedule water quality testing within 12 hours.',
-      severity: 'Emergency'
-    },
-    {
-      topic: 'Health Center Pharmacy Shortages',
-      source: 'Auto-grouped from 6 Mohalla Clinic reports',
-      summary: 'Medicine stockout audits report high shortage rates of pediatric antibiotics and basic antipyretics in North East Delhi clinics. Citizen dissatisfaction increased by 30%.',
-      action: 'Initiate digital file DF-2026-512 to authorize fast-track platelet and stock purchases.',
-      severity: 'Medium'
-    }
-  ];
+  ].sort((a, b) => a.priority - b.priority);
+
+  const handleRefresh = async () => {
+    setLoading(true);
+    await new Promise(r => setTimeout(r, 900));
+    setRefreshCount(c => c + 1);
+    setLoading(false);
+  };
 
   return (
-    <div className="space-y-6">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h2 className="text-xl font-extrabold text-slate-800 tracking-tight flex items-center gap-2">
-            <BrainCircuit className="h-5 w-5 text-indigo-600 animate-pulse" />
-            AI Suggestions Inbox
-          </h2>
-          <p className="text-sm text-slate-500 mt-0.5">
-            AI suggestions grouping raw complaints into administrative recommendations.
-          </p>
-        </div>
-        <span className="text-xs font-bold text-teal-600 bg-teal-50 border border-teal-100 px-3 py-1.5 rounded-xl flex items-center gap-1 shadow-sm select-none">
-          <Sparkles className="h-3.5 w-3.5 fill-teal-600 text-teal-600" /> AI Model Online
-        </span>
+    <GovPageShell
+      office="CM Executive Office · AI Policy Recommendation Engine"
+      title="AI-Driven Policy Suggestions"
+      subtitle="Rule-based insights derived from live grievance data — mapped to government guidelines, citizen charter obligations, and legal frameworks."
+      sourceNote={`Refresh ${refreshCount + 1} · ${new Date().toLocaleString('en-IN')} · Data: State Portal (synthetic MVP)`}
+      actions={
+        <button className="gov-btn gov-btn-outline gov-btn-sm" onClick={handleRefresh} disabled={loading}>
+          <RefreshCw size={15} style={{ animation: loading ? 'spin 1s linear infinite' : 'none' }} />
+          {loading ? 'Refreshing…' : 'Refresh Analysis'}
+        </button>
+      }
+    >
+      {/* Compliance disclosure */}
+      <div className="citizen-charter-note mb-16">
+        <strong>AI Transparency Note (Government AI Policy 2023):</strong> These suggestions are generated by rule-based analytics, not generative AI. Every insight is traceable to a specific government regulation, DOPT circular, or Citizen Charter clause. Officers must apply independent professional judgement before acting on any suggestion. AI-generated content must not replace legally mandated human review per MeitY AI Governance Framework 2024.
       </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-in fade-in duration-200">
-        {aiInsights.map((insight, idx) => (
-          <div
-            key={idx}
-            className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col justify-between hover:shadow-md hover:border-slate-300 transition-all"
-          >
-            <div>
-              <div className="flex justify-between items-start gap-2 mb-3">
-                <span className={`text-xs font-bold px-2 py-0.5 rounded-full border uppercase tracking-wider ${
-                  insight.severity === 'Emergency' ? 'bg-rose-50 text-rose-600 border-rose-200' :
-                  insight.severity === 'High' ? 'bg-amber-50 text-amber-600 border-amber-200' :
-                  'bg-indigo-50 text-indigo-600 border-indigo-200'
-                }`}>
-                  {insight.severity} Priority
-                </span>
-                <span className="text-xs text-slate-400 font-semibold truncate max-w-[150px]">{insight.source}</span>
+      {/* Insights */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        {insights.map(ins => {
+          const meta = TYPE_META[ins.type];
+          return (
+            <div key={ins.id} style={{
+              background: meta.bg,
+              border: `1px solid ${meta.border}`,
+              borderLeft: `4px solid ${meta.color}`,
+              borderRadius: 3,
+              padding: '14px 16px',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+                <div style={{
+                  width: 32, height: 32, borderRadius: 3,
+                  background: meta.bg, border: `1px solid ${meta.border}`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  color: meta.color, flexShrink: 0,
+                }}>
+                  {meta.icon}
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, flexWrap: 'wrap' }}>
+                    <span style={{
+                      fontSize: '0.84rem', fontWeight: 700, color: meta.color,
+                      background: 'rgba(0,0,0,0.06)',
+                      padding: '1px 7px', borderRadius: 2,
+                      fontFamily: 'var(--font-mono)', letterSpacing: '0.08em',
+                    }}>
+                      {meta.label}
+                    </span>
+                    <span style={{ fontSize: '0.80rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
+                      Dept: {ins.department}
+                    </span>
+                  </div>
+                  <div style={{ fontFamily: 'var(--font-heading)', fontSize: '0.92rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: 6 }}>
+                    {ins.title}
+                  </div>
+                  <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', lineHeight: 1.65, marginBottom: 10 }}>
+                    {ins.detail}
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                    <button className="gov-btn gov-btn-primary gov-btn-sm">
+                      <ChevronRight size={14} /> {ins.action}
+                    </button>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                      <ShieldCheck size={14} color="var(--text-muted)" />
+                      <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
+                        {ins.rule}
+                      </span>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <h4 className="text-sm font-extrabold text-slate-800 mb-2 leading-snug">
-                {insight.topic}
-              </h4>
-              <p className="text-xs text-slate-500 leading-relaxed mb-4">
-                {insight.summary}
-              </p>
             </div>
-
-            <div className="pt-3 border-t border-slate-100 space-y-2">
-              <div className="text-xs font-bold text-teal-600 uppercase tracking-widest flex items-center gap-1">
-                <ArrowUpRight className="h-3.5 w-3.5 text-teal-600" /> Recommended Executive Action:
-              </div>
-              <p className="text-xs leading-relaxed text-indigo-600 italic bg-indigo-50/50 p-2.5 rounded-lg border border-indigo-100/50">
-                "{insight.action}"
-              </p>
+          );
+        })}
+        {insights.length === 0 && (
+          <div className="gov-card">
+            <div className="gov-card-body" style={{ textAlign: 'center', padding: 32, color: 'var(--text-muted)' }}>
+              <CheckCircle2 size={28} style={{ margin: '0 auto 10px', opacity: 0.4 }} />
+              <div style={{ fontWeight: 600, marginBottom: 4 }}>All Systems Nominal</div>
+              <div style={{ fontSize: '0.78rem' }}>No critical or warning-level issues detected at this time.</div>
             </div>
           </div>
-        ))}
+        )}
       </div>
-
-            <div className="bg-indigo-50 border border-indigo-100 rounded-2xl p-4 flex items-start gap-3 text-xs text-indigo-800">
-        <Info className="h-4.5 w-4.5 text-indigo-600 shrink-0 mt-0.5" />
-        <div className="leading-relaxed">
-          <span className="font-bold">AI System Overview:</span> NagarVaani crawls text data fields from SMS, web intakes, and mobile DM registers hourly, mapping semantic links to flag emerging infrastructure hot-spots.
-        </div>
-      </div>
-    </div>
+    </GovPageShell>
   );
 };

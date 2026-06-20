@@ -123,7 +123,7 @@ export const Heatmap: React.FC = () => {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-slate-50/50 rounded-2xl border border-slate-200 relative overflow-hidden">
         
         {/* Decorative Grid BG lines */}
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(99,102,241,0.03),rgba(255,255,255,0))]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(11,61,98,0.03),rgba(255,255,255,0))]" />
 
         {DELHI_DISTRICTS_MAP.map((card) => {
           const stats = getDistrictStats(card.name);

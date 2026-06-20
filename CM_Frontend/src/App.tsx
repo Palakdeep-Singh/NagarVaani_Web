@@ -1,5 +1,8 @@
 import React from 'react';
 import { DashboardProvider, useStore } from './context/Store';
+import { CallProvider } from './context/CallContext';
+import { CallOverlay } from './components/CallOverlay';
+import { getRoleLabel } from './utils/helper';
 import { MainLayout } from './layouts/MainLayout';
 import { Overview } from './views/Overview';
 import { Analytics } from './views/Analytics';
@@ -15,6 +18,9 @@ import { Files } from './views/Files';
 import { Comm } from './views/Comm';
 import { VideoCall } from './views/VideoCall';
 import { Login } from './views/Login';
+import { HierarchyGraph } from './views/HierarchyGraph';
+import { BoothManagement } from './views/BoothManagement';
+import { ElectionCommandCenter } from './views/election/ElectionCommandCenter';
 
 
 const DashboardContent: React.FC = () => {
@@ -26,10 +32,16 @@ const DashboardContent: React.FC = () => {
 
   const renderActiveView = () => {
     switch (activeTab) {
+      case 'ElectionCommandCenter':
+        return <ElectionCommandCenter />;
+      case 'BoothManagement':
+        return <BoothManagement />;
       case 'Overview':
         return <Overview />;
       case 'Analytics':
         return <Analytics />;
+      case 'HierarchyGraph':
+        return <HierarchyGraph />;
       case 'Rankings':
         return <Rankings />;
       case 'Suggestions':
@@ -57,10 +69,15 @@ const DashboardContent: React.FC = () => {
     }
   };
 
+  const roleLabel = getRoleLabel(currentUser);
+
   return (
-    <MainLayout>
-      {renderActiveView()}
-    </MainLayout>
+    <CallProvider selfId={roleLabel} selfName={roleLabel}>
+      <MainLayout>
+        {renderActiveView()}
+      </MainLayout>
+      <CallOverlay />
+    </CallProvider>
   );
 };
 
