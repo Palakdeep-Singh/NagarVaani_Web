@@ -11,6 +11,7 @@ import { TIER_CFG, buildDelhiGovGraph, resolveId } from './graphEngine';
 import type { NodeTier, GNode, GLink, GraphData } from './graphEngine';
 import { paintNode as _paintNode, paintNodeArea, paintLink as _paintLink } from './painters';
 import { useStore } from '../context/Store';
+import { getNodeAISummary } from '../services/aiService';
 
 export interface KnowledgeGraphProps { officers?: any[] }
 
@@ -593,12 +594,26 @@ export const KnowledgeGraph: React.FC<KnowledgeGraphProps> = ({ officers: propOf
               </div>
 
               {/* Detail body */}
-              <div className="px-4 py-4 flex-1">
+              <div className="px-4 py-4 flex-1 space-y-4">
                 {selectedNode.type === 'cm'        && <DetailCM        node={selectedNode} />}
                 {selectedNode.type === 'district'  && <DetailDistrict  node={selectedNode} />}
                 {selectedNode.type === 'booth'     && <DetailWard      node={selectedNode} />}
                 {selectedNode.type === 'officer'   && <DetailOfficer   node={selectedNode} />}
                 {selectedNode.type === 'complaint' && <DetailComplaint node={selectedNode} />}
+
+                {/* AI Summary Box */}
+                <div className="p-3.5 rounded-lg border border-cyan-850 bg-cyan-950/20 text-slate-300 text-xs">
+                  <div className="text-[9px] font-bold text-cyan-400 uppercase tracking-widest mb-1.5 flex items-center gap-1">
+                    <span>⚡</span> Hansa AI Copilot
+                  </div>
+                  <div className="text-[11px] leading-relaxed space-y-1 font-sans">
+                    {getNodeAISummary(selectedNode.type, selectedNode.label, selectedNode.meta).split('\n').map((line, idx) => {
+                      if (line.startsWith('###')) return <h4 key={idx} className="font-extrabold text-slate-100 mt-2 text-xs">{line.replace('###', '')}</h4>;
+                      if (line.startsWith('*')) return <div key={idx} className="pl-2 border-l border-cyan-700/60 mt-1">{line.replace('*', '')}</div>;
+                      return <p key={idx} className="mt-1">{line}</p>;
+                    })}
+                  </div>
+                </div>
               </div>
 
               {/* Children list */}

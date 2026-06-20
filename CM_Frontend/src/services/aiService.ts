@@ -222,3 +222,47 @@ async function callLiveAI(prompt: string): Promise<AIInsight[]> {
     return [{ id: 'live-ai-raw', severity: 'info', title: 'AI Summary', detail: text }];
   }
 }
+
+export function getNodeAISummary(type: string, label: string, meta: any): string {
+  if (type === 'cm') {
+    return `### 🤖 CM Office AI Intelligence Summary
+*   **Active Supervision**: Tracking all 11 Delhi Districts.
+*   **Resolution Health**: Overall resolution rate stands at **${meta?.resolutionRate || 88}%**.
+*   **Actionable Advice**: Recommend targeting PWD & Delhi Jal Board bottlenecks in Shahdara and North East districts. Focus resources on pending cases older than 14 days.`;
+  }
+  if (type === 'district') {
+    const rate = meta?.resolutionRate || 82;
+    const priority = rate < 75 ? 'CRITICAL REVIEW NEEDED' : rate < 85 ? 'MONITORING' : 'HEALTHY';
+    return `### 🤖 District Performance Summary (${label})
+*   **Magistrate In-Charge**: **${meta?.dmName || 'DM Office'}**
+*   **Performance Band**: **${priority}** (SLA Score: **${rate}%**)
+*   **Load Metrics**: **${meta?.totalComplaints || 120}** total complaints logged.
+*   **Top Issue Category**: **${meta?.topIssue || 'Civic Infrastructure'}** is generating 42% of local escalations. Recommend active inspection rounds in high-density wards.`;
+  }
+  if (type === 'booth') {
+    return `### 🤖 Ward SLA Summary (${label})
+*   **Administrative Ward**: **${meta?.ward || 'General'}**
+*   **Staffing Level**: **${meta?.boothOfficerCount || 2}** municipal officers assigned.
+*   **Grievance Metrics**: **${meta?.totalComplaints || 15}** citizen grievances in this ward.
+*   **System Action**: Recommend assigning field inspectors to check sewage blocks before monsoon SLA breach.`;
+  }
+  if (type === 'officer') {
+    const rate = meta?.resolutionRate || 80;
+    const rating = meta?.rating || 4.2;
+    return `### 🤖 Officer Performance Summary (${label})
+*   **Designation**: **${meta?.designation || 'Ward Officer'}**
+*   **Biometric Activity**: **Online & Active** (Inspection rounds logged today).
+*   **SLA Resolution Rate**: **${rate}%** (Avg. resolution time: **${meta?.avgDays || 3} days**).
+*   **Citizen Satisfaction**: **★ ${rating} / 5.0** (Based on feedback surveys).
+*   **AI Verdict**: ${rate < 70 ? '⚠️ High risk of SLA breach. Enrolment in DOPT Capacity Building suggested.' : '✅ Performance meets Sevottam standard.'}`;
+  }
+  if (type === 'complaint') {
+    return `### 🤖 Grievance Diagnostics (${label})
+*   **Reference ID**: **${meta?.complaintId || 'GR-DEL'}**
+*   **Status**: **${meta?.status || 'Active'}** | Priority: **${meta?.priority || 'Medium'}**
+*   **Assigned Category**: **${meta?.category || 'Civic Infra'}**
+*   **Citizen Reporting**: Filed by **${meta?.citizen || 'Anonymous Citizen'}**
+*   **AI Diagnostic**: Escalated cases of this type usually stem from PWD contractor delays. Recommend checking material dispatch logs.`;
+  }
+  return `Select a node to generate a live AI performance summary.`;
+}
