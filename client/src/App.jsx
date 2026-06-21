@@ -11,20 +11,21 @@
 import { useContext, useState } from 'react';
 import { AuthContext } from './context/AuthContext.jsx';
 import LoginUser from './pages/LoginUser.jsx';
-import LoginAdmin from './pages/LoginAdmin.jsx';
 import UserApp from './pages/UserApp.jsx';
 import AdminApp from './pages/AdminApp.jsx';
 import LandingPage from './pages/LandingPage.jsx';
 
+// CM Frontend (scoped under .cm-scope)
+import CMApp from './cm_frontend/App';
+import './cm_frontend/index.css';
+
 export default function App() {
   const { user, token, loading, isAdmin, showAdmin, switchToAdmin, switchToUser } = useContext(AuthContext);
-  // Controls whether user has chosen a portal yet (null = show landing)
   const [portalChoice, setPortalChoice] = useState(() => {
     const p = new URLSearchParams(window.location.search).get('portal');
     return p === 'citizen' || p === 'admin' ? p : null;
   });
 
-  // Ensure showAdmin is consistent with URL on mount
   useState(() => {
     const p = new URLSearchParams(window.location.search).get('portal');
     if (p === 'admin') switchToAdmin();
@@ -42,13 +43,13 @@ export default function App() {
     );
   }
 
-  // Logged in — route to the right app
+  // Logged in
   if (token && user) {
     if (isAdmin) return <AdminApp />;
     return <UserApp />;
   }
 
-  // Not logged in — show landing if no portal chosen yet
+  // Landing
   if (!portalChoice) {
     return (
       <LandingPage
@@ -58,34 +59,38 @@ export default function App() {
     );
   }
 
-  // Portal chosen — show respective login with back-to-home link
+  // CM Dashboard portal — render inside .cm-scope wrapper
+  if (portalChoice === 'admin' || showAdmin) {
+    return (
+      <div className="cm-scope">
+        <CMApp setPortalChoice={(choice) => {
+          if (choice === 'citizen') {
+            setPortalChoice('citizen');
+            switchToUser();
+          } else {
+            setPortalChoice(null);
+          }
+        }} />
+      </div>
+    );
+  }
+
+  // Citizen login
   const BackLink = () => (
     <div style={{ textAlign: 'center', padding: '8px 0 20px', fontSize: 12, color: 'var(--t3)', background: 'var(--bg)' }}>
       <span
         onClick={() => { setPortalChoice(null); switchToUser(); }}
         style={{ color: 'var(--nv)', fontWeight: 700, cursor: 'pointer', textDecoration: 'underline' }}
       >← Back to Home</span>
-      {portalChoice === 'citizen' && (
-        <span style={{ marginLeft: 12 }}>
-          Government officer?{' '}
-          <span
-            onClick={() => { setPortalChoice('admin'); switchToAdmin(); }}
-            style={{ color: 'var(--sf)', fontWeight: 700, cursor: 'pointer', textDecoration: 'underline' }}
-          >👑 CM Dashboard →</span>
-        </span>
-      )}
-      {portalChoice === 'admin' && (
-        <span style={{ marginLeft: 12 }}>
-          Not an officer?{' '}
-          <span
-            onClick={() => { setPortalChoice('citizen'); switchToUser(); }}
-            style={{ color: 'var(--sf)', fontWeight: 700, cursor: 'pointer', textDecoration: 'underline' }}
-          >Citizen Login →</span>
-        </span>
-      )}
+      <span style={{ marginLeft: 12 }}>
+        Government officer?{' '}
+        <span
+          onClick={() => { setPortalChoice('admin'); switchToAdmin(); }}
+          style={{ color: 'var(--sf)', fontWeight: 700, cursor: 'pointer', textDecoration: 'underline' }}
+        >👑 CM Dashboard →</span>
+      </span>
     </div>
   );
 
-  if (showAdmin) return <><LoginAdmin /><BackLink /></>;
   return <><LoginUser /><BackLink /></>;
 }

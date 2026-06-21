@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useStore } from '../context/Store';
 import { ShieldCheck, Lock, User, Eye, EyeOff, AlertCircle, Zap } from 'lucide-react';
 
-export const Login: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
+export const Login: React.FC<{ setPortalChoice?: (v: string | null) => void }> = ({ setPortalChoice }) => {
   const { loginUser } = useStore();
   const [username, setUsername]   = useState('');
   const [password, setPassword]   = useState('');
@@ -88,25 +88,7 @@ export const Login: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
         <span className="login-govbar-right">Classification: RESTRICTED · {today}</span>
       </div>
 
-      <div className="login-main" style={{ position: 'relative' }}>
-        {onBack && (
-          <button
-            type="button"
-            onClick={onBack}
-            style={{
-              position: 'absolute', top: 20, left: 40,
-              display: 'flex', alignItems: 'center', gap: 6,
-              background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)',
-              borderRadius: 20, padding: '8px 16px', color: '#fff',
-              fontSize: 13, fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s',
-              zIndex: 10
-            }}
-            onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.2)'}
-            onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
-          >
-            <span style={{ fontSize: 16 }}>←</span> Home Page
-          </button>
-        )}
+      <div className="login-main">
         <div className="login-box fade-in">
 
           <div className="login-header">
@@ -249,7 +231,7 @@ export const Login: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
                 Fast Authorization Access
               </span>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
               {fastRoles.map(r => (
                 <button
                   key={r.u}
@@ -290,23 +272,33 @@ export const Login: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
                   </span>
                 </button>
               ))}
-            </div>
-          </div>
-
-          {onBack && (
-            <div style={{ textAlign: 'center', marginTop: 12 }}>
               <button
                 type="button"
-                onClick={onBack}
+                onClick={() => setPortalChoice && setPortalChoice('citizen')}
                 style={{
-                  background: 'none', border: 'none', color: '#F59E0B',
-                  fontSize: 12, fontWeight: 700, cursor: 'pointer', textDecoration: 'underline'
+                  padding: '10px 6px',
+                  background: 'rgba(255,255,255,0.04)',
+                  border: '1.5px solid rgba(245,158,11,0.3)',
+                  borderRadius: 10, cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.background = '#8B5CF615';
+                  e.currentTarget.style.borderColor = '#8B5CF6';
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.background = 'rgba(255,255,255,0.04)';
+                  e.currentTarget.style.borderColor = 'rgba(245,158,11,0.3)';
+                  e.currentTarget.style.transform = 'none';
                 }}
               >
-                ← Back to Home Page
+                <span style={{ fontSize: 18 }}>🧑‍🤝‍🧑</span>
+                <span style={{ fontSize: 9.5, fontWeight: 700, color: '#D97706' }}>Citizen Portal</span>
               </button>
             </div>
-          )}
+          </div>
 
           <div className="login-footer mt-6">
             NagarVaani v2.0 · National Informatics Centre (NIC)<br />
