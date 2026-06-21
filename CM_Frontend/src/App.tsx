@@ -14,7 +14,6 @@ import { DMView } from './views/DMView';
 import { Officers } from './views/Officers';
 import { Projects } from './views/Projects';
 import { Funds } from './views/Funds';
-import { Files } from './views/Files';
 import { Comm } from './views/Comm';
 import { VideoCall } from './views/VideoCall';
 import { Login } from './views/Login';
@@ -85,8 +84,6 @@ const DashboardContent: React.FC = () => {
         return <Projects />;
       case 'Funds':
         return <Funds />;
-      case 'Files':
-        return <Files />;
       case 'Communications':
         return <Comm />;
       case 'VideoCall':

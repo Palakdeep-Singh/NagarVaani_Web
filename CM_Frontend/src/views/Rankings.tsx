@@ -42,13 +42,12 @@ export const Rankings: React.FC = () => {
         <strong>ECI / DOPT Compliance:</strong> Performance rankings are used strictly for internal administrative accountability and service improvement. Rankings are not for public release during Model Code of Conduct periods without ECI clearance (ECI Instruction No. 576/3/2022/SDR).
       </div>
 
-      {/* Summary strip */}
       <div className="grid-4 mb-16">
         {[
-          { label: 'Best Performing District', value: rankings[0]?.name || '—', color: 'navy', icon: <TrendingUp size={14} /> },
-          { label: 'Needs Intervention',        value: rankings[rankings.length-1]?.name || '—', color: 'navy',   icon: <TrendingDown size={14} /> },
-          { label: 'State Average SLA Score',   value: `${avg}%`, color: 'navy', icon: <Minus size={14} /> },
-          { label: 'Performing Districts',       value: `${performing} / ${rankings.length}`, color: 'navy', icon: <ShieldCheck size={14} /> },
+          { label: 'Best Performing District', value: rankings.some(r => r.total > 0) ? rankings[0]?.name : '—', color: 'navy', icon: <TrendingUp size={14} /> },
+          { label: 'Needs Intervention',        value: rankings.some(r => r.total > 0) ? rankings[rankings.length-1]?.name : '—', color: 'navy',   icon: <TrendingDown size={14} /> },
+          { label: 'State Average SLA Score',   value: rankings.some(r => r.total > 0) ? `${avg}%` : '0%', color: 'navy', icon: <Minus size={14} /> },
+          { label: 'Performing Districts',       value: rankings.some(r => r.total > 0) ? `${performing} / ${rankings.length}` : `0 / ${rankings.length}`, color: 'navy', icon: <ShieldCheck size={14} /> },
         ].map((s, i) => (
           <div key={i} className={`stat-card c-${s.color}`}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>

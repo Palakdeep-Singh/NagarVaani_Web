@@ -93,8 +93,8 @@ export const DMView: React.FC = () => {
             </div>
             <div>
               <span className="text-xs uppercase font-bold text-slate-400 tracking-wider block">District Magistrate ({activeDistrict})</span>
-              <h3 className="text-md font-extrabold text-slate-800 mt-0.5">{dmProfile?.name || 'DM Delhi'}</h3>
-              <p className="text-xs text-slate-500 font-semibold">{dmProfile?.designation} • Revenue & Grievance</p>
+              <h3 className="text-md font-extrabold text-slate-800 mt-0.5">{dmProfile?.name || 'No Officer Assigned'}</h3>
+              <p className="text-xs text-slate-500 font-semibold">{dmProfile ? `${dmProfile.designation} • ` : ''}Revenue & Grievance</p>
             </div>
           </div>
 
@@ -109,7 +109,7 @@ export const DMView: React.FC = () => {
             </div>
             <div>
               <div className="text-xs uppercase font-bold text-slate-400">SLA Rating</div>
-              <div className="text-md font-extrabold text-indigo-600 mt-1">★ {dmProfile?.rating || '4.0'}</div>
+              <div className="text-md font-extrabold text-indigo-600 mt-1">{dmProfile?.rating ? `★ ${dmProfile.rating}` : 'N/A'}</div>
             </div>
           </div>
         </div>

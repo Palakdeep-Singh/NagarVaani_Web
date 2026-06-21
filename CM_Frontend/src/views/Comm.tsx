@@ -1,15 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useStore } from '../context/Store';
 import { MessageSquare, Send, Phone, Video } from 'lucide-react';
 import { useCall } from '../context/CallContext';
+import { getRoleLabel } from '../utils/helper';
 
 export const Comm: React.FC = () => {
-  const { messages, addMessage, activeRole, activeDistrict, activeDepartment } = useStore();
+  const { messages, addMessage, officers, currentUser, activeChatPartner, setActiveChatPartner, unreadCounts } = useStore();
   const { startCall, callState, activeCallPartner } = useCall();
 
-  
   const [chatInput, setChatInput] = useState('');
-  const [selectedContact, setSelectedContact] = useState<string>('Chief Minister');
+  const selectedContact = activeChatPartner || 'Chief Minister';
 
   const handleSendChat = (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,19 +20,58 @@ export const Comm: React.FC = () => {
   };
 
   
-  let userRoleLabel = activeRole as string;
-  if (activeRole === 'District Magistrate') userRoleLabel = `${activeDistrict} DM`;
-  if (activeRole === 'Department Head') userRoleLabel = activeDepartment === 'Education & Schools' ? 'Director of Education' : 'Director Health Services';
+  const userRoleLabel = getRoleLabel(currentUser);
 
-  const contactList = [
-    { role: 'Chief Minister', name: 'Office of Chief Minister' },
-    { role: 'New Delhi DM', name: 'Alice Vaz (New Delhi DM)' },
-    { role: 'West Delhi DM', name: 'Amit Kumar (West Delhi DM)' },
-    { role: 'Director of Education', name: 'Himanshu Gupta (IAS)' },
-    { role: 'Director Health Services', name: 'Dr. Shalini Gupta' }
-  ].filter(c => c.role !== userRoleLabel);
+  const getOfficerRoleLabel = (off: any): string => {
+    if (off.designation === 'District Magistrate') return `${off.district} DM`;
+    if (off.designation === 'Director Health Services' || off.department === 'Health & Family Welfare' || off.department === 'Public Health') return 'Director Health Services';
+    if (off.designation === 'Director of Education' || off.department === 'Education Department' || off.department === 'Education & Schools') return 'Director of Education';
+    if (off.designation === 'Chief Engineer' || off.department === 'PWD & Infrastructure') return 'Chief Engineer';
+    return off.designation;
+  };
 
-  
+  const getOfficerDisplayName = (off: any): string => {
+    if (off.designation === 'District Magistrate') return `${off.name} (${off.district} DM)`;
+    if (off.designation === 'Director Health Services' || off.department === 'Health & Family Welfare' || off.department === 'Public Health') return `${off.name} (Director Health)`;
+    if (off.designation === 'Director of Education' || off.department === 'Education Department' || off.department === 'Education & Schools') return `${off.name} (Director Education)`;
+    if (off.designation === 'Chief Engineer' || off.department === 'PWD & Infrastructure') return `${off.name} (Chief Engineer PWD)`;
+    return `${off.name} (${off.designation})`;
+  };
+
+  const rawContactList = [
+    ...(userRoleLabel !== 'Chief Minister' ? [{ role: 'Chief Minister', name: 'Office of Chief Minister' }] : []),
+    ...officers.map(off => ({
+      role: getOfficerRoleLabel(off),
+      name: getOfficerDisplayName(off)
+    }))
+  ].filter((c, index, self) => 
+    c.role !== userRoleLabel && 
+    self.findIndex(t => t.role === c.role) === index
+  );
+
+  const getLatestMessageIndex = (contactRole: string): number => {
+    for (let i = messages.length - 1; i >= 0; i--) {
+      const m = messages[i];
+      if (
+        (m.senderRole === userRoleLabel && m.receiverRole === contactRole) ||
+        (m.senderRole === contactRole && m.receiverRole === userRoleLabel)
+      ) {
+        return i;
+      }
+    }
+    return -1;
+  };
+
+  const contactList = [...rawContactList].sort((a, b) => {
+    return getLatestMessageIndex(b.role) - getLatestMessageIndex(a.role);
+  });
+
+  useEffect(() => {
+    if (!activeChatPartner && contactList.length > 0) {
+      setActiveChatPartner(contactList[0].role);
+    }
+  }, [activeChatPartner, contactList, setActiveChatPartner]);
+
   const threadMessages = messages.filter(
     m => (m.senderRole === userRoleLabel && m.receiverRole === selectedContact) ||
          (m.senderRole === selectedContact && m.receiverRole === userRoleLabel)
@@ -64,7 +103,7 @@ export const Comm: React.FC = () => {
               return (
                 <button
                   key={contact.role}
-                  onClick={() => setSelectedContact(contact.role)}
+                  onClick={() => setActiveChatPartner(contact.role)}
                   className={`w-full text-left px-4 py-3 rounded-xl transition-all flex items-center gap-3 cursor-pointer border ${
                     isSelected
                       ? 'bg-indigo-50 border-indigo-200 text-indigo-900 font-bold'
@@ -76,8 +115,15 @@ export const Comm: React.FC = () => {
                   }`}>
                     {contact.name[0]}
                   </div>
-                  <div className="leading-tight">
-                    <div className="text-xs font-semibold text-slate-800">{contact.name}</div>
+                  <div className="leading-tight flex-1">
+                    <div className="text-xs font-semibold text-slate-800 flex items-center justify-between">
+                      <span className="truncate pr-2">{contact.name}</span>
+                      {unreadCounts[contact.role] > 0 && (
+                        <span className="bg-transparent border border-indigo-600 text-indigo-600 text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center shrink-0">
+                          {unreadCounts[contact.role]}
+                        </span>
+                      )}
+                    </div>
                     <div className="text-xs text-slate-500 font-bold uppercase mt-0.5 tracking-wider">{contact.role}</div>
                   </div>
                   {activeCallPartner?.id === contact.role && (

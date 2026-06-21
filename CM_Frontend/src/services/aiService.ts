@@ -65,7 +65,11 @@ Response format MUST be a JSON object with an 'insights' array containing object
       const parsed = JSON.parse(result);
       return parsed.insights || [];
     } catch (err) {
-      console.error('getBoothInsights failed, falling back to local:', err);
+      if (err instanceof Error && err.message === 'Groq API Key not configured') {
+        console.info('[AI Service] Groq API Key not configured. Using local booth insights fallback.');
+      } else {
+        console.warn('[AI Service] getBoothInsights failed:', err);
+      }
       return localBoothHeuristics(booths);
     }
   }
@@ -82,7 +86,11 @@ Response format MUST be a JSON object with an 'insights' array containing object
       const parsed = JSON.parse(result);
       return parsed.insights || [];
     } catch (err) {
-      console.error('getComplaintInsights failed, falling back to local:', err);
+      if (err instanceof Error && err.message === 'Groq API Key not configured') {
+        console.info('[AI Service] Groq API Key not configured. Using local complaint insights fallback.');
+      } else {
+        console.warn('[AI Service] getComplaintInsights failed:', err);
+      }
       return localComplaintHeuristics(complaints);
     }
   }
@@ -96,7 +104,11 @@ export async function askAI(question: string, context: { booths: Booth[]; compla
       const user = `Question: ${question}\n\nContext:\n- Total complaints: ${context.complaints.length}\n- Active/Pending/Escalated: ${context.complaints.filter(c => c.status !== 'Resolved').length}\n- Resolved: ${context.complaints.filter(c => c.status === 'Resolved').length}\n- Booths monitored: ${context.booths.length}\nSample complaints:\n${JSON.stringify(context.complaints.slice(0, 20).map(c => ({ id: c.id, title: c.title, status: c.status, district: c.district })))}\n`;
       return await callGroqAPI(system, user, false);
     } catch (err) {
-      console.error('askAI failed, falling back to local:', err);
+      if (err instanceof Error && err.message === 'Groq API Key not configured') {
+        console.info('[AI Service] Groq API Key not configured. Using local answer fallback.');
+      } else {
+        console.warn('[AI Service] askAI failed:', err);
+      }
       return localAnswer(question, context);
     }
   }
@@ -123,7 +135,11 @@ Node Metadata: ${JSON.stringify(meta)}`;
 
     return await callGroqAPI(system, user, false);
   } catch (err) {
-    console.error('getNodeAISummaryLive failed, using local static:', err);
+    if (err instanceof Error && err.message === 'Groq API Key not configured') {
+      console.info('[AI Service] Groq API Key not configured. Using local administrative summary.');
+    } else {
+      console.warn('[AI Service] getNodeAISummaryLive failed:', err);
+    }
     return getNodeAISummary(type, label, meta);
   }
 }
@@ -151,7 +167,11 @@ Sample unresolved: ${JSON.stringify(unresolved.slice(0, 10).map(c => ({ id: c.id
     const parsed = JSON.parse(result);
     return parsed.suggestions || [];
   } catch (err) {
-    console.error('getDynamicAISuggestions failed, returning static fallback:', err);
+    if (err instanceof Error && err.message === 'Groq API Key not configured') {
+      console.info('[AI Service] Groq API Key not configured. Using live-dynamic local rules fallback.');
+    } else {
+      console.warn('[AI Service] getDynamicAISuggestions failed:', err);
+    }
     return [
       { rule: 'DOPT OM 43011/2/2014', desc: `${complaints.filter(c => c.priority === 'Emergency' && c.status !== 'Resolved').length} emergency complaints require immediate DM oversight.` },
       { rule: 'Delhi Citizen Charter Act 2023', desc: `${complaints.filter(c => c.status !== 'Resolved' && Math.floor((Date.now() - new Date(c.dateFiled).getTime()) / 86400000) > 21).length} tickets exceed the 21-day DARPG limit.` },
@@ -233,7 +253,11 @@ Response format MUST be a JSON object with an 'audits' array containing objects 
     const parsed = JSON.parse(result);
     return parsed.audits || [];
   } catch (err) {
-    console.error('getOfficerAuditAnalysis failed, fallback to local:', err);
+    if (err instanceof Error && err.message === 'Groq API Key not configured') {
+      console.info('[AI Service] Groq API Key not configured. Using local officer audit analysis.');
+    } else {
+      console.warn('[AI Service] getOfficerAuditAnalysis failed:', err);
+    }
     return [
       { officerName: 'Rajesh Kumar (Shahdara W1)', issue: 'Grievance resolution SLA exceeded 24 days for water pipeline leakage complaints.', action: 'Deploy additional junior engineers from Central Zone; enforce daily biometric attendance.' },
       { officerName: 'Priya Sharma (Central W5)', issue: 'Avg citizen rating dropped to 3.1 stars due to PWD contractor coordination delays.', action: 'Initiate joint review meeting with district PWD Nodal Officer; establish online status confirmations.' },

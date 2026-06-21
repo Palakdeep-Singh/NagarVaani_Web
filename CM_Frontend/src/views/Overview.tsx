@@ -175,7 +175,7 @@ export const Overview: React.FC = () => {
     updateComplaintStatus(
       complaintId,
       'Escalated',
-      '🚨 Chief Minister Direct Directive: Transmitted directly to Chief Secretary for instant departmental accountability.',
+      'Chief Minister Direct Directive: Transmitted directly to Chief Secretary for instant departmental accountability.',
       'Chief Minister Office'
     );
     alert(`Case ${complaintId} escalated directly to the Chief Secretary (CS) for immediate action.`);
@@ -575,7 +575,7 @@ export const Overview: React.FC = () => {
                                   </button>
                                 </div>
                                 <div style={{ marginTop: 10, fontSize: '0.74rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', lineHeight: 1.7 }}>
-                                  ⚠ All status changes are logged with officer ID and timestamp<br />
+                                  All status changes are logged with officer ID and timestamp<br />
                                   per DOPT Grievance Redressal Guidelines 2014.
                                 </div>
                               </div>

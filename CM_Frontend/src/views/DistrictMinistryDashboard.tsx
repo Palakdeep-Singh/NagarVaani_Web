@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useStore } from '../context/Store';
 import { getStatusBadgeStyle, getPriorityBadgeStyle } from '../utils/helper';
 import { MapPin, User, PlusCircle, FileSpreadsheet, PhoneCall, Video, Award, Calendar, Check, X } from 'lucide-react';
@@ -26,13 +26,13 @@ export const DistrictMinistryDashboard: React.FC = () => {
     complaints,
     officers,
     updateComplaintStatus,
-    addComplaint
+    addComplaint,
+    setActiveTab
   } = useStore();
 
   const [statusFilter, setStatusFilter] = useState<string>('All');
   const [remarkText, setRemarkText] = useState<Record<string, string>>({});
   
-  // Field complaint form state
   const [newTitle, setNewTitle] = useState('');
   const [newDesc, setNewDesc] = useState('');
   const [newCategory, setNewCategory] = useState<ComplaintCategory>('Civic Infrastructure');
@@ -41,33 +41,15 @@ export const DistrictMinistryDashboard: React.FC = () => {
   const [citizenPhone, setCitizenPhone] = useState('');
   const [showForm, setShowForm] = useState(false);
 
-  // Review Meeting state
   const [showMeetingForm, setShowMeetingForm] = useState(false);
   const [meetTopic, setMeetTopic] = useState('');
   const [meetDate, setMeetDate] = useState('');
   const [meetDept, setMeetDept] = useState('PWD & Infrastructure');
-  const [meetings, setMeetings] = useState<ReviewMeeting[]>([
-    { id: 1, date: '2026-06-22', topic: 'Monsoon waterlogging mitigation strategy', departments: ['Delhi Jal Board', 'PWD & Infrastructure'], status: 'Scheduled' },
-    { id: 2, date: '2026-06-15', topic: 'Weekly SLA review and pending sewer works', departments: ['Delhi Jal Board', 'Health & Family Welfare'], status: 'Completed' }
-  ]);
+  const [meetings, setMeetings] = useState<ReviewMeeting[]>([]);
 
-  // Revenue Cases Tracker state
-  const [revenueCases] = useState<RevenueCase[]>([
-    { id: 'REV-2026-0012', title: 'Land boundary dispute Block C Okhla', type: 'Land Dispute', deadline: '2026-06-25', status: 'Pending' },
-    { id: 'REV-2026-0044', title: 'Mutation application for property 442 CP', type: 'Mutation', deadline: '2026-06-28', status: 'Pending' },
-    { id: 'REV-2026-0090', title: 'Registration verification Gole Market', type: 'Property Registration', deadline: '2026-06-12', status: 'Resolved' }
-  ]);
-
-  // SDM assignment lists & local workloads
-  const [sdmWorkloads, setSdmWorkloads] = useState([
-    { id: 'sdm-cp', name: 'SDM Connaught Place', pending: 8 },
-    { id: 'sdm-kb', name: 'SDM Karol Bagh', pending: 14 },
-    { id: 'sdm-cy', name: 'SDM Chanakyapuri', pending: 4 }
-  ]);
+  const [revenueCases] = useState<RevenueCase[]>([]);
 
   const district = activeDistrict || 'New Delhi';
-
-  // Filter complaints for this district
   const districtComplaints = complaints.filter(c => c.district === district);
   const dmProfile = officers.find(o => o.district === district);
 
@@ -127,15 +109,13 @@ export const DistrictMinistryDashboard: React.FC = () => {
     setRemarkText(prev => ({ ...prev, [id]: '' }));
   };
 
-  // Escalate to Department Secretary
   const handleEscalateToSecretary = (id: string, dept: string) => {
     const note = remarkText[id] || `Escalated directly to Principal Secretary of ${dept} due to SLA breach.`;
-    updateComplaintStatus(id, 'Escalated', `🚨 DM Direct Escalation: ${note}`, `${district} DM`);
+    updateComplaintStatus(id, 'Escalated', `DM Direct Escalation: ${note}`, `${district} DM`);
     setRemarkText(prev => ({ ...prev, [id]: '' }));
     alert(`Complaint ${id} escalated directly to the Secretary of ${dept}`);
   };
 
-  // DARPG 2024 mandated interim reply tool (for tickets past day 15)
   const handleSendInterimReply = (id: string) => {
     updateComplaintStatus(
       id,
@@ -147,18 +127,14 @@ export const DistrictMinistryDashboard: React.FC = () => {
   };
 
   const handleSdmAssign = (complaintId: string, sdmId: string) => {
-    const sdmName = sdmWorkloads.find(s => s.id === sdmId)?.name || 'SDM';
-    
-    // Log assignment to timeline
+    const sdmName = officers.find(o => o.id === sdmId)?.name || 'SDM';
     updateComplaintStatus(
       complaintId,
       'Active',
       `Assigned to SDM officer: ${sdmName} for ground verification and load monitoring.`,
       `${district} DM`
     );
-
-    // Increase workload counter
-    setSdmWorkloads(prev => prev.map(s => s.id === sdmId ? { ...s, pending: s.pending + 1 } : s));
+    alert(`Complaint ${complaintId} assigned to SDM ${sdmName}.`);
   };
 
   const handleScheduleMeeting = (e: React.FormEvent) => {
@@ -189,26 +165,49 @@ export const DistrictMinistryDashboard: React.FC = () => {
   const totalCount = districtComplaints.length;
   const performanceScore = totalCount > 0 ? Math.round((resolvedCount / totalCount) * 100) : 100;
   const slaBreachCount = districtComplaints.filter(c => c.status !== 'Resolved' && getDaysOpen(c.dateFiled) > 21).length;
-  const rtiRequestsCount = 12; // Mock metrics for DM Scorecard
+  const rtiRequestsCount = 0;
 
-  // District department leaderboard mock metrics
-  const deptLeaderboard = [
-    { name: 'PWD & Infrastructure', resolved: 14, total: 15, sla: 93 },
-    { name: 'Delhi Jal Board', resolved: 18, total: 22, sla: 81 },
-    { name: 'Health & Family Welfare', resolved: 9, total: 12, sla: 75 },
-    { name: 'Power Department', resolved: 11, total: 12, sla: 91 }
-  ].sort((a, b) => b.sla - a.sla);
+  const deptLeaderboard = useMemo(() => {
+    const departmentsList = [
+      'PWD & Infrastructure',
+      'Delhi Jal Board',
+      'Health & Family Welfare',
+      'Power Department',
+      'Transport Department',
+      'Education Department'
+    ];
+    return departmentsList.map(dept => {
+      const deptComplaints = districtComplaints.filter(c => c.department === dept);
+      const total = deptComplaints.length;
+      const resolved = deptComplaints.filter(c => c.status === 'Resolved').length;
+      const sla = total > 0 ? Math.round((resolved / total) * 100) : 0;
+      return { name: dept, resolved, total, sla };
+    }).sort((a, b) => b.sla - a.sla);
+  }, [districtComplaints]);
 
-  // Local Ward Officers simulation
-  const wardOfficers = [
-    { name: 'Karan Singh', ward: 'Ward 1 - CP', rating: 4.8, performance: 95 },
-    { name: 'Neeta Patel', ward: 'Ward 2 - Karol Bagh', rating: 4.5, performance: 88 },
-    { name: 'Sanjay Sharma', ward: 'Ward 3 - Chanakyapuri', rating: 4.2, performance: 82 }
-  ];
+  const wardOfficers = useMemo(() => {
+    return officers
+      .filter(o => o.district === district && o.designation?.toLowerCase().includes('ward'))
+      .map(o => ({
+        name: o.name,
+        ward: o.designation || 'Ward Officer',
+        rating: o.rating || 0,
+        performance: o.resolutionRate || 0
+      }));
+  }, [officers, district]);
+
+  const sdmList = useMemo(() => {
+    return officers
+      .filter(o => o.district === district && o.designation?.toLowerCase().includes('sdm'))
+      .map(o => ({
+        id: o.id,
+        name: o.name,
+        pending: o.activeComplaints || 0
+      }));
+  }, [officers, district]);
 
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
-      {/* Title */}
       <div className="flex flex-wrap justify-between items-start gap-3">
         <div>
           <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest font-mono">
@@ -223,20 +222,21 @@ export const DistrictMinistryDashboard: React.FC = () => {
           </p>
         </div>
 
-        {/* Hotlines */}
         <div className="flex gap-2">
           <button className="gov-btn gov-btn-outline gov-btn-sm flex items-center gap-1.5 text-xs">
             <PhoneCall size={14} className="text-emerald-600 animate-pulse" />
             CM Hotline
           </button>
-          <button className="gov-btn gov-btn-primary gov-btn-sm flex items-center gap-1.5 text-xs">
+          <button 
+            onClick={() => setActiveTab('VideoCall')}
+            className="gov-btn gov-btn-primary gov-btn-sm flex items-center gap-1.5 text-xs cursor-pointer"
+          >
             <Video size={14} />
             Joint Video Conference
           </button>
         </div>
       </div>
 
-      {/* KPI Info / DM Scorecard */}
       <div className="grid grid-cols-1 sm:grid-cols-5 gap-4">
         <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm border-l-4 border-indigo-600">
           <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Total District Cases</span>
@@ -258,7 +258,9 @@ export const DistrictMinistryDashboard: React.FC = () => {
 
         <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm border-l-4 border-purple-500">
           <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">DM Rating</span>
-          <div className="text-xl font-extrabold text-purple-600 mt-1">★ {dmProfile?.rating || '4.6'}</div>
+          <div className="text-xl font-extrabold text-purple-600 mt-1">
+            {dmProfile?.rating ? `★ ${dmProfile.rating.toFixed(1)}` : 'N/A'}
+          </div>
           <p className="text-[10px] text-slate-400 mt-1">Citizen feedback rating</p>
         </div>
 
@@ -269,12 +271,9 @@ export const DistrictMinistryDashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Main Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
-        {/* Left Column: District Profile & Log rounds & Meetings */}
         <div className="space-y-6">
-          {/* Profile Card */}
           <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm border-t-4 border-indigo-600">
             <div className="flex items-center gap-4">
               <div className="h-14 w-14 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center font-bold text-indigo-600">
@@ -282,13 +281,12 @@ export const DistrictMinistryDashboard: React.FC = () => {
               </div>
               <div>
                 <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">District Magistrate</span>
-                <h3 className="text-md font-extrabold text-slate-800 mt-0.5">{dmProfile?.name || 'DM Delhi'}</h3>
-                <p className="text-xs text-slate-500 font-semibold">{dmProfile?.designation} · Revenue & Admin</p>
+                <h3 className="text-md font-extrabold text-slate-800 mt-0.5">{dmProfile?.name || 'N/A'}</h3>
+                <p className="text-xs text-slate-500 font-semibold">{dmProfile?.designation || 'Revenue & Admin'}</p>
               </div>
             </div>
           </div>
 
-          {/* Department SLA Leaderboard */}
           <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
             <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1">
               <Award className="h-4 w-4 text-amber-500" />
@@ -310,75 +308,89 @@ export const DistrictMinistryDashboard: React.FC = () => {
             </div>
           </div>
 
-          {/* Ward Officer Directory */}
           <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
             <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1">
               <User className="h-4 w-4 text-indigo-600" />
               Ward Officer Directory
             </h3>
             <div className="space-y-3">
-              {wardOfficers.map(officer => (
-                <div key={officer.name} className="flex justify-between items-center text-xs p-2.5 bg-slate-50 rounded-lg border border-slate-100">
-                  <div>
-                    <span className="font-bold text-slate-800 block">{officer.name}</span>
-                    <span className="text-[10px] text-slate-400 font-medium block">{officer.ward}</span>
-                  </div>
-                  <div className="text-right">
-                    <span className="font-bold text-emerald-600">{officer.performance}% SLA</span>
-                    <span className="text-[9px] text-slate-455 block">Rating: ★{officer.rating}</span>
-                  </div>
+              {wardOfficers.length === 0 ? (
+                <div className="text-center py-6 text-xs text-slate-400 font-medium bg-slate-50/20 rounded-xl border border-slate-100">
+                  No ward officers active in database.
                 </div>
-              ))}
+              ) : (
+                wardOfficers.map(officer => (
+                  <div key={officer.name} className="flex justify-between items-center text-xs p-2.5 bg-slate-50 rounded-lg border border-slate-100">
+                    <div>
+                      <span className="font-bold text-slate-800 block">{officer.name}</span>
+                      <span className="text-[10px] text-slate-400 font-medium block">{officer.ward}</span>
+                    </div>
+                    <div className="text-right">
+                      <span className="font-bold text-emerald-600">{officer.performance}% SLA</span>
+                      <span className="text-[9px] text-slate-455 block">Rating: ★{officer.rating}</span>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
 
-          {/* SDM Workload Grid */}
           <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
             <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
               <User className="h-4 w-4 text-indigo-600" />
               SDM Workload & Rebalancing
             </h3>
             <div className="space-y-3">
-              {sdmWorkloads.map(sdm => {
-                const limit = 15;
-                const ratio = Math.min(100, Math.round((sdm.pending / limit) * 100));
-                return (
-                  <div key={sdm.id} className="text-xs space-y-1.5 p-3 bg-slate-50 rounded-xl border border-slate-100">
-                    <div className="flex justify-between font-bold text-slate-750">
-                      <span>{sdm.name}</span>
-                      <span>{sdm.pending} cases pending</span>
+              {sdmList.length === 0 ? (
+                <div className="text-center py-6 text-xs text-slate-400 font-medium bg-slate-50/20 rounded-xl border border-slate-100">
+                  No SDM workloads active in database.
+                </div>
+              ) : (
+                sdmList.map(sdm => {
+                  const limit = 15;
+                  const ratio = Math.min(100, Math.round((sdm.pending / limit) * 100));
+                  return (
+                    <div key={sdm.id} className="text-xs space-y-1.5 p-3 bg-slate-50 rounded-xl border border-slate-100">
+                      <div className="flex justify-between font-bold text-slate-750">
+                        <span>{sdm.name}</span>
+                        <span>{sdm.pending} cases pending</span>
+                      </div>
+                      <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
+                        <div className={`h-full rounded-full transition-all duration-300 ${ratio > 75 ? 'bg-red-500' : ratio > 45 ? 'bg-amber-500' : 'bg-emerald-500'}`} style={{ width: `${ratio}%` }} />
+                      </div>
                     </div>
-                    <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
-                      <div className={`h-full rounded-full transition-all duration-300 ${ratio > 75 ? 'bg-red-500' : ratio > 45 ? 'bg-amber-500' : 'bg-emerald-500'}`} style={{ width: `${ratio}%` }} />
-                    </div>
-                  </div>
-                );
-              })}
+                  );
+                })
+              )}
             </div>
           </div>
 
-          {/* Revenue Cases Tracker */}
           <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
             <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
               <Award className="h-4 w-4 text-indigo-600" />
               Revenue & Land Disputes Tracker
             </h3>
             <div className="space-y-3">
-              {revenueCases.map(c => (
-                <div key={c.id} className="flex justify-between items-center text-xs p-2.5 bg-slate-50 rounded-xl border border-slate-100">
-                  <div>
-                    <span className="font-extrabold text-slate-800 block leading-tight">{c.title}</span>
-                    <span className="text-[9px] text-slate-400 font-bold block mt-0.5">{c.type} · Deadline: {c.deadline}</span>
-                  </div>
-                  <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase ${c.status === 'Resolved' ? 'bg-emerald-50 text-emerald-700 border border-emerald-150' : 'bg-amber-50 text-amber-700 border border-amber-150'}`}>
-                    {c.status}
-                  </span>
+              {revenueCases.length === 0 ? (
+                <div className="text-center py-6 text-xs text-slate-400 font-medium bg-slate-50/20 rounded-xl border border-slate-100">
+                  No pending land disputes in database.
                 </div>
-              ))}
+              ) : (
+                revenueCases.map(c => (
+                  <div key={c.id} className="flex justify-between items-center text-xs p-2.5 bg-slate-50 rounded-xl border border-slate-100">
+                    <div>
+                      <span className="font-extrabold text-slate-800 block leading-tight">{c.title}</span>
+                      <span className="text-[9px] text-slate-400 font-bold block mt-0.5">{c.type} · Deadline: {c.deadline}</span>
+                    </div>
+                    <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase ${c.status === 'Resolved' ? 'bg-emerald-50 text-emerald-700 border border-emerald-150' : 'bg-amber-50 text-amber-700 border border-amber-150'}`}>
+                      {c.status}
+                    </span>
+                  </div>
+                ))
+              )}
             </div>
           </div>
 
-          {/* DM Field Rounds Logs */}
           <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
             <div className="flex justify-between items-center">
               <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider">DM Field Rounds</h3>
@@ -487,7 +499,6 @@ export const DistrictMinistryDashboard: React.FC = () => {
             )}
           </div>
 
-          {/* Joint Review Meetings */}
           <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
             <div className="flex justify-between items-center">
               <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider">Weekly Review Meetings</h3>
@@ -547,26 +558,30 @@ export const DistrictMinistryDashboard: React.FC = () => {
               </form>
             ) : (
               <div className="space-y-3">
-                {meetings.map(meeting => (
-                  <div key={meeting.id} className="p-3 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between text-xs">
-                    <div>
-                      <strong className="text-slate-800 block">{meeting.topic}</strong>
-                      <span className="text-[9px] text-slate-455 block mt-0.5">Date: {meeting.date} · Depts: {meeting.departments.join(', ')}</span>
-                    </div>
-                    <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase ${meeting.status === 'Scheduled' ? 'bg-indigo-50 text-indigo-700 border border-indigo-150' : 'bg-slate-150 text-slate-500'}`}>
-                      {meeting.status}
-                    </span>
+                {meetings.length === 0 ? (
+                  <div className="text-center py-6 text-xs text-slate-400 font-medium bg-slate-50/20 rounded-xl border border-slate-100">
+                    No review meetings scheduled.
                   </div>
-                ))}
+                ) : (
+                  meetings.map(meeting => (
+                    <div key={meeting.id} className="p-3 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between text-xs">
+                      <div>
+                        <strong className="text-slate-800 block">{meeting.topic}</strong>
+                        <span className="text-[9px] text-slate-455 block mt-0.5">Date: {meeting.date} · Depts: {meeting.departments.join(', ')}</span>
+                      </div>
+                      <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase ${meeting.status === 'Scheduled' ? 'bg-indigo-50 text-indigo-700 border border-indigo-150' : 'bg-slate-150 text-slate-500'}`}>
+                        {meeting.status}
+                      </span>
+                    </div>
+                  ))
+                )}
               </div>
             )}
           </div>
 
         </div>
 
-        {/* Right Column: Complaint Lists & Officer Management */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Intake Registry Filter Bar */}
           <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-3">
             <div className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
               <FileSpreadsheet className="h-4.5 w-4.5 text-indigo-600" />
@@ -588,7 +603,6 @@ export const DistrictMinistryDashboard: React.FC = () => {
             </div>
           </div>
 
-          {/* Complaints list */}
           <div className="space-y-4">
             {filtered.length === 0 ? (
               <div className="bg-white p-8 text-center rounded-2xl border border-slate-200 text-slate-500 text-xs font-semibold">
@@ -631,7 +645,6 @@ export const DistrictMinistryDashboard: React.FC = () => {
                       </span>
                     </div>
 
-                    {/* Timeline progress */}
                     <div className="space-y-2">
                       <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block">Audit Trail:</span>
                       <div className="space-y-1.5 max-h-32 overflow-y-auto pr-1">
@@ -645,7 +658,6 @@ export const DistrictMinistryDashboard: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* Assign SDM or Send Interim Reply */}
                     {comp.status !== 'Resolved' && (
                       <div className="pt-3 border-t border-slate-150 space-y-3">
                         <div className="flex flex-wrap items-center gap-3 justify-between bg-slate-50 p-3 rounded-xl border border-slate-100">
@@ -656,7 +668,7 @@ export const DistrictMinistryDashboard: React.FC = () => {
                             className="bg-white border border-slate-200 rounded-lg px-2.5 py-1 text-xs text-slate-700 outline-none"
                           >
                             <option value="">Select SDM to Assign...</option>
-                            {sdmWorkloads.map(s => (
+                            {sdmList.map(s => (
                               <option key={s.id} value={s.id}>{s.name} ({s.pending} load)</option>
                             ))}
                           </select>
@@ -664,14 +676,11 @@ export const DistrictMinistryDashboard: React.FC = () => {
                       </div>
                     )}
 
-                    {/* Remarks & Auditing Actions */}
                     {comp.status === 'Resolved' && (
                       <div className="pt-3 border-t border-slate-100 space-y-3">
                         <div className="bg-emerald-50 border border-emerald-250 p-3 rounded-xl flex items-center justify-between text-xs text-emerald-950">
-                          <div className="flex items-center gap-2">
-                            <Check className="h-4.5 w-4.5 text-emerald-600" />
-                            <span>Resolution ATR pending validation by DM Executive Office.</span>
-                          </div>
+                          <Check className="h-4.5 w-4.5 text-emerald-600" />
+                          <span>Resolution ATR pending validation by DM Executive Office.</span>
                         </div>
                         
                         <div className="flex flex-wrap items-center justify-between gap-3">

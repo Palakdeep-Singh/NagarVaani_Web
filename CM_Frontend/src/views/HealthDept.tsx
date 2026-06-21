@@ -4,7 +4,7 @@ import { getStatusBadgeStyle, getPriorityBadgeStyle, formatDate } from '../utils
 import { Hospital, AlertOctagon, Stethoscope } from 'lucide-react';
 
 export const HealthDept: React.FC = () => {
-  const { complaints, updateComplaintStatus } = useStore();
+  const { complaints, updateComplaintStatus, healthBeds, healthInventory, generalMetrics } = useStore();
   const [remarkInput, setRemarkInput] = useState<Record<string, string>>({});
 
   
@@ -15,22 +15,12 @@ export const HealthDept: React.FC = () => {
     setRemarkInput(prev => ({ ...prev, [id]: '' }));
   };
 
-  
-  const icuBeds = [
-    { hospital: 'Lok Nayak Hospital (LNJP)', total: 150, occupied: 122, status: 'Stable' },
-    { hospital: 'GTB Hospital, Shahdara', total: 100, occupied: 88, status: 'Critical' },
-    { hospital: 'Deen Dayal Upadhyay Hospital', total: 80, occupied: 52, status: 'Stable' },
-    { hospital: 'Sanjay Gandhi Memorial Hospital', total: 60, occupied: 59, status: 'Emergency' },
-    { hospital: 'Dr. BSA Hospital, Rohini', total: 75, occupied: 61, status: 'Stable' }
-  ];
+  const icuBeds = healthBeds;
+  const medicineStocks = healthInventory;
 
-  
-  const medicineStocks = [
-    { item: 'Paracetamol 650mg', status: 'Safe', stockLevel: '88%', demand: 'High' },
-    { item: 'Amoxicillin Antibiotic', status: 'Restocking', stockLevel: '42%', demand: 'High' },
-    { item: 'Insulin Glargine', status: 'Critical Shortage', stockLevel: '8%', demand: 'Medium' },
-    { item: 'Dengue Rapid Test Kits', status: 'Restocking', stockLevel: '35%', demand: 'Urgent' }
-  ];
+  const totalOccupied = icuBeds.reduce((acc, curr) => acc + curr.occupied, 0);
+  const totalBeds = icuBeds.reduce((acc, curr) => acc + curr.total, 0);
+  const occupancyPercent = totalBeds > 0 ? Math.round((totalOccupied / totalBeds) * 100) : 0;
 
   return (
     <div className="space-y-6">
@@ -48,17 +38,19 @@ export const HealthDept: React.FC = () => {
         <div className="bg-white p-5 rounded-2xl border-l-4 border-indigo-500 shadow-sm border border-slate-200/60">
           <span className="text-xs uppercase font-bold text-slate-400 tracking-wider">ICU Bed Occupancy</span>
           <div className="flex items-baseline gap-2 mt-1">
-            <h3 className="text-xl font-extrabold text-slate-800">382/465</h3>
-            <span className="text-xs text-amber-600 font-bold">82% Occupied</span>
+            <h3 className="text-xl font-extrabold text-slate-800">{totalOccupied}/{totalBeds}</h3>
+            <span className="text-xs text-amber-600 font-bold">{occupancyPercent}% Occupied</span>
           </div>
-          <p className="text-xs text-slate-400 mt-1 font-medium">Occupancy audit across 5 core facilities</p>
+          <p className="text-xs text-slate-400 mt-1 font-medium">Occupancy audit across {icuBeds.length} core facilities</p>
         </div>
         
         <div className="bg-white p-5 rounded-2xl border-l-4 border-emerald-500 shadow-sm border border-slate-200/60">
           <span className="text-xs uppercase font-bold text-slate-400 tracking-wider">Mohalla Clinics Active</span>
           <div className="flex items-baseline gap-2 mt-1">
-            <h3 className="text-xl font-extrabold text-slate-800">518</h3>
-            <span className="text-xs text-emerald-600 font-bold">98% Online</span>
+            <h3 className="text-xl font-extrabold text-slate-800">{generalMetrics.health_clinic_count || '0'}</h3>
+            {generalMetrics.health_clinic_count && (
+              <span className="text-xs text-emerald-600 font-bold">98% Online</span>
+            )}
           </div>
           <p className="text-xs text-slate-400 mt-1 font-medium">Nodal practitioner biometric checks online</p>
         </div>
@@ -83,33 +75,39 @@ export const HealthDept: React.FC = () => {
             ICU & Emergency Bed Occupancy Audit
           </h3>
           <div className="space-y-4">
-            {icuBeds.map((bed, idx) => {
-              const occupiedPercent = Math.round((bed.occupied / bed.total) * 100);
-              return (
-                <div key={idx} className="space-y-1">
-                  <div className="flex justify-between items-center text-xs font-semibold">
-                    <span className="text-slate-700">{bed.hospital}</span>
-                    <span className="text-slate-400 text-xs">
-                      <strong className="text-slate-800">{bed.occupied}</strong> / {bed.total} beds ({occupiedPercent}%)
-                    </span>
+            {icuBeds.length === 0 ? (
+              <div className="text-center py-8 text-xs text-slate-400 font-medium bg-slate-50/20 rounded-xl border border-slate-100">
+                No hospital ICU beds audit data in database.
+              </div>
+            ) : (
+              icuBeds.map((bed, idx) => {
+                const occupiedPercent = Math.round((bed.occupied / bed.total) * 100);
+                return (
+                  <div key={idx} className="space-y-1">
+                    <div className="flex justify-between items-center text-xs font-semibold">
+                      <span className="text-slate-700">{bed.hospital}</span>
+                      <span className="text-slate-400 text-xs">
+                        <strong className="text-slate-800">{bed.occupied}</strong> / {bed.total} beds ({occupiedPercent}%)
+                      </span>
+                    </div>
+                    <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden border border-slate-200">
+                      <div
+                        className={`h-full rounded-full transition-all duration-300 ${
+                          occupiedPercent >= 95 ? 'bg-rose-500' : occupiedPercent >= 80 ? 'bg-amber-500' : 'bg-emerald-500'
+                        }`}
+                        style={{ width: `${occupiedPercent}%` }}
+                      />
+                    </div>
+                    <div className="flex justify-between text-xs text-slate-455 font-medium">
+                      <span>Available: {bed.total - bed.occupied} beds</span>
+                      <span className={`font-bold uppercase ${
+                        bed.status === 'Emergency' ? 'text-rose-600' : bed.status === 'Critical' ? 'text-amber-600' : 'text-emerald-600'
+                      }`}>{bed.status}</span>
+                    </div>
                   </div>
-                  <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden border border-slate-200">
-                    <div
-                      className={`h-full rounded-full transition-all duration-300 ${
-                        occupiedPercent >= 95 ? 'bg-rose-500' : occupiedPercent >= 80 ? 'bg-amber-500' : 'bg-emerald-500'
-                      }`}
-                      style={{ width: `${occupiedPercent}%` }}
-                    />
-                  </div>
-                  <div className="flex justify-between text-xs text-slate-455 font-medium">
-                    <span>Available: {bed.total - bed.occupied} beds</span>
-                    <span className={`font-bold uppercase ${
-                      bed.status === 'Emergency' ? 'text-rose-600' : bed.status === 'Critical' ? 'text-amber-600' : 'text-emerald-600'
-                    }`}>{bed.status}</span>
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })
+            )}
           </div>
         </div>
 
@@ -119,34 +117,40 @@ export const HealthDept: React.FC = () => {
             Monsoon Medical Supplies Inventory Status
           </h3>
           <div className="overflow-x-auto">
-            <table className="w-full text-xs text-left">
-              <thead>
-                <tr className="border-b border-slate-100 text-slate-400 font-bold uppercase text-xs tracking-wider">
-                  <th className="py-2">Medicine / Kit</th>
-                  <th>Safety Status</th>
-                  <th>Stock Level</th>
-                  <th>Monsoon Demand</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100/50">
-                {medicineStocks.map((med, idx) => (
-                  <tr key={idx} className="hover:bg-slate-50/50">
-                    <td className="py-3 font-semibold text-slate-700">{med.item}</td>
-                    <td>
-                      <span className={`px-2 py-0.5 rounded text-xs font-bold ${
-                        med.status === 'Safe' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' :
-                        med.status === 'Restocking' ? 'bg-amber-50 text-amber-700 border border-amber-100' :
-                        'bg-rose-50 text-rose-700 border border-rose-100 font-extrabold animate-pulse'
-                      }`}>
-                        {med.status}
-                      </span>
-                    </td>
-                    <td className="font-bold text-slate-600">{med.stockLevel}</td>
-                    <td className="text-slate-500 font-semibold">{med.demand}</td>
+            {medicineStocks.length === 0 ? (
+              <div className="text-center py-8 text-xs text-slate-400 font-medium bg-slate-50/20 rounded-xl border border-slate-100">
+                No medical supplies inventory status in database.
+              </div>
+            ) : (
+              <table className="w-full text-xs text-left">
+                <thead>
+                  <tr className="border-b border-slate-100 text-slate-400 font-bold uppercase text-xs tracking-wider">
+                    <th className="py-2">Medicine / Kit</th>
+                    <th>Safety Status</th>
+                    <th>Stock Level</th>
+                    <th>Monsoon Demand</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-slate-100/50">
+                  {medicineStocks.map((med, idx) => (
+                    <tr key={idx} className="hover:bg-slate-50/50">
+                      <td className="py-3 font-semibold text-slate-700">{med.item}</td>
+                      <td>
+                        <span className={`px-2 py-0.5 rounded text-xs font-bold ${
+                          med.status === 'Safe' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' :
+                          med.status === 'Restocking' ? 'bg-amber-50 text-amber-700 border border-amber-100' :
+                          'bg-rose-50 text-rose-700 border border-rose-100 font-extrabold animate-pulse'
+                        }`}>
+                          {med.status}
+                        </span>
+                      </td>
+                      <td className="font-bold text-slate-600">{med.stockLevel}</td>
+                      <td className="text-slate-500 font-semibold">{med.demand}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
           </div>
         </div>
 

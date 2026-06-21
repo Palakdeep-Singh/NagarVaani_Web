@@ -6,11 +6,7 @@
   --font-heading: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
   --font-mono:    'JetBrains Mono', 'Roboto Mono', monospace;
 
-  /* ── Remap Tailwind "indigo" → govt digital-blue accent ──────
-     Several screens were built with raw Tailwind indigo/slate
-     utilities. Rather than hand-edit every class, we remap the
-     palette itself so text-indigo-600 etc. resolve to the same
-     navy/blue system used by the gov-* classes. */
+  
   --color-indigo-50:  #EAF1F8;
   --color-indigo-100: #D7E6F3;
   --color-indigo-200: #B3D0E9;
@@ -23,7 +19,7 @@
   --color-indigo-900: #062742;
   --color-indigo-950: #041A2D;
 
-  /* ── Remap Tailwind "slate" → cool govt neutral ────────────── */
+  
   --color-slate-50:  #F8FAFC;
   --color-slate-100: #F1F4F7;
   --color-slate-200: #E2E7EC;
@@ -37,14 +33,11 @@
   --color-slate-950: #0B0F15;
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   NAGARVAANI CM DASHBOARD — CLEAN WHITE PROFESSIONAL THEME
-   White surfaces throughout · Single navy accent used sparingly
-   ═══════════════════════════════════════════════════════════════ */
+
 
 :root {
-  /* ── Master Accent: Govt Navy & Primary Blue ── */
-  --primary:          #2563EB;   /* Primary Blue */
+  
+  --primary:          #2563EB;   
   --primary-dark:     #1D4ED8;
   --primary-mid:      #2563EB;
   --primary-light:    #60A5FA;
@@ -52,7 +45,7 @@
   --accent:           #2563EB;
   --accent-strong:    #1D4ED8;
 
-  /* ── Neutrals ────────────────────────────────────────────── */
+  
   --white:            #FFFFFF;
   --surface-page:     #F8FAFC;
   --surface-card:     #FFFFFF;
@@ -60,25 +53,25 @@
   --surface-row-alt:  #F9FAFB;
   --surface-hover:    #F3F4F6;
 
-  /* ── Text ────────────────────────────────────────────────── */
+  
   --text-primary:     #111827;
   --text-secondary:   #6B7280;
   --text-muted:       #9CA3AF;
   --text-faint:       #D1D5DB;
   --text-inverse:     #FFFFFF;
 
-  /* ── Borders ─────────────────────────────────────────────── */
+  
   --border:           #E5E7EB;
   --border-light:     #F3F4F6;
   --border-dark:      #D1D5DB;
 
-  /* ── Status / Semantic (Solid colors from design system) ── */
+  
   --success: #16A34A;
   --warning: #F59E0B;
   --danger:  #DC2626;
   --info:    #7C3AED;
 
-  /* Status Tints */
+  
   --status-pending-bg:    #FFFBEB;
   --status-pending-text:  #B45309;
   --status-pending-border:#FEF3C7;
@@ -95,29 +88,27 @@
   --status-escalated-text:#B91C1C;
   --status-escalated-border:#FEE2E2;
 
-  /* ── Chart Colors ───────── */
-  --chart-1: #2563EB; /* Blue */
-  --chart-2: #16A34A; /* Green */
-  --chart-3: #F59E0B; /* Amber */
-  --chart-4: #DC2626; /* Red */
-  --chart-5: #7C3AED; /* Purple */
+  
+  --chart-1: #2563EB; 
+  --chart-2: #16A34A; 
+  --chart-3: #F59E0B; 
+  --chart-4: #DC2626; 
+  --chart-5: #7C3AED; 
 
-  /* ── Shadows (Soft, enterprise-grade) ── */
+  
   --shadow-xs:    0 1px 2px 0 rgba(0, 0, 0, 0.05);
   --shadow-sm:    0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
   --shadow-md:    0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
   --shadow-lg:    0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
   --shadow-focus: 0 0 0 3px rgba(37, 99, 235, 0.2);
 
-  /* ── Shape ───────────────────────────────────────────────── */
+  
   --radius:       10px;
   --radius-lg:    16px;
   --radius-sm:    8px;
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   RESET & BASE
-   ═══════════════════════════════════════════════════════════════ */
+
 *, *::before, *::after { box-sizing: border-box; }
 
 html { font-size: 16px; scroll-behavior: smooth; }
@@ -148,18 +139,14 @@ input, select, textarea, button {
   font-family: inherit;
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   TRICOLOR STRIPE
-   ═══════════════════════════════════════════════════════════════ */
+
 .tricolor-stripe {
   height: 3px;
   background: linear-gradient(to right, #FF9933 33.33%, #FFFFFF 33.33% 66.66%, #138808 66.66%);
   flex-shrink: 0;
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   SIDEBAR — clean white panel, right border, accent only on active item
-   ═══════════════════════════════════════════════════════════════ */
+
 .sidebar {
   width:           320px;
   min-width:       320px;
@@ -257,7 +244,7 @@ input, select, textarea, button {
   padding:        10px 14px;
   font-size:      0.87rem;
   font-weight:    500;
-  color:          #CBD5E1; /* Inactive Text */
+  color:          #CBD5E1; 
   cursor:         pointer;
   border-radius:  12px;
   border-left:    none;
@@ -314,9 +301,7 @@ input, select, textarea, button {
   flex-shrink: 0;
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   TOP HEADER
-   ═══════════════════════════════════════════════════════════════ */
+
 .main-header {
   background:     var(--surface-card);
   border-bottom:  1px solid var(--border);
@@ -412,9 +397,7 @@ input, select, textarea, button {
   color:        #A82424;
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   PAGE SHELL
-   ═══════════════════════════════════════════════════════════════ */
+
 .page-shell { 
   padding: 0; 
   width: 100%;
@@ -470,9 +453,7 @@ input, select, textarea, button {
   margin-top:   6px;
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   SECTION LABEL
-   ═══════════════════════════════════════════════════════════════ */
+
 .section-lbl {
   font-family:    var(--font-heading);
   font-size:      1.02rem;
@@ -504,9 +485,7 @@ input, select, textarea, button {
   font-family:    var(--font-sans);
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   GOV CARDS
-   ═══════════════════════════════════════════════════════════════ */
+
 .gov-card {
   background:   var(--surface-card);
   border:       1px solid var(--border);
@@ -544,9 +523,7 @@ input, select, textarea, button {
 
 .gov-card-body { padding: 20px; }
 
-/* ═══════════════════════════════════════════════════════════════
-   STAT CARDS
-   ═══════════════════════════════════════════════════════════════ */
+
 .stat-card {
   background:   var(--surface-card);
   border:       1px solid var(--border);
@@ -613,9 +590,7 @@ input, select, textarea, button {
   flex-shrink:     0;
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   TABLE
-   ═══════════════════════════════════════════════════════════════ */
+
 .gov-table {
   width:            100%;
   border-collapse:  collapse;
@@ -651,9 +626,7 @@ input, select, textarea, button {
 }
 .gov-table tbody td strong { color: var(--text-primary); font-weight: 600; }
 
-/* ═══════════════════════════════════════════════════════════════
-   STATUS PILLS
-   ═══════════════════════════════════════════════════════════════ */
+
 .status-pill {
   display:         inline-flex;
   align-items:     center;
@@ -674,9 +647,7 @@ input, select, textarea, button {
 .status-pill.resolved  { background: var(--status-resolved-bg);  color: var(--status-resolved-text);  border-color: var(--status-resolved-border); }
 .status-pill.escalated { background: var(--status-escalated-bg); color: var(--status-escalated-text); border-color: var(--status-escalated-border); }
 
-/* ═══════════════════════════════════════════════════════════════
-   PRIORITY DOTS
-   ═══════════════════════════════════════════════════════════════ */
+
 .prio-dot {
   display:     inline-flex;
   align-items: center;
@@ -701,9 +672,7 @@ input, select, textarea, button {
 .prio-dot.low       { color: var(--text-muted); }
 .prio-dot.low::before       { background: var(--border-dark); }
 
-/* ═══════════════════════════════════════════════════════════════
-   BUTTONS
-   ═══════════════════════════════════════════════════════════════ */
+
 .gov-btn {
   display:      inline-flex;
   align-items:  center;
@@ -758,9 +727,7 @@ input, select, textarea, button {
 
 .gov-btn:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
 
-/* ═══════════════════════════════════════════════════════════════
-   TABS
-   ═══════════════════════════════════════════════════════════════ */
+
 .gov-tabs {
   display:       flex;
   border-bottom: 1px solid var(--border);
@@ -785,9 +752,7 @@ input, select, textarea, button {
 .gov-tab:hover        { color: var(--primary); }
 .gov-tab.active       { color: var(--primary); border-bottom-color: var(--primary); font-weight: 700; }
 
-/* ═══════════════════════════════════════════════════════════════
-   ALERT STRIPS
-   ═══════════════════════════════════════════════════════════════ */
+
 .alert-strip {
   display:      flex;
   align-items:  flex-start;
@@ -804,9 +769,7 @@ input, select, textarea, button {
 .alert-strip.warning  { background: #FFF6E6; border-color: #F0D699; color: var(--warning); }
 .alert-strip.info     { background: var(--primary-xlight); border-color: var(--primary-light); color: var(--accent-strong); }
 
-/* ═══════════════════════════════════════════════════════════════
-   PROGRESS & SLA BARS
-   ═══════════════════════════════════════════════════════════════ */
+
 .gov-progress { height: 6px; background: var(--border-light); border-radius: 4px; overflow: hidden; }
 .gov-progress-fill { height: 100%; border-radius: 4px; background: var(--primary-mid); transition: width 0.6s ease; }
 
@@ -816,9 +779,7 @@ input, select, textarea, button {
 .sla-warn  { background: var(--warning); }
 .sla-breach{ background: var(--danger); }
 
-/* ═══════════════════════════════════════════════════════════════
-   DATA SOURCE BADGE
-   ═══════════════════════════════════════════════════════════════ */
+
 .data-source-badge {
   display:      inline-flex;
   align-items:  center;
@@ -832,9 +793,7 @@ input, select, textarea, button {
   border-radius:6px;
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   NOTIFICATION PANEL
-   ═══════════════════════════════════════════════════════════════ */
+
 .notif-panel {
   position:     absolute;
   top:          66px; right: 24px;
@@ -886,9 +845,7 @@ input, select, textarea, button {
   color:           var(--accent-strong);
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   SCORE RING
-   ═══════════════════════════════════════════════════════════════ */
+
 .score-ring {
   width:        58px; height: 58px;
   border-radius:50%;
@@ -906,9 +863,7 @@ input, select, textarea, button {
 .score-ring.warn { border-color: var(--warning); color: var(--warning); }
 .score-ring.bad  { border-color: var(--danger); color: var(--danger); }
 
-/* ═══════════════════════════════════════════════════════════════
-   TRACK STEPS / CITIZEN STATUS
-   ═══════════════════════════════════════════════════════════════ */
+
 .track-step {
   display:     flex;
   align-items: flex-start;
@@ -928,9 +883,7 @@ input, select, textarea, button {
 .track-dot.cur  { background: var(--primary-xlight); border-color: var(--primary-mid); }
 .track-dot.pend { background: #fff; border-color: var(--border); }
 
-/* ═══════════════════════════════════════════════════════════════
-   REF ID
-   ═══════════════════════════════════════════════════════════════ */
+
 .ref-id {
   font-family:  var(--font-mono);
   font-size:    0.77rem;
@@ -938,9 +891,7 @@ input, select, textarea, button {
   letter-spacing:0.02em;
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   CITIZEN CHARTER NOTE
-   ═══════════════════════════════════════════════════════════════ */
+
 .citizen-charter-note {
   background:   var(--primary-xxlight);
   border:       1px solid var(--border);
@@ -952,9 +903,7 @@ input, select, textarea, button {
   line-height:  1.65;
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   PUBLIC TRACK BOX
-   ═══════════════════════════════════════════════════════════════ */
+
 .public-track-box {
   background:   var(--surface-card);
   border:       1px solid var(--border);
@@ -962,17 +911,13 @@ input, select, textarea, button {
   padding:      20px;
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   SCROLLBAR
-   ═══════════════════════════════════════════════════════════════ */
+
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border-dark); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--primary-light); }
 
-/* ═══════════════════════════════════════════════════════════════
-   GRID & LAYOUT UTILITIES
-   ═══════════════════════════════════════════════════════════════ */
+
 .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
 .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 18px; }
 .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
@@ -981,7 +926,7 @@ input, select, textarea, button {
 .flex-row     { display: flex; align-items: center; gap: 10px; }
 .flex-between { display: flex; align-items: center; justify-content: space-between; }
 
-/* Spacing */
+
 .mt-4  { margin-top: 4px; }   .mb-4  { margin-bottom: 4px; }
 .mt-8  { margin-top: 8px; }   .mb-8  { margin-bottom: 8px; }
 .mt-12 { margin-top: 12px; }  .mb-12 { margin-bottom: 12px; }
@@ -989,7 +934,7 @@ input, select, textarea, button {
 .mt-20 { margin-top: 20px; }  .mb-20 { margin-bottom: 20px; }
 .gap-8 { gap: 8px; }   .gap-12 { gap: 12px; }   .gap-16 { gap: 16px; }
 
-/* Typography */
+
 .text-muted   { color: var(--text-muted); font-size: 0.81rem; }
 .text-mono    { font-family: var(--font-mono); }
 .text-heading { font-family: var(--font-heading); }
@@ -997,18 +942,14 @@ input, select, textarea, button {
 .fw-600 { font-weight: 600; }
 .divider { height: 1px; background: var(--border-light); margin: 16px 0; }
 
-/* ═══════════════════════════════════════════════════════════════
-   ANIMATIONS
-   ═══════════════════════════════════════════════════════════════ */
+
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(6px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 .fade-in { animation: fadeIn 0.25s ease; }
 
-/* ═══════════════════════════════════════════════════════════════
-   RESPONSIVE
-   ═══════════════════════════════════════════════════════════════ */
+
 @media (max-width: 1200px) {
   .grid-6 { grid-template-columns: repeat(3, 1fr); }
   .grid-4 { grid-template-columns: repeat(2, 1fr); }
@@ -1024,9 +965,7 @@ input, select, textarea, button {
   .page-shell { padding: 14px; }
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   ACCESSIBILITY — visible keyboard focus
-   ═══════════════════════════════════════════════════════════════ */
+
 a:focus-visible,
 button:focus-visible,
 input:focus-visible,
@@ -1046,9 +985,7 @@ textarea:focus-visible,
   }
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   TRUST BADGE — digital govt service mark (Login, public-facing views)
-   ═══════════════════════════════════════════════════════════════ */
+
 .trust-badge {
   display:        inline-flex;
   align-items:    center;
@@ -1069,9 +1006,7 @@ textarea:focus-visible,
   flex-shrink: 0;
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   LOGIN — digital govt service portal
-   ═══════════════════════════════════════════════════════════════ */
+
 .login-page {
   min-height: 100vh;
   background: radial-gradient(ellipse 1200px 700px at 50% -10%, #103E63 0%, var(--primary-dark) 55%, #051A2C 100%);
@@ -1256,3 +1191,128 @@ textarea:focus-visible,
 .login-terms { margin-top: 15px; font-size: 0.72rem; color: var(--text-muted); text-align: center; line-height: 1.7; font-family: var(--font-sans); }
 
 .login-footer { text-align: center; margin-top: 22px; font-size: 0.74rem; color: rgba(255,255,255,0.28); font-family: var(--font-mono); line-height: 1.8; }
+
+
+.toast-container {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 380px;
+  width: calc(100vw - 48px);
+  pointer-events: none;
+}
+
+.toast-item {
+  pointer-events: auto;
+  display: flex;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05), inset 0 1px 1px rgba(255, 255, 255, 0.9);
+  border-radius: var(--radius-md, 16px);
+  padding: 14px 16px;
+  transform: translateX(120%);
+  animation: toastSlideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  overflow: hidden;
+  position: relative;
+}
+
+.toast-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: var(--primary, #4f46e5);
+}
+
+.toast-item:hover {
+  transform: translateY(-2px) scale(1.01);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  border-color: rgba(79, 70, 229, 0.3);
+}
+
+.toast-item.exiting {
+  animation: toastSlideOut 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.toast-icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: rgba(79, 70, 229, 0.1);
+  color: var(--primary, #4f46e5);
+  flex-shrink: 0;
+}
+
+.toast-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.toast-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-primary, #0f172a);
+  margin-bottom: 2px;
+}
+
+.toast-desc {
+  font-size: 0.76rem;
+  color: var(--text-muted, #64748b);
+  line-height: 1.4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.toast-close {
+  background: none;
+  border: none;
+  color: var(--text-muted, #94a3b8);
+  cursor: pointer;
+  padding: 4px;
+  align-self: flex-start;
+  margin-top: -2px;
+  margin-right: -4px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, color 0.15s;
+}
+
+.toast-close:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--text-primary, #0f172a);
+}
+
+@keyframes toastSlideIn {
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes toastSlideOut {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(120%);
+    opacity: 0;
+  }
+}
+

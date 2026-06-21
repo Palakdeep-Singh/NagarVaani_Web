@@ -217,7 +217,7 @@ export const OfficerWorkspace: React.FC = () => {
                       <div className="p-3 bg-rose-50 border border-rose-100 rounded-xl flex items-start gap-2 text-xs text-rose-950">
                         <AlertTriangle className="h-4.5 w-4.5 text-rose-650 shrink-0 mt-0.5" />
                         <div>
-                          <strong className="font-extrabold uppercase text-[10px] tracking-wider block">🚨 Poor-Rating Appeal / DM Rejection</strong>
+                          <strong className="font-extrabold uppercase text-[10px] tracking-wider block">Poor-Rating Appeal / DM Rejection</strong>
                           <p className="mt-0.5 italic">"{rejectionReason}"</p>
                         </div>
                       </div>
@@ -473,7 +473,7 @@ export const OfficerWorkspace: React.FC = () => {
               ))}
             </div>
             <div className="text-[10px] text-amber-700 bg-amber-50 p-2.5 rounded-lg border border-amber-100 flex items-start gap-1.5 leading-normal">
-              <span>⚠️</span>
+              <AlertTriangle className="w-3.5 h-3.5 text-amber-600 shrink-0 mt-0.5" />
               <span>
                 <strong>Restricted Access:</strong> Lower-level officers require scheduling authorization to call DM or CM.
               </span>

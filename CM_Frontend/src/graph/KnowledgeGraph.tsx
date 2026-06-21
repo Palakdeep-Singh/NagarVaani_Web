@@ -1,11 +1,11 @@
-// ─── KnowledgeGraph.tsx ────────────────────────────────────────────────────────
-// CM → District → Ward → Officer → Complaint — orbital web layout
-// ─────────────────────────────────────────────────────────────────────────────
+
+
+
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import ForceGraph2D from 'react-force-graph-2d';
 import {
   X, Search, ChevronRight, Star, Clock, CheckCircle,
-  AlertTriangle, MapPin, User, FileText,
+  AlertTriangle, MapPin, User, FileText, Sparkles, Zap, Brain
 } from 'lucide-react';
 import { TIER_CFG, buildDelhiGovGraph, resolveId } from './graphEngine';
 import type { NodeTier, GNode, GLink, GraphData } from './graphEngine';
@@ -15,15 +15,7 @@ import { getNodeAISummary, getNodeAISummaryLive, getOfficerAuditAnalysis } from 
 
 export interface KnowledgeGraphProps { officers?: any[] }
 
-const DISTRICTS = [
-  'All Districts','New Delhi','North Delhi','North West Delhi','West Delhi',
-  'South West Delhi','South Delhi','South East Delhi','Central Delhi',
-  'East Delhi','Shahdara','North East Delhi',
-];
-const DEPARTMENTS = [
-  'All Departments','Civic Infrastructure','Water & Sewage','Electricity & Power',
-  'Public Health','Education & Schools','Law & Policing','Transport & Roads','Social Welfare',
-];
+
 
 const STATUS_COLOR: Record<string, string> = {
   Resolved: '#10B981', Active: '#3B82F6', Pending: '#F59E0B', Escalated: '#EF4444',
@@ -32,7 +24,7 @@ const PRIORITY_COLOR: Record<string, string> = {
   Emergency: '#EF4444', High: '#F97316', Medium: '#F59E0B', Low: '#10B981',
 };
 
-// ── Sub-components ────────────────────────────────────────────────────────────
+
 function Stars({ v }: { v: number }) {
   return (
     <span className="flex items-center gap-0.5">
@@ -75,7 +67,7 @@ function Crumb({ path }: { path: GNode[] }) {
   );
 }
 
-// ── Detail panels per node type ───────────────────────────────────────────────
+
 function DetailCM({ node }: { node: GNode }) {
   const m = node.meta!;
   return (
@@ -255,17 +247,31 @@ function DetailComplaint({ node }: { node: GNode }) {
           <div className="w-2 h-2 rounded-full" style={{ backgroundColor: sc }} />
           <span className="text-[11px] font-bold" style={{ color: sc }}>Status: {m.status}</span>
         </div>
-        {m.status === 'Escalated' && <p className="text-[10px] text-red-300 mt-1">⚠ This complaint has been escalated and requires immediate CM-level attention.</p>}
-        {m.status === 'Resolved'  && <p className="text-[10px] text-emerald-300 mt-1">✓ Complaint resolved successfully by the assigned ward officer.</p>}
+        {m.status === 'Escalated' && <p className="text-[10px] text-red-300 mt-1">Escalated: This complaint requires immediate attention.</p>}
+        {m.status === 'Resolved'  && <p className="text-[10px] text-emerald-300 mt-1">Resolved: Complaint resolved successfully.</p>}
       </div>
     </div>
   );
 }
 
-// ── Main component ─────────────────────────────────────────────────────────────
+
 export const KnowledgeGraph: React.FC<KnowledgeGraphProps> = ({ officers: propOfficers }) => {
   const storeData   = useStore();
   const allOfficers = propOfficers ?? storeData.officers ?? [];
+
+  const districtsList = useMemo(() => {
+    return ['All Districts', ...Array.from(new Set([
+      ...allOfficers.map(o => o.district).filter(Boolean),
+      ...storeData.complaints.map(c => c.district).filter(Boolean)
+    ]))];
+  }, [allOfficers, storeData.complaints]);
+
+  const departmentsList = useMemo(() => {
+    return ['All Departments', ...Array.from(new Set([
+      ...allOfficers.map(o => o.department).filter(Boolean),
+      ...storeData.complaints.map(c => c.department).filter(Boolean)
+    ]))];
+  }, [allOfficers, storeData.complaints]);
 
   const [distFilter, setDistFilter] = useState('All Districts');
   const [deptFilter, setDeptFilter] = useState('All Departments');
@@ -319,28 +325,55 @@ export const KnowledgeGraph: React.FC<KnowledgeGraphProps> = ({ officers: propOf
   }, [allOfficers]);
 
   const liveAuditLog = useMemo(() => {
-    return [
-      { id: 'AUD-9012', time: '10 mins ago', desc: 'Direct escalation to Chief Secretary triggered for GR-2026-0042.', tag: 'ESCALATION', badge: 'bg-red-500/10 text-red-400 border border-red-500/20' },
-      { id: 'AUD-8831', time: '1 hour ago', desc: 'ATR filed by Nodal Officer Rajesh Kumar for Shahdara sewage pipeline repair.', tag: 'ATR SUBMITTED', badge: 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' },
-      { id: 'AUD-8210', time: '3 hours ago', desc: 'DM New Delhi approved audit report for grievance resolution at Connaught Place.', tag: 'AUDIT APPROVE', badge: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' },
-      { id: 'AUD-7945', time: '5 hours ago', desc: 'Summons issued to PWD department head regarding statutory 21-day SLA breach.', tag: 'SUMMONS', badge: 'bg-amber-500/10 text-amber-400 border border-amber-500/20' },
-    ];
-  }, []);
+    const logs: { id: string; time: string; desc: string; tag: string; badge: string }[] = [];
+    storeData.complaints.forEach(c => {
+      if (c.timeline) {
+        c.timeline.forEach((t, idx) => {
+          const id = `AUD-${c.id.split('-').pop() || '0000'}${idx}`;
+          let tag = 'ACTION';
+          let badge = 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20';
+          const act = t.action.toUpperCase();
+          if (act.includes('ESCALAT')) {
+            tag = 'ESCALATION';
+            badge = 'bg-rose-500/10 text-rose-400 border border-rose-500/20';
+          } else if (act.includes('RESOLVE') || act.includes('APPROV')) {
+            tag = 'RESOLVED';
+            badge = 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20';
+          } else if (act.includes('ASSIGN') || act.includes('FORWARD')) {
+            tag = 'FORWARDED';
+            badge = 'bg-amber-500/10 text-amber-400 border border-amber-500/20';
+          } else if (act.includes('FILE') || act.includes('CREATE')) {
+            tag = 'NEW TICKET';
+            badge = 'bg-blue-500/10 text-blue-400 border border-blue-500/20';
+          }
+          
+          logs.push({
+            id,
+            time: t.date,
+            desc: `${t.action} by ${t.actor || 'System'}${t.notes ? `: ${t.notes}` : ''} for ticket ${c.id}.`,
+            tag,
+            badge
+          });
+        });
+      }
+    });
+    return logs.sort((a, b) => b.time.localeCompare(a.time)).slice(0, 10);
+  }, [storeData.complaints]);
 
   const fgRef  = useRef<any>(null);
   const rafRef = useRef<number>(0);
 
-  // Build
+  
   useEffect(() => {
-    const gd = buildDelhiGovGraph(allOfficers, {
+    const gd = buildDelhiGovGraph(allOfficers, storeData.complaints, {
       district:   distFilter !== 'All Districts'   ? distFilter   : undefined,
       department: deptFilter !== 'All Departments' ? deptFilter   : undefined,
     });
     setGraphData(gd);
     setSelectedNode(null);
-  }, [allOfficers, distFilter, deptFilter]);
+  }, [allOfficers, storeData.complaints, distFilter, deptFilter]);
 
-  // Force: orbital web, CM pinned at centre
+  
   useEffect(() => {
     if (!graphData.nodes.length) return;
     const fg = fgRef.current;
@@ -357,7 +390,7 @@ export const KnowledgeGraph: React.FC<KnowledgeGraphProps> = ({ officers: propOf
       return d[t] ?? 60;
     }).strength(0.5);
 
-    // Radial rings
+    
     const tierR: Record<string, number> = { cm: 0, district: 180, booth: 320, officer: 440, complaint: 560 };
     try {
       const d3 = (window as any).d3;
@@ -370,7 +403,7 @@ export const KnowledgeGraph: React.FC<KnowledgeGraphProps> = ({ officers: propOf
       }
     } catch (_) {}
 
-    // Pin CM
+    
     const cm = graphData.nodes.find(n => n.id === 'CM');
     if (cm) { cm.fx = 0; cm.fy = 0; }
 
@@ -378,14 +411,14 @@ export const KnowledgeGraph: React.FC<KnowledgeGraphProps> = ({ officers: propOf
     return () => clearTimeout(t);
   }, [graphData]);
 
-  // Animation
+  
   useEffect(() => {
     const loop = () => { fgRef.current?.refresh?.(); rafRef.current = requestAnimationFrame(loop); };
     rafRef.current = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(rafRef.current);
   }, []);
 
-  // Path tracing
+  
   const buildPath = useCallback((nodeId: string): GNode[] => {
     const map = new Map(graphData.nodes.map(n => [n.id, n]));
     const path: GNode[] = [];
@@ -422,7 +455,7 @@ export const KnowledgeGraph: React.FC<KnowledgeGraphProps> = ({ officers: propOf
     if (!tgt) return null;
     const set = new Set<string>();
     buildPath(tgt.id).forEach(n => set.add(n.id));
-    // children
+    
     graphData.links.forEach(l => {
       if (resolveId(l.source) === tgt.id) set.add(resolveId(l.target));
     });
@@ -459,7 +492,7 @@ export const KnowledgeGraph: React.FC<KnowledgeGraphProps> = ({ officers: propOf
   return (
     <div className="flex flex-col h-full bg-[#050C1A] font-sans">
 
-      {/* Top bar */}
+      
       <div className="flex items-center gap-3 px-5 py-2.5 bg-[#080F22] border-b border-[#1A2540] shrink-0">
         <div className="shrink-0">
           <div className="text-[11px] font-bold text-white tracking-widest uppercase">Knowledge Graph</div>
@@ -478,12 +511,12 @@ export const KnowledgeGraph: React.FC<KnowledgeGraphProps> = ({ officers: propOf
 
         <select value={distFilter} onChange={e => setDistFilter(e.target.value)}
           className="bg-[#0D1730] border border-[#1E2D47] text-[11px] text-slate-300 rounded px-2 py-1.5 outline-none cursor-pointer">
-          {DISTRICTS.map(d => <option key={d}>{d}</option>)}
+          {districtsList.map(d => <option key={d}>{d}</option>)}
         </select>
 
         <select value={deptFilter} onChange={e => setDeptFilter(e.target.value)}
           className="bg-[#0D1730] border border-[#1E2D47] text-[11px] text-slate-300 rounded px-2 py-1.5 outline-none cursor-pointer">
-          {DEPARTMENTS.map(d => <option key={d}>{d}</option>)}
+          {departmentsList.map(d => <option key={d}>{d}</option>)}
         </select>
 
         <button onClick={() => { setDistFilter('All Districts'); setDeptFilter('All Departments'); setSearch(''); setSelectedNode(null); }}
@@ -491,7 +524,7 @@ export const KnowledgeGraph: React.FC<KnowledgeGraphProps> = ({ officers: propOf
           RESET
         </button>
 
-        {/* Live stats pills */}
+        
         <div className="hidden xl:flex items-center gap-2 shrink-0">
           {[
             { label: 'Districts', v: stats.districts,  c: '#8B5CF6' },
@@ -509,13 +542,13 @@ export const KnowledgeGraph: React.FC<KnowledgeGraphProps> = ({ officers: propOf
       </div>
 
       <div className="flex flex-col flex-1 min-h-0 overflow-y-auto">
-        {/* Upper row: Graph on left, detailed sidebar on right */}
+        
         <div className="flex flex-1 min-h-[500px] border-b border-[#1A2540]">
           
-          {/* Canvas */}
+          
           <div className="flex-1 relative overflow-hidden bg-[#050C1A]">
 
-            {/* Legend */}
+            
             <div className="absolute top-3 left-3 z-20 pointer-events-none space-y-1">
               {Object.entries(TIER_CFG).map(([type, c]) => (
                 <div key={type} className="flex items-center gap-1.5">
@@ -533,11 +566,11 @@ export const KnowledgeGraph: React.FC<KnowledgeGraphProps> = ({ officers: propOf
               </div>
             </div>
 
-            {/* Hint */}
+            
             {!selectedNode && !hoverNode && !search && (
               <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 pointer-events-none">
                 <div className="bg-[#080F22]/90 border border-[#1A2540] rounded-full px-4 py-1.5 text-[10px] text-slate-500 flex items-center gap-2">
-                  <span>🖱</span> Click any node — CM · Districts · Wards · Officers · Complaints
+                  <MapPin className="w-3.5 h-3.5 text-cyan-500" /> Click any node — CM · Districts · Wards · Officers · Complaints
                 </div>
               </div>
             )}
@@ -564,7 +597,7 @@ export const KnowledgeGraph: React.FC<KnowledgeGraphProps> = ({ officers: propOf
               backgroundColor="transparent"
             />
 
-            {/* Hover tooltip */}
+            
             {hoverNode && !selectedNode && (
               <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-30 pointer-events-none">
                 <div className="bg-[#0D1730] border border-[#2D3F65] rounded-lg px-3 py-2 shadow-2xl flex items-center gap-2.5">
@@ -581,7 +614,7 @@ export const KnowledgeGraph: React.FC<KnowledgeGraphProps> = ({ officers: propOf
             )}
           </div>
 
-          {/* Sidebar */}
+          
           <div className="w-[320px] bg-[#080F22] border-l border-[#1A2540] flex flex-col shrink-0 overflow-hidden">
             {!selectedNode ? (
               <div className="flex-1 overflow-y-auto px-4 py-4 space-y-5">
@@ -589,14 +622,14 @@ export const KnowledgeGraph: React.FC<KnowledgeGraphProps> = ({ officers: propOf
                   <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3">How to navigate</div>
                   <div className="space-y-2">
                     {[
-                      { icon: '🟡', label: 'Chief Minister', desc: 'Centre node — citywide stats' },
-                      { icon: '🟣', label: 'Districts (11)',  desc: 'DM name, resolution rate' },
-                      { icon: '🟢', label: 'Wards',          desc: 'Officers & complaint count' },
-                      { icon: '🔵', label: 'Officers',       desc: 'Individual KPIs, ratings' },
-                      { icon: '🟠', label: 'Complaints',     desc: 'Status, priority, citizen' },
+                      { color: '#F59E0B', label: 'Chief Minister', desc: 'Centre node — citywide stats' },
+                      { color: '#8B5CF6', label: 'Districts (11)',  desc: 'DM name, resolution rate' },
+                      { color: '#14B8A6', label: 'Wards',          desc: 'Officers & complaint count' },
+                      { color: '#3B82F6', label: 'Officers',       desc: 'Individual KPIs, ratings' },
+                      { color: '#F97316', label: 'Complaints',     desc: 'Status, priority, citizen' },
                     ].map(r => (
                       <div key={r.label} className="flex items-start gap-2.5 p-2 rounded-lg bg-[#0D1730] border border-[#1A2540]">
-                        <span className="text-sm shrink-0 mt-0.5">{r.icon}</span>
+                        <span className="w-2 h-2 rounded-full shrink-0 mt-1.5" style={{ backgroundColor: r.color }} />
                         <div>
                           <div className="text-[11px] font-bold text-white">{r.label}</div>
                           <div className="text-[10px] text-slate-500">{r.desc}</div>
@@ -617,7 +650,7 @@ export const KnowledgeGraph: React.FC<KnowledgeGraphProps> = ({ officers: propOf
               </div>
             ) : (
               <div className="flex flex-col h-full overflow-y-auto">
-                {/* Header */}
+                
                 <div className="px-4 py-3 border-b border-[#1A2540] relative shrink-0"
                   style={{ backgroundColor: (cfg?.color ?? '#1E2D47') + '18' }}>
                   <button onClick={() => setSelectedNode(null)}
@@ -646,7 +679,7 @@ export const KnowledgeGraph: React.FC<KnowledgeGraphProps> = ({ officers: propOf
                   <Crumb path={selectedPath} />
                 </div>
 
-                {/* Detail body */}
+                
                 <div className="px-4 py-4 flex-1 space-y-4">
                   {selectedNode.type === 'cm'        && <DetailCM        node={selectedNode} />}
                   {selectedNode.type === 'district'  && <DetailDistrict  node={selectedNode} />}
@@ -654,10 +687,10 @@ export const KnowledgeGraph: React.FC<KnowledgeGraphProps> = ({ officers: propOf
                   {selectedNode.type === 'officer'   && <DetailOfficer   node={selectedNode} />}
                   {selectedNode.type === 'complaint' && <DetailComplaint node={selectedNode} />}
 
-                  {/* AI Summary Box */}
+                  
                   <div className="p-3.5 rounded-lg border border-cyan-850 bg-cyan-950/20 text-slate-300 text-xs">
                     <div className="text-[9px] font-bold text-cyan-400 uppercase tracking-widest mb-1.5 flex items-center gap-1">
-                      <span>⚡</span> Hansa AI Copilot {loadingSummary && <span className="animate-pulse">(Loading...)</span>}
+                      <Sparkles className="w-3.5 h-3.5 text-cyan-400" /> Hansa AI Copilot {loadingSummary && <span className="animate-pulse">(Loading...)</span>}
                     </div>
                     <div className="text-[11px] leading-relaxed space-y-1 font-sans">
                       {aiSummary.split('\n').map((line, idx) => {
@@ -669,7 +702,7 @@ export const KnowledgeGraph: React.FC<KnowledgeGraphProps> = ({ officers: propOf
                   </div>
                 </div>
 
-                {/* Children list */}
+                
                 {(() => {
                   const kids = graphData.nodes.filter(n =>
                     graphData.links.some(l => resolveId(l.source) === selectedNode.id && resolveId(l.target) === n.id)
@@ -714,13 +747,13 @@ export const KnowledgeGraph: React.FC<KnowledgeGraphProps> = ({ officers: propOf
           </div>
         </div>
 
-        {/* Lower Row: AI Operations Deck / Bottom Console */}
+        
         <div className="bg-[#040A18] p-5 border-t border-[#1A2540] shrink-0 grid grid-cols-1 lg:grid-cols-3 gap-6">
           
-          {/* Column 1: AI Underperforming Officer Diagnostics */}
+          
           <div className="space-y-3">
             <div className="flex items-center gap-1.5">
-              <span className="text-cyan-400">🧠</span>
+              <Brain className="w-3.5 h-3.5 text-cyan-400" />
               <h4 className="text-[11px] font-bold text-slate-200 uppercase tracking-wider">AI Officer Audit & Recommendations</h4>
             </div>
             <div className="bg-[#080F22] rounded-xl border border-[#1A2540] p-3.5 space-y-3 min-h-[180px]">
@@ -733,7 +766,7 @@ export const KnowledgeGraph: React.FC<KnowledgeGraphProps> = ({ officers: propOf
                   {officerAudits.map((a, i) => (
                     <div key={i} className="text-[11px] border-b border-[#1A2540]/60 pb-2 last:border-0 last:pb-0">
                       <div className="flex justify-between items-center font-bold text-slate-350">
-                        <span>👤 {a.officerName}</span>
+                        <span className="flex items-center gap-1"><User className="w-3 h-3 text-slate-400" /> {a.officerName}</span>
                         <span className="bg-rose-500/10 text-rose-400 text-[9px] px-1.5 py-0.5 rounded border border-rose-500/20 font-mono">WARNING</span>
                       </div>
                       <p className="text-slate-400 mt-1 leading-normal">
@@ -753,31 +786,37 @@ export const KnowledgeGraph: React.FC<KnowledgeGraphProps> = ({ officers: propOf
             </div>
           </div>
 
-          {/* Column 2: Live System Audit Log */}
+          
           <div className="space-y-3">
             <div className="flex items-center gap-1.5">
-              <span className="text-indigo-400">📜</span>
+              <FileText className="w-3.5 h-3.5 text-indigo-400" />
               <h4 className="text-[11px] font-bold text-slate-200 uppercase tracking-wider">Live System Audit Log</h4>
             </div>
             <div className="bg-[#080F22] rounded-xl border border-[#1A2540] p-3.5 space-y-2 max-h-[180px] overflow-y-auto pr-1 min-h-[180px]">
-              {liveAuditLog.map((log) => (
-                <div key={log.id} className="text-[11px] border-b border-[#1A2540]/40 pb-2 last:border-0 last:pb-0 space-y-1">
-                  <div className="flex justify-between items-center">
-                    <span className="font-mono text-[10px] text-slate-500">{log.id} · {log.time}</span>
-                    <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded uppercase font-mono ${log.badge}`}>
-                      {log.tag}
-                    </span>
-                  </div>
-                  <p className="text-slate-300 leading-normal font-medium">{log.desc}</p>
+              {liveAuditLog.length === 0 ? (
+                <div className="text-xs text-slate-500 py-8 text-center">
+                  No recent audit activities in database.
                 </div>
-              ))}
+              ) : (
+                liveAuditLog.map((log) => (
+                  <div key={log.id} className="text-[11px] border-b border-[#1A2540]/40 pb-2 last:border-0 last:pb-0 space-y-1">
+                    <div className="flex justify-between items-center">
+                      <span className="font-mono text-[10px] text-slate-500">{log.id} · {log.time}</span>
+                      <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded uppercase font-mono ${log.badge}`}>
+                        {log.tag}
+                      </span>
+                    </div>
+                    <p className="text-slate-300 leading-normal font-medium">{log.desc}</p>
+                  </div>
+                ))
+              )}
             </div>
           </div>
 
-          {/* Column 3: Operational SLA Metrics */}
+          
           <div className="space-y-3">
             <div className="flex items-center gap-1.5">
-              <span className="text-amber-400">⚡</span>
+              <Zap className="w-3.5 h-3.5 text-amber-400" />
               <h4 className="text-[11px] font-bold text-slate-200 uppercase tracking-wider">Operational SLA Metrics</h4>
             </div>
             <div className="bg-[#080F22] rounded-xl border border-[#1A2540] p-3.5 space-y-3 min-h-[180px]">
