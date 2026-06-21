@@ -47,8 +47,10 @@ export const HealthDept: React.FC = () => {
         <div className="bg-white p-5 rounded-2xl border-l-4 border-emerald-500 shadow-sm border border-slate-200/60">
           <span className="text-xs uppercase font-bold text-slate-400 tracking-wider">Mohalla Clinics Active</span>
           <div className="flex items-baseline gap-2 mt-1">
-            <h3 className="text-xl font-extrabold text-slate-800">{generalMetrics.health_clinic_count || '518'}</h3>
-            <span className="text-xs text-emerald-600 font-bold">98% Online</span>
+            <h3 className="text-xl font-extrabold text-slate-800">{generalMetrics.health_clinic_count || '0'}</h3>
+            {generalMetrics.health_clinic_count && (
+              <span className="text-xs text-emerald-600 font-bold">98% Online</span>
+            )}
           </div>
           <p className="text-xs text-slate-400 mt-1 font-medium">Nodal practitioner biometric checks online</p>
         </div>

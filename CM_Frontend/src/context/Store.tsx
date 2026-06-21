@@ -13,6 +13,14 @@ import type {
   UserProfile
 } from '../types';
 
+export interface ToastMessage {
+  id: string;
+  senderRole: string;
+  senderName: string;
+  content: string;
+  exiting?: boolean;
+}
+
 interface DashboardContextType {
   complaints: Complaint[];
   projects: Project[];
@@ -45,11 +53,17 @@ interface DashboardContextType {
   showAIPanel: boolean;
   setShowAIPanel: (val: boolean) => void;
   socket: any;
+  unreadCounts: Record<string, number>;
+  activeChatPartner: string | null;
+  setActiveChatPartner: (role: string | null) => void;
+  toasts: ToastMessage[];
+  clearUnreadCount: (role: string) => void;
+  dismissToast: (id: string) => void;
 }
 
 const DashboardContext = createContext<DashboardContextType | undefined>(undefined);
 
-// API Client Setup
+
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
 const api = axios.create({
   baseURL: API_BASE_URL
@@ -81,7 +95,7 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [files, setFiles] = useState<DigitalFile[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
 
-  // Health and Education metrics from DB
+  
   const [healthBeds, setHealthBeds] = useState<any[]>([]);
   const [healthInventory, setHealthInventory] = useState<any[]>([]);
   const [schoolSmartBoards, setSchoolSmartBoards] = useState<any[]>([]);
@@ -89,7 +103,60 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const [socket, setSocket] = useState<any>(null);
 
-  // Configure starting roles/tabs when user loads
+  
+  const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
+  const [activeChatPartner, setActiveChatPartner] = useState<string | null>(null);
+  const [toasts, setToasts] = useState<ToastMessage[]>([]);
+
+  
+  const activeTabRef = React.useRef(activeTab);
+  const activeChatPartnerRef = React.useRef(activeChatPartner);
+
+  useEffect(() => {
+    activeTabRef.current = activeTab;
+  }, [activeTab]);
+
+  useEffect(() => {
+    activeChatPartnerRef.current = activeChatPartner;
+  }, [activeChatPartner]);
+
+  
+  useEffect(() => {
+    if (currentUser && typeof window !== 'undefined' && 'Notification' in window) {
+      if (Notification.permission === 'default') {
+        Notification.requestPermission();
+      }
+    }
+  }, [currentUser]);
+
+  
+  useEffect(() => {
+    if (activeTab === 'Communications' && activeChatPartner) {
+      setUnreadCounts((prev) => {
+        if (!prev[activeChatPartner] || prev[activeChatPartner] === 0) return prev;
+        return {
+          ...prev,
+          [activeChatPartner]: 0,
+        };
+      });
+    }
+  }, [activeTab, activeChatPartner]);
+
+  const clearUnreadCount = (role: string) => {
+    setUnreadCounts((prev) => ({
+      ...prev,
+      [role]: 0,
+    }));
+  };
+
+  const dismissToast = (id: string) => {
+    setToasts((prev) => prev.map((t) => t.id === id ? { ...t, exiting: true } : t));
+    setTimeout(() => {
+      setToasts((prev) => prev.filter((t) => t.id !== id));
+    }, 300);
+  };
+
+  
   useEffect(() => {
     if (currentUser) {
       setActiveRole(currentUser.role);
@@ -105,7 +172,7 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
   }, [currentUser]);
 
-  // Fetch Dashboard Data from Backend
+  
   const fetchAllData = async () => {
     try {
       const [
@@ -149,7 +216,7 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
   }, [currentUser]);
 
-  // Real-time Chat Sync with Socket.IO
+  
   useEffect(() => {
     if (!currentUser) {
       setSocket(null);
@@ -170,6 +237,59 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         if (prev.some((m) => m.id === newMessage.id)) return prev;
         return [...prev, newMessage];
       });
+
+      const myRole = getRoleLabel(currentUser);
+      if (newMessage.receiverRole === myRole) {
+        const currentActiveTab = activeTabRef.current;
+        const currentActiveChatPartner = activeChatPartnerRef.current;
+
+        
+        if (
+          currentActiveTab === 'Communications' &&
+          currentActiveChatPartner === newMessage.senderRole &&
+          document.visibilityState === 'visible'
+        ) {
+          return;
+        }
+
+        
+        setUnreadCounts((prev) => ({
+          ...prev,
+          [newMessage.senderRole]: (prev[newMessage.senderRole] || 0) + 1,
+        }));
+
+        
+        const toastId = `toast-${Date.now()}-${Math.random()}`;
+        setToasts((prev) => [
+          ...prev,
+          {
+            id: toastId,
+            senderRole: newMessage.senderRole,
+            senderName: newMessage.senderName,
+            content: newMessage.content,
+          },
+        ]);
+
+        
+        setTimeout(() => {
+          setToasts((prev) => prev.map((t) => t.id === toastId ? { ...t, exiting: true } : t));
+          setTimeout(() => {
+            setToasts((prev) => prev.filter((t) => t.id !== toastId));
+          }, 300);
+        }, 5000);
+
+        
+        if (document.hidden && typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+          try {
+            new Notification(`New message from ${newMessage.senderName}`, {
+              body: newMessage.content,
+              tag: newMessage.senderRole,
+            });
+          } catch (err) {
+            console.error('Desktop notification failed:', err);
+          }
+        }
+      }
     });
 
     return () => {
@@ -316,6 +436,9 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     setHealthInventory([]);
     setSchoolSmartBoards([]);
     setGeneralMetrics({});
+    setUnreadCounts({});
+    setActiveChatPartner(null);
+    setToasts([]);
   };
 
   return (
@@ -351,7 +474,13 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         logoutUser,
         showAIPanel,
         setShowAIPanel,
-        socket
+        socket,
+        unreadCounts,
+        activeChatPartner,
+        setActiveChatPartner,
+        toasts,
+        clearUnreadCount,
+        dismissToast
       }}
     >
       {children}

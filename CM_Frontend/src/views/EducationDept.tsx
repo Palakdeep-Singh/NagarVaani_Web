@@ -34,8 +34,8 @@ export const EducationDept: React.FC = () => {
         <div className="bg-white p-5 rounded-2xl border-l-4 border-indigo-500 shadow-sm border border-slate-200/60">
           <span className="text-xs uppercase font-bold text-slate-400 tracking-wider">Model Smart Schools</span>
           <div className="flex items-baseline gap-2 mt-1">
-            <h3 className="text-xl font-extrabold text-slate-800">{generalMetrics.education_smart_schools_count || '49'}/100</h3>
-            <span className="text-xs text-indigo-600 font-bold">{generalMetrics.education_smart_schools_count || '49'}% Completed</span>
+            <h3 className="text-xl font-extrabold text-slate-800">{generalMetrics.education_smart_schools_count || '0'}/100</h3>
+            <span className="text-xs text-indigo-600 font-bold">{generalMetrics.education_smart_schools_count || '0'}% Completed</span>
           </div>
           <p className="text-xs text-slate-400 mt-1 font-medium">Campus digital classroom audits</p>
         </div>
@@ -43,8 +43,10 @@ export const EducationDept: React.FC = () => {
         <div className="bg-white p-5 rounded-2xl border-l-4 border-emerald-500 shadow-sm border border-slate-200/60">
           <span className="text-xs uppercase font-bold text-slate-400 tracking-wider">Student-Teacher Ratio</span>
           <div className="flex items-baseline gap-2 mt-1">
-            <h3 className="text-xl font-extrabold text-slate-800">{generalMetrics.education_student_teacher_ratio || '28 : 1'}</h3>
-            <span className="text-xs text-emerald-600 font-bold">Target met</span>
+            <h3 className="text-xl font-extrabold text-slate-800">{generalMetrics.education_student_teacher_ratio || 'N/A'}</h3>
+            {generalMetrics.education_student_teacher_ratio && (
+              <span className="text-xs text-emerald-600 font-bold">Target met</span>
+            )}
           </div>
           <p className="text-xs text-slate-400 mt-1 font-medium">Delhi state average (National: 30:1)</p>
         </div>

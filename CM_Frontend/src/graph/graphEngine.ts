@@ -1,6 +1,6 @@
-// ─── graphEngine.ts ───────────────────────────────────────────────────────────
-// CM → Districts → Booths → Officers → Complaints
-// ─────────────────────────────────────────────────────────────────────────────
+
+
+
 
 export type NodeTier = 'cm' | 'district' | 'booth' | 'officer' | 'complaint';
 
@@ -22,7 +22,7 @@ export interface GNode {
   val?: number;
   x?: number; y?: number; fx?: number; fy?: number; vx?: number; vy?: number;
   meta?: {
-    // district
+    
     totalComplaints?: number;
     resolved?: number;
     pending?: number;
@@ -30,10 +30,10 @@ export interface GNode {
     resolutionRate?: number;
     topIssue?: string;
     dmName?: string;
-    // booth
+    
     ward?: string;
     boothOfficerCount?: number;
-    // officer
+    
     name?: string;
     designation?: string;
     phone?: string;
@@ -41,7 +41,7 @@ export interface GNode {
     completedComplaints?: number;
     avgDays?: number;
     rating?: number;
-    // complaint
+    
     complaintId?: string;
     status?: 'Pending' | 'Active' | 'Resolved' | 'Escalated';
     priority?: 'Low' | 'Medium' | 'High' | 'Emergency';
@@ -66,11 +66,11 @@ export const resolveId = (v: unknown): string => {
   return String(v);
 };
 
-// ── Static Delhi data ──────────────────────────────────────────────────────
-// DISTRICTS_DATA removed as Delhi gov graph is now built dynamically from live collections
 
-// ── Build graph ────────────────────────────────────────────────────────────────
-// ── Build graph ────────────────────────────────────────────────────────────────
+
+
+
+
 export function buildDelhiGovGraph(
   officers: any[] = [],
   complaints: any[] = [],
@@ -93,7 +93,7 @@ export function buildDelhiGovGraph(
     }
   };
 
-  // 1. CM node
+  
   const totalResolved = complaints.filter(c => c.status === 'Resolved').length;
   const totalPending  = complaints.filter(c => c.status !== 'Resolved').length;
   const totalEsc      = complaints.filter(c => c.status === 'Escalated').length;
@@ -109,7 +109,7 @@ export function buildDelhiGovGraph(
     }
   });
 
-  // 2. Department Heads (State Level)
+  
   const deptHeads = officers.filter(o => o.designation !== 'District Magistrate');
   deptHeads.forEach(dh => {
     if (filters.department && filters.department !== 'All Departments') {
@@ -130,12 +130,11 @@ export function buildDelhiGovGraph(
     link('CM', dh.id, 'coordinates', 1);
   });
 
-  // 3. Districts
-  const DISTRICT_NAMES = [
-    'New Delhi', 'North Delhi', 'North West Delhi', 'West Delhi',
-    'South West Delhi', 'South Delhi', 'South East Delhi', 'Central Delhi',
-    'East Delhi', 'Shahdara', 'North East Delhi'
-  ];
+  
+  const DISTRICT_NAMES = Array.from(new Set([
+    ...officers.map(o => o.district).filter(Boolean),
+    ...complaints.map(c => c.district).filter(Boolean)
+  ])) as string[];
 
   let filteredDistricts = DISTRICT_NAMES;
   if (filters.district && filters.district !== 'All Districts') {
@@ -152,11 +151,11 @@ export function buildDelhiGovGraph(
     const total = distComplaints.length;
     const rate = total > 0 ? Math.round((resolved / total) * 100) : 100;
 
-    // Find DM officer for this district
+    
     const dmOfficer = officers.find(o => o.district === distName && o.designation === 'District Magistrate');
     const dmName = dmOfficer ? dmOfficer.name : `DM ${distName}`;
 
-    // Get Top issue category
+    
     const categoryCounts: Record<string, number> = {};
     distComplaints.forEach(c => {
       categoryCounts[c.category] = (categoryCounts[c.category] || 0) + 1;
@@ -179,7 +178,7 @@ export function buildDelhiGovGraph(
     });
     link('CM', distId, 'commands', 1);
 
-    // Link DM officer to District node
+    
     if (dmOfficer) {
       const dmRate = dmOfficer.completedComplaints + dmOfficer.activeComplaints > 0
         ? Math.round((dmOfficer.completedComplaints / (dmOfficer.completedComplaints + dmOfficer.activeComplaints)) * 100)
@@ -196,7 +195,7 @@ export function buildDelhiGovGraph(
       link(distId, dmOfficer.id, 'magistrate', 1);
     }
 
-    // Wards based on categories of complaints in this district
+    
     const categories = Array.from(new Set(distComplaints.map(c => c.category)));
     categories.forEach((cat) => {
       if (filters.department && filters.department !== 'All Departments') {
@@ -218,7 +217,7 @@ export function buildDelhiGovGraph(
       const wardId = `W_${distName.toUpperCase().replace(/\s+/g, '')}_${cat.toUpperCase().replace(/[^A-Z0-9]/g, '')}`;
       const wardName = `${cat} Ward`;
 
-      // Count officers overseeing this ward category
+      
       const mappings: Record<string, string> = {
         'Civic Infrastructure': 'PWD & Infrastructure',
         'Water & Sewage': 'Delhi Jal Board',
@@ -236,7 +235,7 @@ export function buildDelhiGovGraph(
         id: wardId, label: wardName, type: 'booth', sub: `District Division`, val: 1.5,
         meta: {
           ward: wardName,
-          boothOfficerCount: matchingDeptHead ? 2 : 1, // DM and/or Dept Head
+          boothOfficerCount: matchingDeptHead ? 2 : 1, 
           totalComplaints: catComplaints.length,
           resolved: catComplaints.filter(c => c.status === 'Resolved').length,
           pending: catComplaints.filter(c => c.status !== 'Resolved').length,
@@ -248,7 +247,7 @@ export function buildDelhiGovGraph(
         link(matchingDeptHead.id, wardId, 'oversees', 1);
       }
 
-      // Add complaints of this category
+      
       catComplaints.forEach(c => {
         add({
           id: c.id, label: c.title.slice(0, 28) + (c.title.length > 28 ? '…' : ''), type: 'complaint',
@@ -266,7 +265,7 @@ export function buildDelhiGovGraph(
   return { nodes, links };
 }
 
-// Legacy compat
+
 export const NODE_CFG = TIER_CFG;
 export const buildGraph = (officers: any[], complaints: any[] = []) =>
   buildDelhiGovGraph(officers, complaints);

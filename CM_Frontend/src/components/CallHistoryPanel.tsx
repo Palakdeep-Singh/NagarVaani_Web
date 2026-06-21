@@ -2,13 +2,13 @@ import React, { useState } from 'react';
 import {
   Phone, Video, PhoneIncoming, PhoneOutgoing, PhoneMissed,
   Clock, Calendar, FileText, X, ChevronDown, ChevronUp,
-  Trash2, PhoneOff, RotateCcw, Download
+  Trash2, PhoneOff, Download
 } from 'lucide-react';
 import type { CallHistoryEntry, CallOutcome } from '../hooks/useCallHistory';
 import type { CallType } from '../context/CallContext';
 import { useCall } from '../context/CallContext';
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
+
 
 const formatDuration = (secs: number): string => {
   if (secs === 0) return '—';
@@ -38,7 +38,7 @@ const timeAgo = (iso: string): string => {
   return formatDateTime(iso).date;
 };
 
-// ─── Outcome config ──────────────────────────────────────────────────────────
+
 
 const outcomeConfig: Record<CallOutcome, { label: string; color: string; badgeBg: string }> = {
   completed:  { label: 'Completed',  color: 'text-emerald-600', badgeBg: 'bg-emerald-50 border-emerald-200 text-emerald-700' },
@@ -59,7 +59,7 @@ const DirectionIcon: React.FC<{ direction: 'incoming' | 'outgoing'; outcome: Cal
   return <PhoneOutgoing className={cls} />;
 };
 
-// ─── Detail Popup ─────────────────────────────────────────────────────────────
+
 
 const HistoryDetailPopup: React.FC<{
   entry: CallHistoryEntry;
@@ -105,7 +105,7 @@ const HistoryDetailPopup: React.FC<{
     >
       <div className="bg-white border border-slate-200 w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-150">
 
-        {/* Header */}
+        
         <div className="bg-slate-50/80 border-b border-slate-200 px-5 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className={`h-9 w-9 rounded-xl flex items-center justify-center border ${
@@ -130,10 +130,10 @@ const HistoryDetailPopup: React.FC<{
           </button>
         </div>
 
-        {/* Body */}
+        
         <div className="p-5 space-y-4">
 
-          {/* Partner info + outcome */}
+          
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-3">
               <div className="h-12 w-12 rounded-2xl bg-indigo-50 border border-indigo-200 text-indigo-600 text-base font-extrabold flex items-center justify-center">
@@ -149,7 +149,7 @@ const HistoryDetailPopup: React.FC<{
             </span>
           </div>
 
-          {/* Stats grid */}
+          
           <div className="grid grid-cols-3 gap-3">
             <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3 text-center">
               <DirectionIcon direction={entry.direction} outcome={entry.outcome} callType={entry.callType} />
@@ -168,7 +168,7 @@ const HistoryDetailPopup: React.FC<{
             </div>
           </div>
 
-          {/* Briefing notes */}
+          
           <div>
             <div className="flex items-center justify-between mb-2">
               <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
@@ -193,7 +193,7 @@ const HistoryDetailPopup: React.FC<{
           </div>
         </div>
 
-        {/* Action footer */}
+        
         <div className="bg-slate-50/80 border-t border-slate-200 px-5 py-3.5 flex items-center justify-between gap-3">
           <button
             onClick={onClose}
@@ -223,7 +223,7 @@ const HistoryDetailPopup: React.FC<{
   );
 };
 
-// ─── Row ─────────────────────────────────────────────────────────────────────
+
 
 const HistoryRow: React.FC<{
   entry: CallHistoryEntry;
@@ -236,12 +236,12 @@ const HistoryRow: React.FC<{
       onClick={onClick}
       className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-50 transition-colors text-left group cursor-pointer border border-transparent hover:border-slate-200"
     >
-      {/* Direction icon */}
+      
       <div className="shrink-0 h-8 w-8 rounded-xl bg-slate-100 flex items-center justify-center">
         <DirectionIcon direction={entry.direction} outcome={entry.outcome} callType={entry.callType} />
       </div>
 
-      {/* Info */}
+      
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1.5">
           <span className="text-xs font-bold text-slate-800 truncate">{entry.partner.name}</span>
@@ -255,18 +255,20 @@ const HistoryRow: React.FC<{
             <span className="text-[10px] text-slate-400">· {formatDuration(entry.durationSecs)}</span>
           )}
           {entry.notes.trim() && (
-            <FileText className="h-2.5 w-2.5 text-indigo-400" title="Has briefing notes" />
+            <span title="Has briefing notes">
+              <FileText className="h-2.5 w-2.5 text-indigo-400" />
+            </span>
           )}
         </div>
       </div>
 
-      {/* Timestamp */}
+      
       <span className="text-[10px] text-slate-400 font-medium shrink-0">{timeAgo(entry.endedAt)}</span>
     </button>
   );
 };
 
-// ─── Main Component ───────────────────────────────────────────────────────────
+
 
 const COLLAPSED_COUNT = 5;
 
@@ -307,7 +309,7 @@ export const CallHistoryPanel: React.FC = () => {
       )}
 
       <div className="rounded-2xl bg-white border border-slate-200 overflow-hidden">
-        {/* Panel header */}
+        
         <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
           <div className="flex items-center gap-2">
             <Clock className="h-4 w-4 text-indigo-600" />
@@ -316,7 +318,7 @@ export const CallHistoryPanel: React.FC = () => {
               {callHistory.length}
             </span>
           </div>
-          {/* Clear history */}
+          
           {confirmClear ? (
             <div className="flex items-center gap-2">
               <span className="text-[10px] text-slate-500">Clear all?</span>
@@ -344,7 +346,7 @@ export const CallHistoryPanel: React.FC = () => {
           )}
         </div>
 
-        {/* Entries */}
+        
         <div className="p-2">
           {displayedEntries.map((entry) => (
             <HistoryRow
@@ -355,7 +357,7 @@ export const CallHistoryPanel: React.FC = () => {
           ))}
         </div>
 
-        {/* Expand / collapse */}
+        
         {hasMore && (
           <div className="border-t border-slate-100 px-4 py-2.5">
             <button

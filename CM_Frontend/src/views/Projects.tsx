@@ -4,7 +4,8 @@ import { formatINR } from '../utils/helper';
 import { PlusCircle, ListTodo } from 'lucide-react';
 
 export const Projects: React.FC = () => {
-  const { projects, updateProjectProgress, addNewProject } = useStore();
+  const { projects, updateProjectProgress, addNewProject, activeRole } = useStore();
+  const isCM = activeRole === 'Chief Minister';
   const [showAddForm, setShowAddForm] = useState(false);
 
   
@@ -58,18 +59,22 @@ export const Projects: React.FC = () => {
         <div>
           <h2 className="text-xl font-extrabold text-slate-800 tracking-tight flex items-center gap-2">
             <ListTodo className="h-5 w-5 text-indigo-600" />
-            Major Projects Monitor
+            {isCM ? 'Major Projects Monitor' : 'Project Announcement'}
           </h2>
           <p className="text-xs text-slate-500 mt-0.5">
-            Physical progress tracking and milestones of monitored Delhi capital projects.
+            {isCM
+              ? 'Physical progress tracking and milestones of monitored Delhi capital projects.'
+              : 'Official list of announced capital infrastructure projects and updates.'}
           </p>
         </div>
-        <button
-          onClick={() => setShowAddForm(!showAddForm)}
-          className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-2 cursor-pointer shadow-lg shadow-indigo-600/10 hover:scale-[1.02] active:scale-95 transition-all"
-        >
-          <PlusCircle className="h-4.5 w-4.5" /> {showAddForm ? 'Cancel Form' : 'Launch New Project'}
-        </button>
+        {isCM && (
+          <button
+            onClick={() => setShowAddForm(!showAddForm)}
+            className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-2 cursor-pointer shadow-lg shadow-indigo-600/10 hover:scale-[1.02] active:scale-95 transition-all"
+          >
+            <PlusCircle className="h-4.5 w-4.5" /> {showAddForm ? 'Cancel Form' : 'Launch New Project'}
+          </button>
+        )}
       </div>
 
             {showAddForm && (
@@ -224,7 +229,7 @@ export const Projects: React.FC = () => {
                   </div>
                 </div>
 
-                                {proj.status !== 'Completed' && (
+                                {isCM && proj.status !== 'Completed' && (
                   <div className="pt-2 flex items-center gap-3 bg-white px-3 py-1.5 rounded-lg border border-slate-200/50">
                     <span className="text-xs text-indigo-600 font-bold uppercase shrink-0">Simulate Progress:</span>
                     <input

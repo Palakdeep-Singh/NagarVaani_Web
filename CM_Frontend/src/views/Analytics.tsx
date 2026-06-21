@@ -42,9 +42,9 @@ export const Analytics: React.FC = () => {
   const { complaints, officers } = useStore();
   const [activeMetric, setActiveMetric] = useState<'volume' | 'resolution' | 'sla'>('volume');
 
-  // Dynamic Trends calculation based on live complaint dates
+  
   const trendsData = useMemo(() => {
-    // Generate last 7 dates in YYYY-MM-DD format ending on 2026-06-19
+    
     const dates = ['2026-06-13', '2026-06-14', '2026-06-15', '2026-06-16', '2026-06-17', '2026-06-18', '2026-06-19'];
     const displayDates = ['13 Jun', '14 Jun', '15 Jun', '16 Jun', '17 Jun', '18 Jun', '19 Jun'];
     
@@ -53,12 +53,11 @@ export const Analytics: React.FC = () => {
       const resolved = complaints.filter(c => c.dateFiled === date && c.status === 'Resolved').length;
       const pending = complaints.filter(c => c.dateFiled === date && c.status !== 'Resolved').length;
       
-      // Add baseline synthetic offset so the chart curve is smooth even with low seed counts
       return {
         date: displayDates[idx],
-        Intake: filed + (10 + (idx * 2) % 5),
-        Resolved: resolved + (8 + (idx * 1) % 4),
-        Pending: pending + (2 + (idx * 1) % 3)
+        Intake: filed,
+        Resolved: resolved,
+        Pending: pending
       };
     });
   }, [complaints]);
@@ -95,7 +94,7 @@ export const Analytics: React.FC = () => {
     .filter(p => priorityCounts[p])
     .map((p, i) => ({ name: p, value: priorityCounts[p], fill: GOV_COLORS[i] }));
 
-  // Peak filing hours distributed deterministically by ID hash
+  
   const hourlyData = useMemo(() => {
     const hourlyDistribution = [0, 0, 0, 0, 0, 0, 0, 0, 0];
     complaints.forEach(c => {
@@ -103,19 +102,19 @@ export const Analytics: React.FC = () => {
       hourlyDistribution[hash % 9]++;
     });
     return [
-      { hour: '06-08', count: hourlyDistribution[0] + 4 },
-      { hour: '08-10', count: hourlyDistribution[1] + 18 },
-      { hour: '10-12', count: hourlyDistribution[2] + 34 },
-      { hour: '12-14', count: hourlyDistribution[3] + 22 },
-      { hour: '14-16', count: hourlyDistribution[4] + 28 },
-      { hour: '16-18', count: hourlyDistribution[5] + 19 },
-      { hour: '18-20', count: hourlyDistribution[6] + 12 },
-      { hour: '20-22', count: hourlyDistribution[7] + 7 },
-      { hour: '22-24', count: hourlyDistribution[8] + 3 },
+      { hour: '06-08', count: hourlyDistribution[0] },
+      { hour: '08-10', count: hourlyDistribution[1] },
+      { hour: '10-12', count: hourlyDistribution[2] },
+      { hour: '12-14', count: hourlyDistribution[3] },
+      { hour: '14-16', count: hourlyDistribution[4] },
+      { hour: '16-18', count: hourlyDistribution[5] },
+      { hour: '18-20', count: hourlyDistribution[6] },
+      { hour: '20-22', count: hourlyDistribution[7] },
+      { hour: '22-24', count: hourlyDistribution[8] },
     ];
   }, [complaints]);
 
-  // SLA Compliance per department calculated dynamically
+  
   const slaData = useMemo(() => {
     const departmentsList = [
       'PWD & Infrastructure',
@@ -129,7 +128,7 @@ export const Analytics: React.FC = () => {
       const deptComplaints = complaints.filter(c => c.department === dept);
       const resolvedInSLA = deptComplaints.filter(c => {
         if (c.status !== 'Resolved') return false;
-        // check if resolved within 7 days
+        
         const start = new Date(c.dateFiled).getTime();
         const end = new Date(c.timeline[c.timeline.length - 1].date).getTime();
         return (end - start) <= 7 * 24 * 60 * 60 * 1000;
@@ -137,7 +136,7 @@ export const Analytics: React.FC = () => {
 
       const rate = deptComplaints.length > 0
         ? Math.round((resolvedInSLA / deptComplaints.length) * 100)
-        : (dept === 'PWD & Infrastructure' ? 78 : dept === 'Delhi Jal Board' ? 62 : dept === 'Health & Family Welfare' ? 85 : dept === 'Power Department' ? 71 : dept === 'Transport Department' ? 90 : 88);
+        : 0;
 
       return {
         dept: dept.replace(' Department', '').replace(' & Family Welfare', '').replace(' & Infrastructure', ''),
@@ -147,7 +146,7 @@ export const Analytics: React.FC = () => {
     });
   }, [complaints]);
 
-  // Dynamic KPI calculation
+  
   const { avgResTimeStr, slaBreachRate, totalVolumeStr, satisfactionStr } = useMemo(() => {
     const resolved = complaints.filter(c => c.status === 'Resolved');
     let totalDays = 0;
@@ -159,11 +158,11 @@ export const Analytics: React.FC = () => {
     
     const avgDays = resolved.length > 0 ? (totalDays / resolved.length).toFixed(1) : '—';
     
-    // SLA Breach Rate
+    
     const escalated = complaints.filter(c => c.status === 'Escalated').length;
     const breachPercent = complaints.length > 0 ? Math.round((escalated / complaints.length) * 100) : 0;
 
-    // Satisfaction score based on officer rating
+    
     const avgRating = officers.length > 0
       ? officers.reduce((acc, curr) => acc + curr.rating, 0) / officers.length
       : 0;
@@ -187,7 +186,7 @@ export const Analytics: React.FC = () => {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }} className="animate-slidein">
 
-      {/* Header */}
+      
       <div className="bg-white rounded-2xl border border-[#E5E7EB] shadow-sm p-6">
         <div className="flex items-center gap-3 mb-2">
           <span className="px-2.5 py-1 bg-[#EFF6FF] text-[#2563EB] text-[10px] font-bold uppercase tracking-widest rounded-md border border-[#DBEAFE]">
@@ -202,7 +201,7 @@ export const Analytics: React.FC = () => {
         </p>
       </div>
 
-      {/* KPI strip */}
+      
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '16px' }}>
         {[
           { label: 'Avg. Resolution Time', value: avgResTimeStr, icon: <Clock style={{ width: 18, height: 18 }} />, bg: '#EFF6FF', color: '#2563EB' },
@@ -223,7 +222,7 @@ export const Analytics: React.FC = () => {
         ))}
       </div>
 
-      {/* Tab selector */}
+      
       <div style={{ display: 'flex', gap: '8px' }}>
         {metricBtns.map(btn => (
           <button key={btn.key} onClick={() => setActiveMetric(btn.key as any)}
@@ -240,9 +239,9 @@ export const Analytics: React.FC = () => {
         ))}
       </div>
 
-      {/* Charts row 1 */}
+      
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-        {/* Daily trends */}
+        
         <div className="bg-white rounded-2xl border border-[#E5E7EB] shadow-sm overflow-hidden">
           <SectionHeader title="Daily Grievance Volume" subtitle="Intake vs Resolved — last 7 days" source="State Portal" />
           <div style={{ padding: '20px' }}>
@@ -270,7 +269,7 @@ export const Analytics: React.FC = () => {
           </div>
         </div>
 
-        {/* Dept bar chart */}
+        
         <div className="bg-white rounded-2xl border border-[#E5E7EB] shadow-sm overflow-hidden">
           <SectionHeader title="Grievances by Department" subtitle="Total complaints per nodal department" />
           <div style={{ padding: '20px' }}>
@@ -291,9 +290,9 @@ export const Analytics: React.FC = () => {
         </div>
       </div>
 
-      {/* Charts row 2 */}
+      
       <div style={{ display: 'grid', gridTemplateColumns: '3fr 2fr', gap: '20px' }}>
-        {/* District comparison */}
+        
         <div className="bg-white rounded-2xl border border-[#E5E7EB] shadow-sm overflow-hidden">
           <SectionHeader title="District-wise Complaint Load & Resolution" subtitle="Filed vs resolved per district for current period" />
           <div style={{ padding: '20px' }}>
@@ -311,7 +310,7 @@ export const Analytics: React.FC = () => {
           </div>
         </div>
 
-        {/* Priority pie */}
+        
         <div className="bg-white rounded-2xl border border-[#E5E7EB] shadow-sm overflow-hidden">
           <SectionHeader title="By Priority Level" subtitle="Distribution across severity tiers" />
           <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
@@ -338,7 +337,7 @@ export const Analytics: React.FC = () => {
         </div>
       </div>
 
-      {/* Hourly intake + SLA */}
+      
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
         <div className="bg-white rounded-2xl border border-[#E5E7EB] shadow-sm overflow-hidden">
           <SectionHeader title="Peak Hour Intake Analysis" subtitle="Complaint filing pattern by time-of-day" />
@@ -388,7 +387,7 @@ export const Analytics: React.FC = () => {
         </div>
       </div>
 
-      {/* Data footnote */}
+      
       <div className="bg-[#EFF6FF] border border-[#DBEAFE] rounded-2xl p-5 flex items-start gap-3">
         <Info style={{ width: 15, height: 15, color: '#2563EB', marginTop: '1px', flexShrink: 0 }} />
         <div style={{ fontSize: '0.80rem', color: '#1D4ED8', lineHeight: 1.6, fontWeight: 500 }}>

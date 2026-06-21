@@ -1,16 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useStore } from '../context/Store';
 import { MessageSquare, Send, Phone, Video } from 'lucide-react';
 import { useCall } from '../context/CallContext';
 import { getRoleLabel } from '../utils/helper';
 
 export const Comm: React.FC = () => {
-  const { messages, addMessage, officers, currentUser } = useStore();
+  const { messages, addMessage, officers, currentUser, activeChatPartner, setActiveChatPartner, unreadCounts } = useStore();
   const { startCall, callState, activeCallPartner } = useCall();
 
-  
   const [chatInput, setChatInput] = useState('');
-  const [selectedContact, setSelectedContact] = useState<string>('Chief Minister');
+  const selectedContact = activeChatPartner || 'Chief Minister';
 
   const handleSendChat = (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,7 +38,7 @@ export const Comm: React.FC = () => {
     return `${off.name} (${off.designation})`;
   };
 
-  const contactList = [
+  const rawContactList = [
     ...(userRoleLabel !== 'Chief Minister' ? [{ role: 'Chief Minister', name: 'Office of Chief Minister' }] : []),
     ...officers.map(off => ({
       role: getOfficerRoleLabel(off),
@@ -50,8 +49,29 @@ export const Comm: React.FC = () => {
     self.findIndex(t => t.role === c.role) === index
   );
 
+  const getLatestMessageIndex = (contactRole: string): number => {
+    for (let i = messages.length - 1; i >= 0; i--) {
+      const m = messages[i];
+      if (
+        (m.senderRole === userRoleLabel && m.receiverRole === contactRole) ||
+        (m.senderRole === contactRole && m.receiverRole === userRoleLabel)
+      ) {
+        return i;
+      }
+    }
+    return -1;
+  };
 
-  
+  const contactList = [...rawContactList].sort((a, b) => {
+    return getLatestMessageIndex(b.role) - getLatestMessageIndex(a.role);
+  });
+
+  useEffect(() => {
+    if (!activeChatPartner && contactList.length > 0) {
+      setActiveChatPartner(contactList[0].role);
+    }
+  }, [activeChatPartner, contactList, setActiveChatPartner]);
+
   const threadMessages = messages.filter(
     m => (m.senderRole === userRoleLabel && m.receiverRole === selectedContact) ||
          (m.senderRole === selectedContact && m.receiverRole === userRoleLabel)
@@ -83,7 +103,7 @@ export const Comm: React.FC = () => {
               return (
                 <button
                   key={contact.role}
-                  onClick={() => setSelectedContact(contact.role)}
+                  onClick={() => setActiveChatPartner(contact.role)}
                   className={`w-full text-left px-4 py-3 rounded-xl transition-all flex items-center gap-3 cursor-pointer border ${
                     isSelected
                       ? 'bg-indigo-50 border-indigo-200 text-indigo-900 font-bold'
@@ -95,8 +115,15 @@ export const Comm: React.FC = () => {
                   }`}>
                     {contact.name[0]}
                   </div>
-                  <div className="leading-tight">
-                    <div className="text-xs font-semibold text-slate-800">{contact.name}</div>
+                  <div className="leading-tight flex-1">
+                    <div className="text-xs font-semibold text-slate-800 flex items-center justify-between">
+                      <span className="truncate pr-2">{contact.name}</span>
+                      {unreadCounts[contact.role] > 0 && (
+                        <span className="bg-transparent border border-indigo-600 text-indigo-600 text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center shrink-0">
+                          {unreadCounts[contact.role]}
+                        </span>
+                      )}
+                    </div>
                     <div className="text-xs text-slate-500 font-bold uppercase mt-0.5 tracking-wider">{contact.role}</div>
                   </div>
                   {activeCallPartner?.id === contact.role && (
