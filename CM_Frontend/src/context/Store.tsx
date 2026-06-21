@@ -44,6 +44,7 @@ interface DashboardContextType {
   logoutUser: () => void;
   showAIPanel: boolean;
   setShowAIPanel: (val: boolean) => void;
+  socket: any;
 }
 
 const DashboardContext = createContext<DashboardContextType | undefined>(undefined);
@@ -85,6 +86,8 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [healthInventory, setHealthInventory] = useState<any[]>([]);
   const [schoolSmartBoards, setSchoolSmartBoards] = useState<any[]>([]);
   const [generalMetrics, setGeneralMetrics] = useState<Record<string, string>>({});
+
+  const [socket, setSocket] = useState<any>(null);
 
   // Configure starting roles/tabs when user loads
   useEffect(() => {
@@ -148,17 +151,21 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   // Real-time Chat Sync with Socket.IO
   useEffect(() => {
-    if (!currentUser) return;
+    if (!currentUser) {
+      setSocket(null);
+      return;
+    }
 
     const socketUrl = import.meta.env.VITE_SIGNALING_URL || 'http://localhost:5000';
-    const socket = io(socketUrl, { transports: ['websocket', 'polling'] });
+    const s = io(socketUrl, { transports: ['websocket', 'polling'] });
+    setSocket(s);
 
-    socket.on('connect', () => {
+    s.on('connect', () => {
       const roleLabel = getRoleLabel(currentUser);
-      socket.emit('register', roleLabel);
+      s.emit('register', roleLabel);
     });
 
-    socket.on('message_received', (newMessage: Message) => {
+    s.on('message_received', (newMessage: Message) => {
       setMessages((prev) => {
         if (prev.some((m) => m.id === newMessage.id)) return prev;
         return [...prev, newMessage];
@@ -166,7 +173,8 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     });
 
     return () => {
-      socket.disconnect();
+      s.disconnect();
+      setSocket(null);
     };
   }, [currentUser]);
 
@@ -342,7 +350,8 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         registerUser,
         logoutUser,
         showAIPanel,
-        setShowAIPanel
+        setShowAIPanel,
+        socket
       }}
     >
       {children}

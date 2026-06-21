@@ -26,7 +26,8 @@ export const DistrictMinistryDashboard: React.FC = () => {
     complaints,
     officers,
     updateComplaintStatus,
-    addComplaint
+    addComplaint,
+    setActiveTab
   } = useStore();
 
   const [statusFilter, setStatusFilter] = useState<string>('All');
@@ -229,7 +230,10 @@ export const DistrictMinistryDashboard: React.FC = () => {
             <PhoneCall size={14} className="text-emerald-600 animate-pulse" />
             CM Hotline
           </button>
-          <button className="gov-btn gov-btn-primary gov-btn-sm flex items-center gap-1.5 text-xs">
+          <button 
+            onClick={() => setActiveTab('VideoCall')}
+            className="gov-btn gov-btn-primary gov-btn-sm flex items-center gap-1.5 text-xs cursor-pointer"
+          >
             <Video size={14} />
             Joint Video Conference
           </button>

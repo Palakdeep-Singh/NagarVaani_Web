@@ -3,6 +3,7 @@ import { Video, Phone, PhoneOff, Wifi, WifiOff } from 'lucide-react';
 import { useCall } from '../context/CallContext';
 import { useStore } from '../context/Store';
 import { getRoleLabel } from '../utils/helper';
+import { CallHistoryPanel } from '../components/CallHistoryPanel';
 
 
 export const VideoCall: React.FC = () => {
@@ -33,13 +34,15 @@ export const VideoCall: React.FC = () => {
       id: getOfficerRoleLabel(off),
       name: getOfficerDisplayName(off)
     }))
-  ].filter((c, index, self) => 
-    c.id !== userRoleLabel && 
+  ].filter((c, index, self) =>
+    c.id !== userRoleLabel &&
     self.findIndex(t => t.id === c.id) === index
   );
 
   return (
     <div className="space-y-6">
+
+      {/* ── Page Header ─────────────────────────────────────────────────────── */}
       <div>
         <h2 className="text-xl font-extrabold text-slate-800 tracking-tight flex items-center gap-2">
           <Video className="h-5 w-5 text-indigo-600" />
@@ -59,16 +62,23 @@ export const VideoCall: React.FC = () => {
         </p>
       </div>
 
+      {/* ── Active call banner ───────────────────────────────────────────────── */}
       {callState !== 'idle' && activeCallPartner ? (
-        <div className="rounded-2xl bg-indigo-50 border border-indigo-200 p-5 flex items-center justify-between">
+        <div className="rounded-2xl bg-indigo-50 border border-indigo-200 p-5 flex items-center justify-between animate-in fade-in duration-200">
           <div>
             <p className="text-sm font-bold text-indigo-900">
-              {callState === 'dialing' ? `Calling ${activeCallPartner.name}...` : callState === 'ringing' ? `Incoming call from ${activeCallPartner.name}` : `On a call with ${activeCallPartner.name}`}
+              {callState === 'dialing'
+                ? `Calling ${activeCallPartner.name}…`
+                : callState === 'ringing'
+                ? `Incoming call from ${activeCallPartner.name}`
+                : `On a call with ${activeCallPartner.name}`}
             </p>
             <p className="text-xs text-indigo-600 mt-0.5">Use the call window to manage mute, camera and notes.</p>
           </div>
         </div>
       ) : (
+
+        /* ── Quick Dial ──────────────────────────────────────────────────── */
         <div className="rounded-2xl bg-white border border-slate-200 p-5">
           <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Quick Dial</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -105,6 +115,10 @@ export const VideoCall: React.FC = () => {
           </p>
         </div>
       )}
+
+      {/* ── Call History ─────────────────────────────────────────────────────── */}
+      <CallHistoryPanel />
+
     </div>
   );
 };
