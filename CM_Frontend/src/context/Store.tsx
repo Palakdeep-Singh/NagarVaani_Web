@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import axios from 'axios';
-import { io } from 'socket.io-client';
+// import axios from 'axios';           // [ORIGINAL] — re-enable when switching back to backend
+// import { io } from 'socket.io-client'; // [ORIGINAL] — re-enable when switching back to backend
 import { getRoleLabel } from '../utils/helper';
 import type {
   Complaint,
@@ -13,6 +13,21 @@ import type {
   UserProfile,
   WelfareApplication
 } from '../types';
+// ── Dummy data (active) — comment out the block below and uncomment the API
+// ── calls further down to switch back to live backend data.
+import {
+  DUMMY_COMPLAINTS,
+  DUMMY_PROJECTS,
+  DUMMY_OFFICERS,
+  DUMMY_FILES,
+  DUMMY_MESSAGES,
+  DUMMY_WELFARE_APPS,
+  DUMMY_HEALTH_BEDS,
+  DUMMY_HEALTH_INVENTORY,
+  DUMMY_SCHOOL_SMART_BOARDS,
+  DUMMY_GENERAL_METRICS,
+  validateDummyLogin,
+} from '../data/dummyData';
 
 export interface ToastMessage {
   id: string;
@@ -81,19 +96,14 @@ interface DashboardContextType {
 
 const DashboardContext = createContext<DashboardContextType | undefined>(undefined);
 
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
-const api = axios.create({
-  baseURL: API_BASE_URL
-});
-
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('nagarvaani_token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
+// [ORIGINAL] API client setup — uncomment when switching back to backend
+// const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
+// const api = axios.create({ baseURL: API_BASE_URL });
+// api.interceptors.request.use((config) => {
+//   const token = localStorage.getItem('nagarvaani_token');
+//   if (token) { config.headers.Authorization = `Bearer ${token}`; }
+//   return config;
+// });
 
 export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(() => {
@@ -195,145 +205,167 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
   }, [currentUser]);
 
-  
-  const fetchAllData = async () => {
-    try {
-      const [
-        complaintsRes,
-        projectsRes,
-        officersRes,
-        filesRes,
-        messagesRes,
-        healthBedsRes,
-        healthInventoryRes,
-        schoolSmartBoardsRes,
-        generalMetricsRes,
-        welfareRes
-      ] = await Promise.all([
-        api.get('/complaints'),
-        api.get('/projects'),
-        api.get('/officers'),
-        api.get('/files'),
-        api.get('/messages'),
-        api.get('/metrics/health/beds'),
-        api.get('/metrics/health/inventory'),
-        api.get('/metrics/education/smartboards'),
-        api.get('/metrics/general'),
-        api.get('/welfare')
-      ]);
-      setComplaints(complaintsRes.data);
-      setProjects(projectsRes.data);
-      setOfficers(officersRes.data);
-      setFiles(filesRes.data);
-      setMessages(messagesRes.data);
-      setHealthBeds(healthBedsRes.data);
-      setHealthInventory(healthInventoryRes.data);
-      setSchoolSmartBoards(schoolSmartBoardsRes.data);
-      setGeneralMetrics(generalMetricsRes.data);
-      setWelfareApps(welfareRes.data);
-    } catch (err) {
-      console.error('Failed to fetch data from API:', err);
-    }
+  // ── Load all dummy data once user is authenticated ───────────────────────
+  const loadDummyData = () => {
+    setComplaints([...DUMMY_COMPLAINTS]);
+    setProjects([...DUMMY_PROJECTS]);
+    setOfficers([...DUMMY_OFFICERS]);
+    setFiles([...DUMMY_FILES]);
+    setMessages([...DUMMY_MESSAGES]);
+    setHealthBeds([...DUMMY_HEALTH_BEDS]);
+    setHealthInventory([...DUMMY_HEALTH_INVENTORY]);
+    setSchoolSmartBoards([...DUMMY_SCHOOL_SMART_BOARDS]);
+    setGeneralMetrics({ ...DUMMY_GENERAL_METRICS });
+    setWelfareApps([...DUMMY_WELFARE_APPS]);
   };
 
   useEffect(() => {
     if (currentUser) {
-      fetchAllData();
+      loadDummyData();
     }
   }, [currentUser]);
 
-  
+  // [ORIGINAL] fetchAllData — fetches from backend API. Uncomment and replace
+  // loadDummyData() with fetchAllData() in the useEffect above to re-enable.
+  // const fetchAllData = async () => {
+  //   try {
+  //     const [
+  //       complaintsRes, projectsRes, officersRes, filesRes, messagesRes,
+  //       healthBedsRes, healthInventoryRes, schoolSmartBoardsRes, generalMetricsRes, welfareRes
+  //     ] = await Promise.all([
+  //       api.get('/complaints'),
+  //       api.get('/projects'),
+  //       api.get('/officers'),
+  //       api.get('/files'),
+  //       api.get('/messages'),
+  //       api.get('/metrics/health/beds'),
+  //       api.get('/metrics/health/inventory'),
+  //       api.get('/metrics/education/smartboards'),
+  //       api.get('/metrics/general'),
+  //       api.get('/welfare')
+  //     ]);
+  //     setComplaints(complaintsRes.data);
+  //     setProjects(projectsRes.data);
+  //     setOfficers(officersRes.data);
+  //     setFiles(filesRes.data);
+  //     setMessages(messagesRes.data);
+  //     setHealthBeds(healthBedsRes.data);
+  //     setHealthInventory(healthInventoryRes.data);
+  //     setSchoolSmartBoards(schoolSmartBoardsRes.data);
+  //     setGeneralMetrics(generalMetricsRes.data);
+  //     setWelfareApps(welfareRes.data);
+  //   } catch (err) {
+  //     console.error('Failed to fetch data from API:', err);
+  //   }
+  // };
+
+  // ── Socket (optional — only connects if backend is available) ────────────
   useEffect(() => {
     if (!currentUser) {
       setSocket(null);
       return;
     }
 
-    const socketUrl = import.meta.env.VITE_SIGNALING_URL || 'http://localhost:5000';
-    const s = io(socketUrl, { transports: ['websocket', 'polling'] });
-    setSocket(s);
+    // Attempt socket connection; silently skip if backend is offline
+    let s: any = null;
+    try {
+      const { io } = require('socket.io-client');
+      const socketUrl = import.meta.env.VITE_SIGNALING_URL || 'http://localhost:5000';
+      s = io(socketUrl, { transports: ['websocket', 'polling'], timeout: 3000 });
+      setSocket(s);
 
-    s.on('connect', () => {
-      const roleLabel = getRoleLabel(currentUser);
-      s.emit('register', roleLabel);
-    });
-
-    s.on('message_received', (newMessage: Message) => {
-      setMessages((prev) => {
-        if (prev.some((m) => m.id === newMessage.id)) return prev;
-        return [...prev, newMessage];
+      s.on('connect', () => {
+        const roleLabel = getRoleLabel(currentUser);
+        s.emit('register', roleLabel);
       });
 
-      const myRole = getRoleLabel(currentUser);
-      if (newMessage.receiverRole === myRole) {
-        const currentActiveTab = activeTabRef.current;
-        const currentActiveChatPartner = activeChatPartnerRef.current;
+      s.on('message_received', (newMessage: Message) => {
+        setMessages((prev) => {
+          if (prev.some((m) => m.id === newMessage.id)) return prev;
+          return [...prev, newMessage];
+        });
 
-        
-        if (
-          currentActiveTab === 'Communications' &&
-          currentActiveChatPartner === newMessage.senderRole &&
-          document.visibilityState === 'visible'
-        ) {
-          return;
-        }
+        const myRole = getRoleLabel(currentUser);
+        if (newMessage.receiverRole === myRole) {
+          const currentActiveTab = activeTabRef.current;
+          const currentActiveChatPartner = activeChatPartnerRef.current;
 
-        
-        setUnreadCounts((prev) => ({
-          ...prev,
-          [newMessage.senderRole]: (prev[newMessage.senderRole] || 0) + 1,
-        }));
+          if (
+            currentActiveTab === 'Communications' &&
+            currentActiveChatPartner === newMessage.senderRole &&
+            document.visibilityState === 'visible'
+          ) {
+            return;
+          }
 
-        
-        const toastId = `toast-${Date.now()}-${Math.random()}`;
-        setToasts((prev) => [
-          ...prev,
-          {
-            id: toastId,
-            senderRole: newMessage.senderRole,
-            senderName: newMessage.senderName,
-            content: newMessage.content,
-          },
-        ]);
+          setUnreadCounts((prev) => ({
+            ...prev,
+            [newMessage.senderRole]: (prev[newMessage.senderRole] || 0) + 1,
+          }));
 
-        
-        setTimeout(() => {
-          setToasts((prev) => prev.map((t) => t.id === toastId ? { ...t, exiting: true } : t));
+          const toastId = `toast-${Date.now()}-${Math.random()}`;
+          setToasts((prev) => [
+            ...prev,
+            {
+              id: toastId,
+              senderRole: newMessage.senderRole,
+              senderName: newMessage.senderName,
+              content: newMessage.content,
+            },
+          ]);
+
           setTimeout(() => {
-            setToasts((prev) => prev.filter((t) => t.id !== toastId));
-          }, 300);
-        }, 5000);
+            setToasts((prev) => prev.map((t) => t.id === toastId ? { ...t, exiting: true } : t));
+            setTimeout(() => {
+              setToasts((prev) => prev.filter((t) => t.id !== toastId));
+            }, 300);
+          }, 5000);
 
-        
-        if (document.hidden && typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
-          try {
-            new Notification(`New message from ${newMessage.senderName}`, {
-              body: newMessage.content,
-              tag: newMessage.senderRole,
-            });
-          } catch (err) {
-            console.error('Desktop notification failed:', err);
+          if (document.hidden && typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+            try {
+              new Notification(`New message from ${newMessage.senderName}`, {
+                body: newMessage.content,
+                tag: newMessage.senderRole,
+              });
+            } catch (err) {
+              console.error('Desktop notification failed:', err);
+            }
           }
         }
-      }
-    });
+      });
+    } catch {
+      // socket.io-client not available or backend offline — dummy mode, no socket
+    }
 
     return () => {
-      s.disconnect();
+      if (s) { s.disconnect(); }
       setSocket(null);
     };
   }, [currentUser]);
 
   const addComplaint = async (newGrip: Omit<Complaint, 'id' | 'dateFiled' | 'timeline'>) => {
-    try {
-      const res = await api.post('/complaints', newGrip);
-      setComplaints((prev) => [res.data, ...prev]);
-      
-      const officersRes = await api.get('/officers');
-      setOfficers(officersRes.data);
-    } catch (err) {
-      console.error('Failed to add complaint:', err);
-    }
+    // [DUMMY MODE] In-memory complaint creation
+    const newComplaint: Complaint = {
+      ...newGrip,
+      id: `GR-2026-${String(Date.now()).slice(-4)}`,
+      dateFiled: new Date().toISOString().split('T')[0],
+      timeline: [{
+        date: new Date().toISOString().split('T')[0],
+        action: 'Complaint Filed',
+        actor: newGrip.citizenName || 'Citizen',
+        notes: 'Submitted via CM Frontend',
+      }],
+    };
+    setComplaints((prev) => [newComplaint, ...prev]);
+    // [ORIGINAL] Backend API version — uncomment to re-enable:
+    // try {
+    //   const res = await api.post('/complaints', newGrip);
+    //   setComplaints((prev) => [res.data, ...prev]);
+    //   const officersRes = await api.get('/officers');
+    //   setOfficers(officersRes.data);
+    // } catch (err) {
+    //   console.error('Failed to add complaint:', err);
+    // }
   };
 
   const updateComplaintStatus = async (
@@ -344,18 +376,30 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     action?: string,
     additionalFields?: Record<string, any>
   ) => {
-    try {
-      const payload = { status, remarkText, actor, action, ...additionalFields };
-      const res = await api.patch(`/complaints/${id}/status`, payload);
-      setComplaints((prev) =>
-        prev.map((c) => (c.id === id ? res.data : c))
-      );
-
-      const officersRes = await api.get('/officers');
-      setOfficers(officersRes.data);
-    } catch (err) {
-      console.error('Failed to update complaint status:', err);
-    }
+    // [DUMMY MODE] In-memory status update
+    const newEvent = {
+      date: new Date().toISOString().split('T')[0],
+      action: action || 'Status Updated',
+      actor: actor || 'System',
+      notes: remarkText,
+    };
+    setComplaints((prev) =>
+      prev.map((c) =>
+        c.id === id
+          ? { ...c, status, ...additionalFields, timeline: [...c.timeline, newEvent] }
+          : c
+      )
+    );
+    // [ORIGINAL] Backend API version — uncomment to re-enable:
+    // try {
+    //   const payload = { status, remarkText, actor, action, ...additionalFields };
+    //   const res = await api.patch(`/complaints/${id}/status`, payload);
+    //   setComplaints((prev) => prev.map((c) => (c.id === id ? res.data : c)));
+    //   const officersRes = await api.get('/officers');
+    //   setOfficers(officersRes.data);
+    // } catch (err) {
+    //   console.error('Failed to update complaint status:', err);
+    // }
   };
 
   const confirmAICategory = async (id: string, approved: boolean, override?: string) => {
@@ -456,34 +500,67 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   };
 
   const addMessage = async (content: string, receiverRole: string) => {
-    try {
-      const res = await api.post('/messages', { content, receiverRole });
-      setMessages((prev) => [...prev, res.data]);
-    } catch (err) {
-      console.error('Failed to send message:', err);
-    }
+    // [DUMMY MODE] In-memory message
+    const newMsg: Message = {
+      id: `MSG-${Date.now()}`,
+      senderName: currentUser?.username || 'Unknown',
+      senderRole: currentUser?.role || 'Unknown',
+      receiverRole,
+      content,
+      timestamp: new Date().toISOString(),
+    };
+    setMessages((prev) => [...prev, newMsg]);
+    // [ORIGINAL] Backend API version — uncomment to re-enable:
+    // try {
+    //   const res = await api.post('/messages', { content, receiverRole });
+    //   setMessages((prev) => [...prev, res.data]);
+    // } catch (err) {
+    //   console.error('Failed to send message:', err);
+    // }
   };
 
   const approveFile = async (fileId: string, remarkText: string) => {
-    try {
-      const res = await api.patch(`/files/${fileId}/approve`, { remarkText });
-      setFiles((prev) =>
-        prev.map((f) => (f.id === fileId ? res.data : f))
-      );
-    } catch (err) {
-      console.error('Failed to approve file:', err);
-    }
+    // [DUMMY MODE] In-memory file approval
+    setFiles((prev) =>
+      prev.map((f) =>
+        f.id === fileId
+          ? {
+              ...f,
+              status: 'Approved' as const,
+              remarks: [...f.remarks, { author: currentUser?.username || 'CM Office', action: 'Approved', text: remarkText, date: new Date().toISOString().split('T')[0] }],
+            }
+          : f
+      )
+    );
+    // [ORIGINAL] Backend API version — uncomment to re-enable:
+    // try {
+    //   const res = await api.patch(`/files/${fileId}/approve`, { remarkText });
+    //   setFiles((prev) => prev.map((f) => (f.id === fileId ? res.data : f)));
+    // } catch (err) {
+    //   console.error('Failed to approve file:', err);
+    // }
   };
 
   const rejectFile = async (fileId: string, remarkText: string) => {
-    try {
-      const res = await api.patch(`/files/${fileId}/reject`, { remarkText });
-      setFiles((prev) =>
-        prev.map((f) => (f.id === fileId ? res.data : f))
-      );
-    } catch (err) {
-      console.error('Failed to reject file:', err);
-    }
+    // [DUMMY MODE] In-memory file rejection
+    setFiles((prev) =>
+      prev.map((f) =>
+        f.id === fileId
+          ? {
+              ...f,
+              status: 'Rejected' as const,
+              remarks: [...f.remarks, { author: currentUser?.username || 'CM Office', action: 'Rejected', text: remarkText, date: new Date().toISOString().split('T')[0] }],
+            }
+          : f
+      )
+    );
+    // [ORIGINAL] Backend API version — uncomment to re-enable:
+    // try {
+    //   const res = await api.patch(`/files/${fileId}/reject`, { remarkText });
+    //   setFiles((prev) => prev.map((f) => (f.id === fileId ? res.data : f)));
+    // } catch (err) {
+    //   console.error('Failed to reject file:', err);
+    // }
   };
 
   const updateProjectProgress = async (
@@ -491,38 +568,60 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     progress: number,
     status?: 'On Track' | 'Delayed' | 'Critical' | 'Completed'
   ) => {
-    try {
-      const res = await api.patch(`/projects/${projectId}/progress`, { progress, status });
-      setProjects((prev) =>
-        prev.map((p) => (p.id === projectId ? res.data : p))
-      );
-    } catch (err) {
-      console.error('Failed to update project progress:', err);
-    }
+    // [DUMMY MODE] In-memory progress update
+    setProjects((prev) =>
+      prev.map((p) =>
+        p.id === projectId ? { ...p, physicalProgress: progress, ...(status ? { status } : {}) } : p
+      )
+    );
+    // [ORIGINAL] Backend API version — uncomment to re-enable:
+    // try {
+    //   const res = await api.patch(`/projects/${projectId}/progress`, { progress, status });
+    //   setProjects((prev) => prev.map((p) => (p.id === projectId ? res.data : p)));
+    // } catch (err) {
+    //   console.error('Failed to update project progress:', err);
+    // }
   };
 
   const addNewProject = async (newProj: Omit<Project, 'id' | 'budgetSpent' | 'physicalProgress'>) => {
-    try {
-      const res = await api.post('/projects', newProj);
-      setProjects((prev) => [...prev, res.data]);
-    } catch (err) {
-      console.error('Failed to add project:', err);
-    }
+    // [DUMMY MODE] In-memory project creation
+    const project: Project = {
+      ...newProj,
+      id: `PRJ-${Date.now()}`,
+      budgetSpent: 0,
+      physicalProgress: 0,
+    };
+    setProjects((prev) => [...prev, project]);
+    // [ORIGINAL] Backend API version — uncomment to re-enable:
+    // try {
+    //   const res = await api.post('/projects', newProj);
+    //   setProjects((prev) => [...prev, res.data]);
+    // } catch (err) {
+    //   console.error('Failed to add project:', err);
+    // }
   };
 
+  // ── Auth — validated against dummyData.ts (no network call) ─────────────
   const loginUser = async (username: string, password: string): Promise<boolean> => {
-    try {
-      const res = await api.post('/auth/login', { username, password });
-      const { token, user } = res.data;
-
-      localStorage.setItem('nagarvaani_token', token);
-      localStorage.setItem('nagarvaani_user', JSON.stringify(user));
-      setCurrentUser(user);
-      return true;
-    } catch (err) {
-      console.error('Login failed:', err);
-      return false;
-    }
+    // [DUMMY MODE] Validates against local DUMMY_USERS (no network call)
+    await new Promise((r) => setTimeout(r, 400)); // simulate network delay
+    const user = validateDummyLogin(username, password);
+    if (!user) return false;
+    localStorage.setItem('nagarvaani_user', JSON.stringify(user));
+    setCurrentUser(user);
+    return true;
+    // [ORIGINAL] Backend API version — uncomment to re-enable:
+    // try {
+    //   const res = await api.post('/auth/login', { username, password });
+    //   const { token, user } = res.data;
+    //   localStorage.setItem('nagarvaani_token', token);
+    //   localStorage.setItem('nagarvaani_user', JSON.stringify(user));
+    //   setCurrentUser(user);
+    //   return true;
+    // } catch (err) {
+    //   console.error('Login failed:', err);
+    //   return false;
+    // }
   };
 
   const registerUser = async (
@@ -532,24 +631,21 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     district?: DistrictName,
     department?: 'Education & Schools' | 'Public Health' | 'PWD & Infrastructure'
   ): Promise<boolean> => {
-    try {
-      const res = await api.post('/auth/register', {
-        username,
-        password,
-        role,
-        district,
-        department
-      });
-      const { token, user } = res.data;
-
-      localStorage.setItem('nagarvaani_token', token);
-      localStorage.setItem('nagarvaani_user', JSON.stringify(user));
-      setCurrentUser(user);
-      return true;
-    } catch (err) {
-      console.error('Registration failed:', err);
-      return false;
-    }
+    // [DUMMY MODE] Registration is not supported — use pre-seeded DUMMY_USERS
+    console.warn('registerUser: dummy mode — use existing demo credentials');
+    return false;
+    // [ORIGINAL] Backend API version — uncomment to re-enable:
+    // try {
+    //   const res = await api.post('/auth/register', { username, password, role, district, department });
+    //   const { token, user } = res.data;
+    //   localStorage.setItem('nagarvaani_token', token);
+    //   localStorage.setItem('nagarvaani_user', JSON.stringify(user));
+    //   setCurrentUser(user);
+    //   return true;
+    // } catch (err) {
+    //   console.error('Registration failed:', err);
+    //   return false;
+    // }
   };
 
   const logoutUser = () => {
@@ -574,25 +670,43 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   };
 
   const updateWelfareStatus = async (id: string, status: 'Approved' | 'Rejected') => {
-    try {
-      const res = await api.patch(`/welfare/${id}/status`, { status });
-      setWelfareApps(prev => prev.map(w => w._id === id ? res.data : w));
-    } catch (err) {
-      console.error('Failed to update welfare status:', err);
-    }
+    // [DUMMY MODE] In-memory welfare status update
+    setWelfareApps((prev) => prev.map((w) => w._id === id ? { ...w, status } : w));
+    // [ORIGINAL] Backend API version — uncomment to re-enable:
+    // try {
+    //   const res = await api.patch(`/welfare/${id}/status`, { status });
+    //   setWelfareApps(prev => prev.map(w => w._id === id ? res.data : w));
+    // } catch (err) {
+    //   console.error('Failed to update welfare status:', err);
+    // }
   };
 
-  const bulkImportOfficers = async (officers: { Name: string; Designation: string; Department: string; District?: string }[]) => {
-    try {
-      const res = await api.post('/officers/bulk-import', { officers });
-      // Reload officers list after import
-      const officersRes = await api.get('/officers');
-      setOfficers(officersRes.data);
-      return res.data as { inserted: number; skipped: string[] };
-    } catch (err) {
-      console.error('Failed to bulk import officers:', err);
-      throw err;
-    }
+  const bulkImportOfficers = async (officerRows: { Name: string; Designation: string; Department: string; District?: string }[]) => {
+    // [DUMMY MODE] In-memory officer import
+    const newOfficers: Officer[] = officerRows.map((o, idx) => ({
+      id: `OFF-IMP-${Date.now()}-${idx}`,
+      name: o.Name,
+      designation: o.Designation,
+      department: o.Department,
+      district: o.District as DistrictName | undefined,
+      resolutionRate: 75,
+      avgResolutionTime: 8,
+      activeComplaints: 0,
+      completedComplaints: 0,
+      rating: 4.0,
+    }));
+    setOfficers((prev) => [...prev, ...newOfficers]);
+    return { inserted: newOfficers.length, skipped: [] };
+    // [ORIGINAL] Backend API version — uncomment to re-enable:
+    // try {
+    //   const res = await api.post('/officers/bulk-import', { officers: officerRows });
+    //   const officersRes = await api.get('/officers');
+    //   setOfficers(officersRes.data);
+    //   return res.data as { inserted: number; skipped: string[] };
+    // } catch (err) {
+    //   console.error('Failed to bulk import officers:', err);
+    //   throw err;
+    // }
   };
 
   return (

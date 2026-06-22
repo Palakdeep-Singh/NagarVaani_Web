@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useStore } from '../context/Store';
 import { ShieldCheck, Lock, User, Eye, EyeOff, AlertCircle, Zap } from 'lucide-react';
+import { FAST_LOGIN_ROLES, DEMO_CREDENTIALS, ROLE_MAP } from '../data/dummyData';
 
 export const Login: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
   const { loginUser } = useStore();
@@ -38,17 +39,12 @@ export const Login: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
           }
         } catch {}
       }
-      // Fallback based on role param
-      const roleMap: Record<string, { u: string; p: string }> = {
-        cm:    { u: 'cm',          p: 'cm123'    },
-        dm:    { u: 'newdelhidm',  p: 'dm123'    },
-        nodal: { u: 'healthhead',  p: 'dept123'  },
-      };
-      const cred = role ? roleMap[role] : roleMap['cm'];
+      // Fallback based on role param — uses ROLE_MAP from dummyData
+      const cred = role ? ROLE_MAP[role] : ROLE_MAP['cm'];
       if (cred) {
         setAutoLoginMsg(`⚡ Fast auth from NagarVaani Portal — logging in…`);
         setTimeout(async () => {
-          await loginUser(cred.u, cred.p);
+          await loginUser(cred.username, cred.password);
           window.history.replaceState({}, document.title, window.location.pathname);
         }, 600);
       }
@@ -75,11 +71,7 @@ export const Login: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
   };
 
 
-  const fastRoles = [
-    { label: 'CM Office',    icon: '👑', u: 'cm',          p: 'cm123',   color: '#F59E0B' },
-    { label: 'DM Office',    icon: '🏛️', u: 'newdelhidm',  p: 'dm123',   color: '#3B82F6' },
-    { label: 'Nodal Officer',icon: '💼', u: 'healthhead',  p: 'dept123', color: '#10B981' },
-  ];
+  const fastRoles = FAST_LOGIN_ROLES;
 
   return (
     <div className="login-page">
@@ -153,16 +145,12 @@ export const Login: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
               <Zap size={14} />
               Demo Credentials (MVP)
             </div>
-            {[
-              { label: 'CM Office',  u: 'cm',          p: 'cm123'    },
-              { label: 'DM Office',  u: 'newdelhidm',  p: 'dm123'    },
-              { label: 'Nodal Off.', u: 'healthhead',  p: 'dept123'  },
-            ].map(c => (
-              <div key={c.u} className="login-demo-row">
+            {DEMO_CREDENTIALS.map(c => (
+              <div key={c.username} className="login-demo-row">
                 <span className="login-demo-label">{c.label}</span>
                 <button type="button" className="login-demo-btn"
-                  onClick={() => { setUsername(c.u); setPassword(c.p); }}>
-                  {c.u} / {c.p}
+                  onClick={() => { setUsername(c.username); setPassword(c.password); }}>
+                  {c.username} / {c.password}
                 </button>
               </div>
             ))}
@@ -257,10 +245,10 @@ export const Login: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
               {fastRoles.map(r => (
                 <button
-                  key={r.u}
+                  key={r.username}
                   type="button"
                   disabled={fastAuthLoading !== null}
-                  onClick={() => handleFastLogin(r.u, r.p, r.label)}
+                  onClick={() => handleFastLogin(r.username, r.password, r.label)}
                   style={{
                     padding: '10px 6px',
                     background: fastAuthLoading === r.label
