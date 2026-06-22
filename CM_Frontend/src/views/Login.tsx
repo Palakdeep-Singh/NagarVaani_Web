@@ -32,6 +32,7 @@ export const Login: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
             setTimeout(async () => {
               await loginUser(auth.username, auth.password);
               localStorage.removeItem('cm_quick_auth');
+              window.history.replaceState({}, document.title, window.location.pathname);
             }, 600);
             return;
           }
@@ -46,7 +47,10 @@ export const Login: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
       const cred = role ? roleMap[role] : roleMap['cm'];
       if (cred) {
         setAutoLoginMsg(`⚡ Fast auth from NagarVaani Portal — logging in…`);
-        setTimeout(async () => await loginUser(cred.u, cred.p), 600);
+        setTimeout(async () => {
+          await loginUser(cred.u, cred.p);
+          window.history.replaceState({}, document.title, window.location.pathname);
+        }, 600);
       }
     }
   }, [loginUser]);

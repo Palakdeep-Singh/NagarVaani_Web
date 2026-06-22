@@ -66,7 +66,11 @@ export const DistrictMinistryDashboard: React.FC = () => {
       'Education & Schools': 'Education Department',
       'Law & Policing': 'Delhi Police',
       'Transport & Roads': 'Transport Department',
-      'Social Welfare': 'Social Welfare Department'
+      'Social Welfare': 'Social Welfare Department',
+      'Revenue & Land': 'Revenue & Grievance',
+      'Sanitation': 'Municipal Corporation',
+      'Noise Pollution': 'Delhi Police',
+      'Stray Animals': 'Municipal Corporation'
     };
     return mappings[cat];
   };

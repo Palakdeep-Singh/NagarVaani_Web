@@ -25,6 +25,30 @@ import { CitizenDashboard } from './views/CitizenDashboard';
 import UserApp from './views/citizen_portal/UserApp';
 import { AuthProvider } from './views/citizen_portal/mockHelpers';
 
+// Ported DM Views
+import { ComplaintQueue } from './views/ComplaintQueue';
+import { DMScorecard } from './views/DMScorecard';
+import { DirectMessages as DMDirectMessages } from './views/DMDirectMessages';
+import { EscalateSecretary } from './views/EscalateSecretary';
+import { InterimReply } from './views/InterimReply';
+import { NewComplaintIntake } from './views/NewComplaintIntake';
+import { OfficerAssignment } from './views/OfficerAssignment';
+import { RevenueCases } from './views/RevenueCases';
+import { SDMLoadView } from './views/SDMLoadView';
+
+// Ported Nodal Views
+import { SmartCategorisation } from './views/SmartCategorisation';
+import { RedressalAssignment } from './views/RedressalAssignment';
+import { SLACountdown } from './views/SLACountdown';
+import { BatchResolution } from './views/BatchResolution';
+import { PendencyMonitor } from './views/PendencyMonitor';
+import { PoorRatingAppeals } from './views/PoorRatingAppeals';
+import { RootCauseClusters } from './views/RootCauseClusters';
+import { MonthlyReport } from './views/MonthlyReport';
+import { CrossDeptTicket } from './views/CrossDeptTicket';
+import { PolicyRecommendation } from './views/PolicyRecommendation';
+import { DirectMessages as NodalDirectMessages } from './views/NodalDirectMessages';
+
 
 const DashboardContent: React.FC = () => {
   const { activeTab, currentUser } = useStore();
@@ -58,8 +82,22 @@ const DashboardContent: React.FC = () => {
     switch (activeTab) {
       case 'Overview':
         return <Overview />;
-      case 'CitizenDashboard':
-        return <CitizenDashboard />;
+      case 'CitizenOverview':
+        return <CitizenDashboard subTab="Overview" />;
+      case 'CitizenComplaints':
+        return <CitizenDashboard subTab="Complaints" />;
+      case 'MilestonesDocuments':
+        return <CitizenDashboard subTab="Milestones & Documents" />;
+      case 'CitizenDistrictView':
+        return <CitizenDashboard subTab="District View" />;
+      case 'BoothAnalyser':
+        return <CitizenDashboard subTab="Booth Analyser" />;
+      case 'FundPredictor':
+        return <CitizenDashboard subTab="Fund Predictor" />;
+      case 'ManageAdmins':
+        return <CitizenDashboard subTab="Manage Admins" />;
+      case 'OfficerCsvImport':
+        return <CitizenDashboard subTab="Officer CSV Import" />;
       case 'Analytics':
         return <Analytics />;
       case 'KnowledgeGraph':
@@ -88,6 +126,51 @@ const DashboardContent: React.FC = () => {
         return <Comm />;
       case 'VideoCall':
         return <VideoCall />;
+
+      // Ported DM View Routing
+      case 'ComplaintQueue':
+        return <ComplaintQueue />;
+      case 'DMScorecard':
+        return <DMScorecard />;
+      case 'DMDirectMessages':
+        return <DMDirectMessages />;
+      case 'EscalateSecretary':
+        return <EscalateSecretary />;
+      case 'InterimReply':
+        return <InterimReply />;
+      case 'NewComplaintIntake':
+        return <NewComplaintIntake />;
+      case 'OfficerAssignment':
+        return <OfficerAssignment />;
+      case 'RevenueCases':
+        return <RevenueCases />;
+      case 'SDMLoadView':
+        return <SDMLoadView />;
+
+      // Ported Nodal View Routing
+      case 'SmartCategorisation':
+        return <SmartCategorisation />;
+      case 'RedressalAssignment':
+        return <RedressalAssignment />;
+      case 'SLACountdown':
+        return <SLACountdown />;
+      case 'BatchResolution':
+        return <BatchResolution />;
+      case 'PendencyMonitor':
+        return <PendencyMonitor />;
+      case 'PoorRatingAppeals':
+        return <PoorRatingAppeals />;
+      case 'RootCauseClusters':
+        return <RootCauseClusters />;
+      case 'MonthlyReport':
+        return <MonthlyReport />;
+      case 'CrossDeptTicket':
+        return <CrossDeptTicket />;
+      case 'PolicyRecommendation':
+        return <PolicyRecommendation />;
+      case 'NodalDirectMessages':
+        return <NodalDirectMessages />;
+
       default:
         return <Overview />;
     }

@@ -10,7 +10,8 @@ import type {
   Message,
   DistrictName,
   ComplaintStatus,
-  UserProfile
+  UserProfile,
+  WelfareApplication
 } from '../types';
 
 export interface ToastMessage {
@@ -27,6 +28,7 @@ interface DashboardContextType {
   officers: Officer[];
   files: DigitalFile[];
   messages: Message[];
+  welfareApps: WelfareApplication[];
   healthBeds: any[];
   healthInventory: any[];
   schoolSmartBoards: any[];
@@ -41,12 +43,28 @@ interface DashboardContextType {
   setActiveDepartment: (dept: 'Education & Schools' | 'Public Health' | 'PWD & Infrastructure') => void;
   setActiveTab: (tab: string) => void;
   addComplaint: (complaint: Omit<Complaint, 'id' | 'dateFiled' | 'timeline'>) => void;
-  updateComplaintStatus: (id: string, status: ComplaintStatus, remarkText?: string, actor?: string) => void;
+  updateComplaintStatus: (
+    id: string,
+    status: ComplaintStatus,
+    remarkText?: string,
+    actor?: string,
+    action?: string,
+    additionalFields?: Record<string, any>
+  ) => void;
+  confirmAICategory: (id: string, approved: boolean, override?: string) => Promise<void>;
+  assignOfficer: (id: string, officerId: string, officerName: string) => Promise<void>;
+  closeBatch: (batchId: string, fieldOrder: string) => Promise<void>;
+  reopenComplaint: (id: string, reason: string) => Promise<void>;
+  sendInterimReply: (id: string) => Promise<void>;
+  updateAssignedSDM: (id: string, sdm: string) => Promise<void>;
+  addWalkInComplaint: (data: { citizenName: string; citizenPhone: string; category: string; priority: string; ward: string; description: string }) => Promise<string>;
   addMessage: (content: string, receiverRole: string) => void;
   approveFile: (fileId: string, remarkText: string) => void;
   rejectFile: (fileId: string, remarkText: string) => void;
   updateProjectProgress: (projectId: string, progress: number, status?: 'On Track' | 'Delayed' | 'Critical' | 'Completed') => void;
   addNewProject: (project: Omit<Project, 'id' | 'budgetSpent' | 'physicalProgress'>) => void;
+  updateWelfareStatus: (id: string, status: 'Approved' | 'Rejected') => Promise<void>;
+  bulkImportOfficers: (officers: { Name: string; Designation: string; Department: string; District?: string }[]) => Promise<{ inserted: number; skipped: string[] }>;
   loginUser: (username: string, password: string) => Promise<boolean>;
   registerUser: (username: string, password: string, role: 'Chief Minister' | 'District Magistrate' | 'Department Head', district?: DistrictName, department?: 'Education & Schools' | 'Public Health' | 'PWD & Infrastructure') => Promise<boolean>;
   logoutUser: () => void;
@@ -94,6 +112,7 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [officers, setOfficers] = useState<Officer[]>([]);
   const [files, setFiles] = useState<DigitalFile[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
+  const [welfareApps, setWelfareApps] = useState<WelfareApplication[]>([]);
 
   
   const [healthBeds, setHealthBeds] = useState<any[]>([]);
@@ -160,12 +179,16 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   useEffect(() => {
     if (currentUser) {
       setActiveRole(currentUser.role);
-      if (currentUser.district) {
-        setActiveDistrict(currentUser.district);
-        setActiveTab('DistrictMinistry');
-      } else if (currentUser.department) {
-        setActiveDepartment(currentUser.department);
-        setActiveTab('OfficerWorkspace');
+      if (currentUser.role === 'District Magistrate') {
+        if (currentUser.district) {
+          setActiveDistrict(currentUser.district);
+        }
+        setActiveTab('ComplaintQueue');
+      } else if (currentUser.role === 'Department Head') {
+        if (currentUser.department) {
+          setActiveDepartment(currentUser.department);
+        }
+        setActiveTab('SmartCategorisation');
       } else {
         setActiveTab('Overview');
       }
@@ -184,7 +207,8 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         healthBedsRes,
         healthInventoryRes,
         schoolSmartBoardsRes,
-        generalMetricsRes
+        generalMetricsRes,
+        welfareRes
       ] = await Promise.all([
         api.get('/complaints'),
         api.get('/projects'),
@@ -194,7 +218,8 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         api.get('/metrics/health/beds'),
         api.get('/metrics/health/inventory'),
         api.get('/metrics/education/smartboards'),
-        api.get('/metrics/general')
+        api.get('/metrics/general'),
+        api.get('/welfare')
       ]);
       setComplaints(complaintsRes.data);
       setProjects(projectsRes.data);
@@ -205,6 +230,7 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       setHealthInventory(healthInventoryRes.data);
       setSchoolSmartBoards(schoolSmartBoardsRes.data);
       setGeneralMetrics(generalMetricsRes.data);
+      setWelfareApps(welfareRes.data);
     } catch (err) {
       console.error('Failed to fetch data from API:', err);
     }
@@ -310,9 +336,17 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
   };
 
-  const updateComplaintStatus = async (id: string, status: ComplaintStatus, remarkText?: string, actor?: string) => {
+  const updateComplaintStatus = async (
+    id: string,
+    status: ComplaintStatus,
+    remarkText?: string,
+    actor?: string,
+    action?: string,
+    additionalFields?: Record<string, any>
+  ) => {
     try {
-      const res = await api.patch(`/complaints/${id}/status`, { status, remarkText, actor });
+      const payload = { status, remarkText, actor, action, ...additionalFields };
+      const res = await api.patch(`/complaints/${id}/status`, payload);
       setComplaints((prev) =>
         prev.map((c) => (c.id === id ? res.data : c))
       );
@@ -322,6 +356,103 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     } catch (err) {
       console.error('Failed to update complaint status:', err);
     }
+  };
+
+  const confirmAICategory = async (id: string, approved: boolean, override?: string) => {
+    const complaint = complaints.find(c => c.id === id);
+    if (!complaint) return;
+    const subCategory = approved ? complaint.aiSuggestedSubCategory : override;
+    await updateComplaintStatus(
+      id,
+      complaint.status,
+      approved ? 'Officer confirmed AI suggestion' : 'Manual override applied',
+      currentUser?.username || 'Nodal Officer',
+      approved ? `AI Category Confirmed: ${subCategory}` : `Category Override: ${override}`,
+      { subCategory }
+    );
+  };
+
+  const assignOfficer = async (id: string, officerId: string, officerName: string) => {
+    await updateComplaintStatus(
+      id,
+      'Active',
+      `Assigned to officer: ${officerName}`,
+      currentUser?.username || 'Nodal Officer',
+      `Assigned to ${officerName}`,
+      { assignedOfficer: officerName }
+    );
+  };
+
+  const closeBatch = async (batchId: string, fieldOrder: string) => {
+    const batchComplaints = complaints.filter(c => c.batchId === batchId);
+    for (const comp of batchComplaints) {
+      await updateComplaintStatus(
+        comp.id,
+        'Active',
+        `Field Order: ${fieldOrder}. Batch ${batchId} closed.`,
+        currentUser?.username || 'Nodal Officer',
+        'Batch Field Order Issued'
+      );
+    }
+  };
+
+  const reopenComplaint = async (id: string, reason: string) => {
+    await updateComplaintStatus(
+      id,
+      'Active',
+      `Citizen appeal reason: ${reason}. Must resolve within 15 days per CPGRAMS mandate.`,
+      currentUser?.username || 'Nodal Officer',
+      'Complaint Reopened — Poor Rating Appeal',
+      { isReopen: true }
+    );
+  };
+
+  const sendInterimReply = async (id: string) => {
+    await updateComplaintStatus(
+      id,
+      'Active',
+      'Citizen notified of current status and expected resolution date per DARPG 2024.',
+      currentUser?.username || 'DM Office',
+      'Interim Reply Sent to Citizen',
+      { interimSent: true }
+    );
+  };
+
+  const updateAssignedSDM = async (id: string, sdm: string) => {
+    await updateComplaintStatus(
+      id,
+      'Active',
+      `Reassigned to SDM: ${sdm}`,
+      currentUser?.username || 'DM Office',
+      `Reassigned to SDM: ${sdm}`,
+      { assignedSDM: sdm }
+    );
+  };
+
+  const addWalkInComplaint = async (data: {
+    citizenName: string;
+    citizenPhone: string;
+    category: string;
+    priority: string;
+    ward: string;
+    description: string;
+  }): Promise<string> => {
+    const count = complaints.length;
+    const newId = `GRV-2026-0${count + 13}`;
+    const payload = {
+      title: `Walk-in: ${data.category} — ${data.ward}`,
+      description: data.description,
+      category: data.category as any,
+      priority: data.priority as any,
+      district: currentUser?.district || 'Shahdara',
+      department: 'DM Office',
+      citizenName: data.citizenName,
+      citizenPhone: data.citizenPhone,
+      ward: data.ward,
+      status: 'Pending' as any
+    };
+    await addComplaint(payload);
+    return newId;
   };
 
   const addMessage = async (content: string, receiverRole: string) => {
@@ -432,6 +563,7 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     setOfficers([]);
     setFiles([]);
     setMessages([]);
+    setWelfareApps([]);
     setHealthBeds([]);
     setHealthInventory([]);
     setSchoolSmartBoards([]);
@@ -439,6 +571,28 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     setUnreadCounts({});
     setActiveChatPartner(null);
     setToasts([]);
+  };
+
+  const updateWelfareStatus = async (id: string, status: 'Approved' | 'Rejected') => {
+    try {
+      const res = await api.patch(`/welfare/${id}/status`, { status });
+      setWelfareApps(prev => prev.map(w => w._id === id ? res.data : w));
+    } catch (err) {
+      console.error('Failed to update welfare status:', err);
+    }
+  };
+
+  const bulkImportOfficers = async (officers: { Name: string; Designation: string; Department: string; District?: string }[]) => {
+    try {
+      const res = await api.post('/officers/bulk-import', { officers });
+      // Reload officers list after import
+      const officersRes = await api.get('/officers');
+      setOfficers(officersRes.data);
+      return res.data as { inserted: number; skipped: string[] };
+    } catch (err) {
+      console.error('Failed to bulk import officers:', err);
+      throw err;
+    }
   };
 
   return (
@@ -449,6 +603,7 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         officers,
         files,
         messages,
+        welfareApps,
         healthBeds,
         healthInventory,
         schoolSmartBoards,
@@ -469,6 +624,8 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         rejectFile,
         updateProjectProgress,
         addNewProject,
+        updateWelfareStatus,
+        bulkImportOfficers,
         loginUser,
         registerUser,
         logoutUser,
@@ -480,7 +637,14 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         setActiveChatPartner,
         toasts,
         clearUnreadCount,
-        dismissToast
+        dismissToast,
+        confirmAICategory,
+        assignOfficer,
+        closeBatch,
+        reopenComplaint,
+        sendInterimReply,
+        updateAssignedSDM,
+        addWalkInComplaint
       }}
     >
       {children}

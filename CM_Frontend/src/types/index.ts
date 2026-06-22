@@ -6,7 +6,11 @@ export type ComplaintCategory =
   | 'Education & Schools'
   | 'Law & Policing'
   | 'Transport & Roads'
-  | 'Social Welfare';
+  | 'Social Welfare'
+  | 'Revenue & Land'
+  | 'Sanitation'
+  | 'Noise Pollution'
+  | 'Stray Animals';
 
 export type ComplaintStatus = 'Pending' | 'Active' | 'Resolved' | 'Escalated';
 
@@ -46,6 +50,104 @@ export interface Complaint {
   dateFiled: string;
   timeline: TimelineEvent[];
   ward?: string;
+  assignedSDM?: string;
+  assignedOfficer?: string;
+  subCategory?: string;
+  aiSuggestedCategory?: string;
+  aiSuggestedSubCategory?: string;
+  citizenRating?: number;
+  isReopen?: boolean;
+  batchId?: string;
+  crossDeptTicket?: boolean;
+  slaDay?: number;
+  interimSent?: boolean;
+  locality?: string;
+}
+
+export interface SDMOfficer {
+  id: string;
+  name: string;
+  designation: string;
+  zone: string;
+  pendingCount: number;
+  resolvedThisMonth: number;
+  avgResolutionDays: number;
+  phone: string;
+  available: boolean;
+}
+
+export interface RevenueCase {
+  id: string;
+  caseType: 'Land Dispute' | 'Property Mutation' | 'Registration' | 'Encroachment';
+  parties: string;
+  ward: string;
+  filedDate: string;
+  statutoryDeadline: string;
+  status: 'Hearing Scheduled' | 'Evidence Collection' | 'Order Pending' | 'Disposed';
+  assignedPatwari: string;
+  daysToDeadline: number;
+}
+
+export interface DMAuditLog {
+  id: string;
+  action: string;
+  officer: string;
+  timestamp: string;
+  complaintId?: string;
+  details: string;
+}
+
+export interface RedressalOfficer {
+  id: string;
+  name: string;
+  designation: string;
+  department: string;
+  pendingCount: number;
+  resolvedThisMonth: number;
+  avgResolutionDays: number;
+  phone: string;
+  available: boolean;
+}
+
+export interface RootCauseCluster {
+  clusterId: string;
+  ward: string;
+  category: ComplaintCategory;
+  complaintIds: string[];
+  count: number;
+  isSystemic: boolean;
+  detectedOn: string;
+  description: string;
+}
+
+export interface BatchGroup {
+  batchId: string;
+  locality: string;
+  category: ComplaintCategory;
+  complaintIds: string[];
+  count: number;
+  status: 'Open' | 'Order Issued' | 'Resolved';
+  fieldOrderIssued?: string;
+}
+
+export interface MonthlyReportData {
+  month: string;
+  totalReceived: number;
+  totalResolved: number;
+  avgResolutionDays: number;
+  slaBreachCount: number;
+  citizenSatisfactionScore: number;
+  cpgramsSubmitted: boolean;
+}
+
+export interface CrossDeptTicket {
+  ticketId: string;
+  complaintId: string;
+  departments: string[];
+  status: 'Open' | 'In Progress' | 'Resolved';
+  createdOn: string;
+  lastUpdated: string;
+  actions: { dept: string; action: string; timestamp: string }[];
 }
 
 export interface Project {
@@ -217,4 +319,12 @@ export interface UserProfile {
   role: 'Chief Minister' | 'District Magistrate' | 'Department Head';
   district?: DistrictName;
   department?: 'Education & Schools' | 'Public Health' | 'PWD & Infrastructure';
+}
+
+export interface WelfareApplication {
+  _id: string;
+  citizen: string;
+  scheme: string;
+  doc: string;
+  status: 'Pending' | 'Approved' | 'Rejected';
 }

@@ -21,6 +21,15 @@ export interface IComplaint {
   dateFiled: string;
   timeline: ITimelineEvent[];
   ward?: string;
+  assignedSDM?: string;
+  assignedOfficer?: string;
+  subCategory?: string;
+  aiSuggestedCategory?: string;
+  aiSuggestedSubCategory?: string;
+  batchId?: string;
+  isReopen?: boolean;
+  interimSent?: boolean;
+  slaDay?: number;
 }
 
 const timelineSchema = new Schema<ITimelineEvent>({
@@ -43,7 +52,16 @@ const complaintSchema = new Schema<IComplaint>({
   citizenPhone: { type: String, required: true },
   dateFiled: { type: String, required: true },
   timeline: [timelineSchema],
-  ward: { type: String }
+  ward: { type: String },
+  assignedSDM: { type: String },
+  assignedOfficer: { type: String },
+  subCategory: { type: String },
+  aiSuggestedCategory: { type: String },
+  aiSuggestedSubCategory: { type: String },
+  batchId: { type: String },
+  isReopen: { type: Boolean, default: false },
+  interimSent: { type: Boolean, default: false },
+  slaDay: { type: Number, default: 0 }
 }, {
   timestamps: true
 });

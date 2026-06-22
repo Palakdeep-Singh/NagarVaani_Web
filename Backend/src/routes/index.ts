@@ -6,6 +6,7 @@ import officerRoutes from './officer.routes';
 import fileRoutes from './file.routes';
 import messageRoutes from './message.routes';
 import metricsRoutes from './metrics.routes';
+import welfareRoutes from './welfare.routes';
 
 const router = Router();
 
@@ -16,6 +17,7 @@ router.use('/officers', officerRoutes);
 router.use('/files', fileRoutes);
 router.use('/messages', messageRoutes);
 router.use('/metrics', metricsRoutes);
+router.use('/welfare', welfareRoutes);
 
 export default router;
 

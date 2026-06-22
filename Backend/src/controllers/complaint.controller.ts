@@ -63,55 +63,77 @@ export const createComplaint = async (req: AuthRequest, res: Response) => {
 export const updateComplaintStatus = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
-    const { status, remarkText, actor } = req.body;
-
-    if (!status) {
-      return res.status(400).json({ error: 'Status is required.' });
-    }
+    const {
+      status,
+      remarkText,
+      actor,
+      action,
+      assignedSDM,
+      assignedOfficer,
+      subCategory,
+      isReopen,
+      interimSent,
+      batchId,
+      slaDay
+    } = req.body;
 
     const complaint = await Complaint.findOne({ id });
     if (!complaint) {
       return res.status(404).json({ error: 'Complaint not found.' });
     }
 
-    const originalStatus = complaint.status;
     const todayStr = new Date().toISOString().split('T')[0];
 
-    complaint.status = status;
-    complaint.timeline.push({
-      date: todayStr,
-      action: `Status updated to ${status}`,
-      actor: actor || req.user?.role || 'System',
-      notes: remarkText
-    });
+    if (status) {
+      const originalStatus = complaint.status;
+      complaint.status = status;
 
-    await complaint.save();
+      // If resolved and wasn't resolved before, update officer resolution rates and ratings
+      if (status === 'Resolved' && originalStatus !== 'Resolved') {
+        const officers = await Officer.find({
+          $or: [
+            { district: complaint.district },
+            { department: complaint.department, district: { $exists: false } }
+          ]
+        });
 
-    // If resolved and wasn't resolved before, update officer resolution rates and ratings
-    if (status === 'Resolved' && originalStatus !== 'Resolved') {
-      const officers = await Officer.find({
-        $or: [
-          { district: complaint.district },
-          { department: complaint.department, district: { $exists: false } }
-        ]
-      });
+        for (const off of officers) {
+          const completed = off.completedComplaints + 1;
+          const active = Math.max(0, off.activeComplaints - 1);
+          const rate = Math.round((completed / (completed + active)) * 100);
+          
+          let ratingBoost = off.district ? 0.1 : 0.05;
+          const newRating = Math.min(5, Number((off.rating + ratingBoost).toFixed(2)));
 
-      for (const off of officers) {
-        const completed = off.completedComplaints + 1;
-        const active = Math.max(0, off.activeComplaints - 1);
-        const rate = Math.round((completed / (completed + active)) * 100);
-        
-        let ratingBoost = off.district ? 0.1 : 0.05;
-        const newRating = Math.min(5, Number((off.rating + ratingBoost).toFixed(2)));
-
-        off.completedComplaints = completed;
-        off.activeComplaints = active;
-        off.resolutionRate = rate;
-        off.rating = newRating;
-        await off.save();
+          off.completedComplaints = completed;
+          off.activeComplaints = active;
+          off.resolutionRate = rate;
+          off.rating = newRating;
+          await off.save();
+        }
       }
     }
 
+    // Update optional fields if provided
+    if (assignedSDM !== undefined) complaint.assignedSDM = assignedSDM;
+    if (assignedOfficer !== undefined) complaint.assignedOfficer = assignedOfficer;
+    if (subCategory !== undefined) complaint.subCategory = subCategory;
+    if (isReopen !== undefined) complaint.isReopen = isReopen;
+    if (interimSent !== undefined) complaint.interimSent = interimSent;
+    if (batchId !== undefined) complaint.batchId = batchId;
+    if (slaDay !== undefined) complaint.slaDay = slaDay;
+
+    // Push timeline event if action, status, or remark is provided
+    if (action || status || remarkText) {
+      complaint.timeline.push({
+        date: todayStr,
+        action: action || (status ? `Status updated to ${status}` : 'Complaint Updated'),
+        actor: actor || req.user?.username || req.user?.role || 'System',
+        notes: remarkText
+      });
+    }
+
+    await complaint.save();
     res.status(200).json(complaint);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
