@@ -1,0 +1,9 @@
+{
+  "SCHEME_QUERY": 0,
+  "GRIEVANCE_FILE": 1,
+  "STATUS_CHECK": 2,
+  "BOOTH_CHANGE": 3,
+  "DOC_UPLOAD": 4,
+  "RE_REGISTER": 5,
+  "GREET": 6
+}

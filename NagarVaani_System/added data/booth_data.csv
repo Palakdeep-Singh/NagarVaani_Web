@@ -1,0 +1,101 @@
+citizen_id,name,age,gender,occupation,annual_income,land_acres,bpl_card,caste,state,district,booth_id,disability,widow,bank_account,phone,marital_status,education,family_size,children_count
+C001,Ravi Patil,44,Male,Farmer,110000,2.5,Yes,OBC,Maharashtra,Nashik,41,No,No,Yes,9876543201,Married,Primary,5,3
+C002,Sunita Devi,38,Female,Homemaker,80000,0,Yes,SC,Maharashtra,Nashik,41,No,No,Yes,9876543202,Married,Illiterate,4,2
+C003,Manoj Yadav,29,Male,Daily Wage,60000,0,Yes,OBC,Maharashtra,Nashik,42,No,No,Yes,9876543203,Married,Secondary,3,1
+C004,Priya Sharma,52,Female,Farmer,140000,1.8,No,General,Maharashtra,Nashik,43,No,No,Yes,9876543204,Married,Graduate,4,2
+C005,Arun Nair,61,Male,Retired,50000,0,No,General,Maharashtra,Nashik,44,No,No,Yes,9876543205,Married,Graduate,2,2
+C006,Lata Kulkarni,67,Female,Homemaker,30000,0,Yes,SC,Maharashtra,Nashik,43,No,Yes,Yes,9876543206,Widowed,Illiterate,1,0
+C007,Deepak More,45,Male,Farmer,100000,3.2,Yes,OBC,Maharashtra,Nashik,42,No,No,Yes,9876543207,Married,Primary,6,4
+C008,Rohit Singh,27,Male,Student,0,0,Yes,General,Maharashtra,Nashik,44,No,No,No,9876543208,Unmarried,Graduate,4,0
+C009,Kavita Jadhav,34,Female,Farmer,120000,1.2,No,OBC,Maharashtra,Nashik,41,No,No,Yes,9876543209,Married,Secondary,3,2
+C010,Suresh Kamble,55,Male,Daily Wage,72000,0,Yes,SC,Maharashtra,Nashik,41,No,No,Yes,9876543210,Married,Primary,5,3
+C011,Rekha Bansode,42,Female,Farmer,95000,2.0,Yes,SC,Maharashtra,Nashik,42,No,No,Yes,9876543211,Married,Primary,4,2
+C012,Prakash Gaikwad,36,Male,Small Business,180000,0,No,OBC,Maharashtra,Nashik,43,No,No,Yes,9876543212,Married,Secondary,4,2
+C013,Anita Shinde,48,Female,Homemaker,55000,0,Yes,ST,Maharashtra,Nashik,44,No,No,Yes,9876543213,Married,Illiterate,5,3
+C014,Vijay Pawar,63,Male,Farmer,85000,1.5,Yes,OBC,Maharashtra,Nashik,41,Yes,No,Yes,9876543214,Married,Primary,4,2
+C015,Meena Thorat,71,Female,Homemaker,25000,0,Yes,SC,Maharashtra,Nashik,42,No,Yes,Yes,9876543215,Widowed,Illiterate,2,2
+C016,Amitabh Verma,50,Male,Farmer,120000,3.0,Yes,OBC,Uttar Pradesh,Lucknow,45,No,No,Yes,9876543226,Married,Primary,6,4
+C017,Sunita Kumari,35,Female,Homemaker,60000,0,Yes,SC,Uttar Pradesh,Lucknow,45,No,No,Yes,9876543227,Married,Illiterate,5,3
+C018,Rajesh Kumar,42,Male,Daily Wage,75000,0,Yes,OBC,Uttar Pradesh,Lucknow,46,No,No,Yes,9876543228,Married,Secondary,4,2
+C019,Geeta Devi,28,Female,Farmer,95000,1.5,Yes,SC,Uttar Pradesh,Lucknow,46,No,No,Yes,9876543229,Married,Primary,3,1
+C020,Mohan Lal,65,Male,Retired,45000,0,Yes,General,Uttar Pradesh,Lucknow,47,No,No,Yes,9876543230,Married,Graduate,2,2
+C021,Seema Gupta,55,Female,Homemaker,40000,0,Yes,OBC,Uttar Pradesh,Lucknow,47,No,Yes,Yes,9876543231,Widowed,Primary,3,3
+C022,Sunil Yadav,38,Male,Farmer,110000,2.2,Yes,OBC,Uttar Pradesh,Lucknow,48,No,No,Yes,9876543232,Married,Secondary,5,3
+C023,Radha Sharma,45,Female,Farmer,130000,1.8,No,General,Uttar Pradesh,Lucknow,48,No,No,Yes,9876543233,Married,Graduate,4,2
+C024,Dinesh Tiwari,60,Male,Daily Wage,70000,0,Yes,OBC,Uttar Pradesh,Lucknow,49,No,No,Yes,9876543234,Married,Primary,5,3
+C025,Kamla Devi,70,Female,Homemaker,22000,0,Yes,SC,Uttar Pradesh,Lucknow,49,No,Yes,Yes,9876543235,Widowed,Illiterate,1,4
+C026,Venkata Rao,48,Male,Farmer,115000,2.8,Yes,OBC,Andhra Pradesh,Guntur,41,No,No,Yes,9876543241,Married,Primary,5,3
+C027,Lakshmi Devi,42,Female,Homemaker,75000,0,Yes,SC,Andhra Pradesh,Guntur,41,No,No,Yes,9876543242,Married,Illiterate,4,2
+C028,Srinivas Reddy,55,Male,Farmer,135000,3.5,No,OBC,Andhra Pradesh,Guntur,42,No,No,Yes,9876543243,Married,Secondary,4,2
+C029,Padmavathi,38,Female,Farmer,90000,1.5,Yes,SC,Andhra Pradesh,Guntur,42,No,No,Yes,9876543244,Married,Primary,4,2
+C030,Narasimha Rao,62,Male,Retired,55000,0,No,General,Andhra Pradesh,Guntur,43,No,No,Yes,9876543245,Married,Graduate,2,2
+C031,Saraswathi,66,Female,Homemaker,28000,0,Yes,SC,Andhra Pradesh,Guntur,43,No,Yes,Yes,9876543246,Widowed,Illiterate,2,3
+C032,Ramakrishna,35,Male,Daily Wage,65000,0,Yes,OBC,Andhra Pradesh,Guntur,44,No,No,Yes,9876543247,Married,Secondary,4,2
+C033,Vijayalakshmi,50,Female,Farmer,120000,2.0,No,General,Andhra Pradesh,Guntur,44,No,No,Yes,9876543248,Married,Graduate,3,2
+C034,Mukesh Meena,46,Male,Farmer,108000,2.3,Yes,ST,Rajasthan,Jaipur,41,No,No,Yes,9876543251,Married,Primary,6,4
+C035,Champa Bai,40,Female,Homemaker,70000,0,Yes,SC,Rajasthan,Jaipur,41,No,No,Yes,9876543252,Married,Illiterate,5,3
+C036,Gopal Lal,57,Male,Farmer,130000,3.0,No,OBC,Rajasthan,Jaipur,42,No,No,Yes,9876543253,Married,Primary,5,3
+C037,Pushpa Devi,32,Female,Daily Wage,55000,0,Yes,SC,Rajasthan,Jaipur,42,No,No,Yes,9876543254,Married,Secondary,3,1
+C038,Ramji Lal,68,Male,Farmer,80000,1.5,Yes,OBC,Rajasthan,Jaipur,43,No,No,Yes,9876543255,Married,Illiterate,4,3
+C039,Savitri Devi,72,Female,Homemaker,18000,0,Yes,SC,Rajasthan,Jaipur,43,No,Yes,Yes,9876543256,Widowed,Illiterate,1,4
+C040,Vijay Singh,34,Male,Small Business,170000,0,No,General,Rajasthan,Jaipur,44,No,No,Yes,9876543257,Married,Graduate,4,2
+C041,Ranjit Kumar,50,Male,Farmer,118000,2.6,Yes,SC,Bihar,Patna,46,No,No,Yes,9876543261,Married,Primary,7,5
+C042,Urmila Devi,44,Female,Homemaker,65000,0,Yes,OBC,Bihar,Patna,46,No,No,Yes,9876543262,Married,Illiterate,6,4
+C043,Santosh Yadav,36,Male,Daily Wage,62000,0,Yes,OBC,Bihar,Patna,47,No,No,Yes,9876543263,Married,Secondary,4,2
+C044,Parvati Devi,60,Female,Homemaker,30000,0,Yes,SC,Bihar,Patna,47,No,Yes,Yes,9876543264,Widowed,Illiterate,2,3
+C045,Ramesh Paswan,65,Male,Farmer,75000,1.0,Yes,SC,Bihar,Patna,48,No,No,Yes,9876543265,Married,Primary,5,3
+C046,Meena Devi,28,Female,Farmer,88000,1.8,Yes,OBC,Bihar,Patna,48,No,No,Yes,9876543266,Married,Secondary,3,1
+C047,Arjun Singh,47,Male,Farmer,112000,2.7,Yes,OBC,Madhya Pradesh,Bhopal,41,No,No,Yes,9876543271,Married,Primary,6,4
+C048,Sushila Bai,41,Female,Homemaker,72000,0,Yes,SC,Madhya Pradesh,Bhopal,41,No,No,Yes,9876543272,Married,Illiterate,5,3
+C049,Bharat Patel,53,Male,Farmer,128000,3.1,No,OBC,Madhya Pradesh,Bhopal,42,No,No,Yes,9876543273,Married,Secondary,5,3
+C050,Rambha Bai,35,Female,Farmer,92000,1.6,Yes,ST,Madhya Pradesh,Bhopal,42,No,No,Yes,9876543274,Married,Primary,4,2
+C051,Laxman Rao,62,Male,Retired,52000,0,No,General,Madhya Pradesh,Bhopal,43,No,No,Yes,9876543275,Married,Graduate,2,2
+C052,Kamla Bai,68,Female,Homemaker,25000,0,Yes,SC,Madhya Pradesh,Bhopal,43,No,Yes,Yes,9876543276,Widowed,Illiterate,2,3
+C053,Suresh Babu,49,Male,Farmer,116000,2.5,Yes,OBC,Tamil Nadu,Chennai,46,No,No,Yes,9876543281,Married,Secondary,5,3
+C054,Meenakshi,43,Female,Homemaker,75000,0,Yes,SC,Tamil Nadu,Chennai,46,No,No,Yes,9876543282,Married,Primary,4,2
+C055,Selvam,57,Male,Farmer,132000,3.2,No,OBC,Tamil Nadu,Chennai,47,No,No,Yes,9876543283,Married,Secondary,4,2
+C056,Parvathi,30,Female,Daily Wage,60000,0,Yes,SC,Tamil Nadu,Chennai,47,No,No,Yes,9876543284,Married,Secondary,3,1
+C057,Kannan,64,Male,Retired,48000,0,Yes,General,Tamil Nadu,Chennai,48,No,No,Yes,9876543285,Married,Graduate,2,2
+C058,Valli,71,Female,Homemaker,22000,0,Yes,SC,Tamil Nadu,Chennai,48,No,Yes,Yes,9876543286,Widowed,Illiterate,1,3
+C059,Gurpreet Singh,46,Male,Farmer,125000,4.0,Yes,General,Punjab,Amritsar,41,No,No,Yes,9876543291,Married,Secondary,5,3
+C060,Harpreet Kaur,40,Female,Homemaker,85000,0,No,General,Punjab,Amritsar,41,No,No,Yes,9876543292,Married,Secondary,4,2
+C061,Jaswant Singh,55,Male,Farmer,145000,5.0,No,General,Punjab,Amritsar,42,No,No,Yes,9876543293,Married,Secondary,4,2
+C062,Baljit Kaur,33,Female,Farmer,98000,1.8,Yes,SC,Punjab,Amritsar,42,No,No,Yes,9876543294,Married,Primary,4,2
+C063,Balwinder Singh,62,Male,Retired,55000,0,No,General,Punjab,Amritsar,43,No,No,Yes,9876543295,Married,Graduate,3,2
+C064,Sukhwinder Kaur,67,Female,Homemaker,30000,0,Yes,SC,Punjab,Amritsar,43,No,Yes,Yes,9876543296,Widowed,Primary,2,3
+C065,Balram Oraon,45,Male,Farmer,102000,2.2,Yes,ST,Jharkhand,Ranchi,46,No,No,Yes,9876543301,Married,Primary,6,4
+C066,Sukhi Bai,39,Female,Homemaker,65000,0,Yes,ST,Jharkhand,Ranchi,46,No,No,Yes,9876543302,Married,Illiterate,5,3
+C067,Raju Minj,32,Male,Daily Wage,58000,0,Yes,ST,Jharkhand,Ranchi,47,No,No,Yes,9876543303,Married,Secondary,4,2
+C068,Phulwa Devi,58,Female,Farmer,85000,1.5,Yes,ST,Jharkhand,Ranchi,47,No,No,Yes,9876543304,Married,Illiterate,5,3
+C069,Mangal Soren,63,Male,Farmer,78000,1.2,Yes,ST,Jharkhand,Ranchi,48,Yes,No,Yes,9876543305,Married,Primary,4,3
+C070,Champa Tudu,70,Female,Homemaker,20000,0,Yes,ST,Jharkhand,Ranchi,48,No,Yes,Yes,9876543306,Widowed,Illiterate,1,4
+C071,Subramanian,51,Male,Farmer,122000,2.6,Yes,OBC,Karnataka,Mysuru,41,No,No,Yes,9876543311,Married,Secondary,5,3
+C072,Girija,45,Female,Homemaker,78000,0,Yes,SC,Karnataka,Mysuru,41,No,No,Yes,9876543312,Married,Primary,4,2
+C073,Basavaraj,58,Male,Farmer,138000,3.5,No,OBC,Karnataka,Mysuru,42,No,No,Yes,9876543313,Married,Secondary,4,2
+C074,Chamundeshwari,32,Female,Farmer,88000,1.4,Yes,SC,Karnataka,Mysuru,42,No,No,Yes,9876543314,Married,Primary,4,2
+C075,Nagesh Rao,65,Male,Retired,50000,0,No,General,Karnataka,Mysuru,43,No,No,Yes,9876543315,Married,Graduate,2,2
+C076,Sarojamma,69,Female,Homemaker,24000,0,Yes,SC,Karnataka,Mysuru,43,No,Yes,Yes,9876543316,Widowed,Illiterate,1,3
+C077,Pratap Naik,47,Male,Farmer,108000,2.2,Yes,ST,Odisha,Bhubaneswar,46,No,No,Yes,9876543321,Married,Primary,6,4
+C078,Sasmita Nayak,41,Female,Homemaker,68000,0,Yes,SC,Odisha,Bhubaneswar,46,No,No,Yes,9876543322,Married,Illiterate,5,3
+C079,Biswajit Das,35,Male,Daily Wage,62000,0,Yes,OBC,Odisha,Bhubaneswar,47,No,No,Yes,9876543323,Married,Secondary,4,2
+C080,Sulochana,62,Female,Homemaker,28000,0,Yes,SC,Odisha,Bhubaneswar,47,No,Yes,Yes,9876543324,Widowed,Illiterate,2,3
+C081,Rajendra Behera,55,Male,Farmer,118000,2.8,No,OBC,Odisha,Bhubaneswar,48,No,No,Yes,9876543325,Married,Primary,5,3
+C082,Malati Sahoo,38,Female,Farmer,92000,1.7,Yes,OBC,Odisha,Bhubaneswar,48,No,No,Yes,9876543326,Married,Primary,4,2
+C083,Ramavtar Gurjar,49,Male,Farmer,114000,2.4,Yes,OBC,Gujarat,Surat,41,No,No,Yes,9876543331,Married,Primary,6,4
+C084,Kantaben,43,Female,Homemaker,72000,0,Yes,SC,Gujarat,Surat,41,No,No,Yes,9876543332,Married,Illiterate,5,3
+C085,Dhirubhai Patel,56,Male,Farmer,132000,3.2,No,OBC,Gujarat,Surat,42,No,No,Yes,9876543333,Married,Secondary,4,2
+C086,Savitaben,36,Female,Daily Wage,58000,0,Yes,SC,Gujarat,Surat,42,No,No,Yes,9876543334,Married,Primary,4,2
+C087,Bhailal Solanki,63,Male,Farmer,88000,1.7,Yes,ST,Gujarat,Surat,43,No,No,Yes,9876543335,Married,Primary,5,3
+C088,Jashoda Bai,69,Female,Homemaker,26000,0,Yes,SC,Gujarat,Surat,43,No,Yes,Yes,9876543336,Widowed,Illiterate,1,4
+C089,Bijay Mahato,48,Male,Farmer,110000,2.3,Yes,OBC,West Bengal,Kolkata,46,No,No,Yes,9876543341,Married,Primary,6,4
+C090,Sabita Mondal,42,Female,Homemaker,70000,0,Yes,SC,West Bengal,Kolkata,46,No,No,Yes,9876543342,Married,Illiterate,5,3
+C091,Tapan Das,55,Male,Farmer,128000,3.0,No,OBC,West Bengal,Kolkata,47,No,No,Yes,9876543343,Married,Secondary,4,2
+C092,Mira Bose,32,Female,Daily Wage,60000,0,Yes,SC,West Bengal,Kolkata,47,No,No,Yes,9876543344,Married,Secondary,3,1
+C093,Nirmal Chatterjee,62,Male,Retired,52000,0,No,General,West Bengal,Kolkata,48,No,No,Yes,9876543345,Married,Graduate,2,2
+C094,Kamala Biswas,67,Female,Homemaker,28000,0,Yes,SC,West Bengal,Kolkata,48,No,Yes,Yes,9876543346,Widowed,Illiterate,1,3
+C095,Krishnamurthy,54,Male,Farmer,126000,3.0,No,OBC,Kerala,Thiruvananthapuram,61,No,No,Yes,9876543421,Married,Secondary,4,2
+C096,Thankamma,48,Female,Homemaker,78000,0,No,OBC,Kerala,Thiruvananthapuram,61,No,No,Yes,9876543422,Married,Secondary,4,2
+C097,Balasubramanian,62,Male,Retired,55000,0,No,General,Kerala,Thiruvananthapuram,62,No,No,Yes,9876543423,Married,Graduate,2,2
+C098,Devaki,35,Female,Farmer,90000,1.5,Yes,SC,Kerala,Thiruvananthapuram,62,No,No,Yes,9876543424,Married,Secondary,4,2
+C099,Harikumar,40,Male,Daily Wage,68000,0,Yes,OBC,Kerala,Thiruvananthapuram,63,No,No,Yes,9876543425,Married,Secondary,4,2
+C100,Saradamma,67,Female,Homemaker,25000,0,Yes,SC,Kerala,Thiruvananthapuram,63,No,Yes,Yes,9876543426,Widowed,Primary,1,3

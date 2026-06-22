@@ -20,3 +20,22 @@ server/surgical_cluster_seed.js
 server/seed_central_admin.js
 *.zip
 desktop.ini
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Local environments / DB
+.env
+*.db
+
+# Executables & Logs
+*.exe
+*.log
+*.txt
+
+# ML Model files (too large for Git)
+*.safetensors
+*.bin
+*.pt
+*.onnx
