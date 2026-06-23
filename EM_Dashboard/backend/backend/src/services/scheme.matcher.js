@@ -1,0 +1,394 @@
+/**
+ * scheme.matcher.js — Production v4 (uses all new profile fields)
+ * Place: server/src/services/scheme.matcher.js
+ */
+
+// ── Occupation taxonomy (250+ keywords → 18 groups) ──────────────────────────
+export const OCCUPATION_GROUPS = {
+  farmer: ['farmer', 'kisan', 'kisaan', 'agriculture', 'agriculturist', 'krishi',
+    'cultivator', 'farming', 'grower', 'crop', 'paddy', 'wheat', 'rice', 'horticulture',
+    'orchardist', 'floriculture', 'marginal farmer', 'small farmer', 'sharecropper',
+    'tenant farmer', 'agricultural labour', 'farm worker', 'bagaichi', 'bagban',
+    'raiyat', 'ryot', 'peasant', 'cultivating', 'land owner'],
+  animal_husbandry: ['animal husbandry', 'livestock', 'dairy', 'dairy farmer',
+    'goat rearing', 'goat', 'sheep', 'poultry', 'cattle', 'fisherman', 'fisher',
+    'fishing', 'aquaculture', 'pisciculture', 'fish farmer', 'fish vendor',
+    'beekeeper', 'bee keeper', 'sericulture', 'silk', 'piggery', 'duck rearing',
+    'apiculture', 'goatkeeper', 'shepherd', 'pashu palan'],
+  labour: ['labour', 'labor', 'labourer', 'laborer', 'daily wage', 'daily wager',
+    'mazdoor', 'coolie', 'construction worker', 'building worker', 'unskilled',
+    'migrant worker', 'brick kiln', 'quarry worker', 'road worker', 'nrega',
+    'mgnrega', 'loader', 'unloader', 'mine worker', 'plantation worker',
+    'tea garden', 'casual worker', 'contract worker', 'wage worker', 'manual worker'],
+  artisan: ['artisan', 'craftsman', 'craftsperson', 'craft', 'carpenter', 'woodwork',
+    'blacksmith', 'welder', 'plumber', 'electrician', 'mason', 'painter', 'tailor',
+    'weaver', 'potter', 'kumhar', 'lohar', 'luhar', 'sunar', 'goldsmith', 'silversmith',
+    'cobbler', 'mochi', 'leather', 'shoemaker', 'barber', 'nai', 'napit', 'washerman',
+    'dhobi', 'basket maker', 'bamboo', 'toy maker', 'sculptor', 'stone carver',
+    'embroidery', 'zari', 'zardozi', 'handloom', 'powerloom', 'karigar', 'shilpkar',
+    'bidi worker', 'agarbatti maker', 'incense', 'candle maker', 'soap maker',
+    'pottery', 'terracotta', 'metal craft', 'wood carving', 'brass', 'copper',
+    'tinsmith', 'darzi', 'hajjam', 'khatik', 'craftwork', 'handicraft', 'vishwakarma'],
+  business: ['business', 'businessman', 'businesswoman', 'shopkeeper', 'trader',
+    'merchant', 'vendor', 'street vendor', 'hawker', 'self employed', 'self-employed',
+    'proprietor', 'wholesale', 'retail', 'kirana', 'provision store', 'cloth merchant',
+    'grain merchant', 'commission agent', 'broker', 'contractor', 'dealer',
+    'distributor', 'petty trader', 'mandi', 'sabzi', 'vegetable seller', 'fruit seller',
+    'fish seller', 'meat seller', 'milk seller', 'milkman', 'doodhwala', 'chaiwala',
+    'tea stall', 'pan shop', 'small trader', 'market vendor'],
+  msme: ['msme', 'small industry', 'small enterprise', 'micro enterprise',
+    'home based', 'home industry', 'cottage industry', 'food processing', 'pickle',
+    'papad', 'garment', 'readymade', 'printing press', 'manufacturing', 'production',
+    'small scale industry', 'ssi', 'workshop', 'factory', 'unit', 'enterprise',
+    'manufacturer'],
+  student: ['student', 'vidyarthi', 'studying', 'school', 'college', 'university',
+    'graduate', 'undergraduate', 'postgraduate', 'phd', 'research scholar',
+    'intern', 'apprentice', 'vocational training', 'iti student', 'polytechnic',
+    'diploma student', 'class 9', 'class 10', 'class 11', 'class 12',
+    '10th', '12th', 'primary school', 'secondary school', 'higher secondary',
+    'engineering student', 'medical student', 'law student'],
+  unemployed: ['unemployed', 'job seeker', 'jobless', 'no job', 'seeking employment',
+    'fresher', 'looking for job', 'no occupation', 'none', 'nil', 'not working',
+    'without employment', 'dropout', 'between jobs'],
+  homemaker: ['housewife', 'homemaker', 'ghar pe', 'grahini', 'household',
+    'stay at home', 'housework', 'domestic duties'],
+  salaried: ['salaried', 'employee', 'government employee', 'govt employee',
+    'teacher', 'professor', 'lecturer', 'doctor', 'engineer', 'nurse', 'bank employee',
+    'clerk', 'officer', 'police', 'army', 'defence', 'military', 'central govt',
+    'state govt', 'psu', 'public sector', 'private sector', 'corporate',
+    'it professional', 'software', 'accountant', 'advocate', 'lawyer', 'ca',
+    'chartered accountant', 'manager', 'executive', 'supervisor', 'technician',
+    'skilled worker', 'private job', 'govt job'],
+  transport: ['driver', 'auto driver', 'taxi driver', 'truck driver', 'bus driver',
+    'rickshaw', 'e-rickshaw', 'transport', 'logistics', 'delivery', 'courier',
+    'tempo driver', 'tractor driver', 'cab driver', 'ola', 'uber', 'bike taxi',
+    'goods transport', 'auto'],
+  healthcare_worker: ['asha worker', 'asha', 'anganwadi', 'anganwadi worker',
+    'auxiliary nurse', 'anm', 'midwife', 'paramedic', 'health worker', 'social worker',
+    'ngo worker', 'community health worker', 'frontline worker', 'chw', 'sahiya',
+    'mitanin'],
+  domestic: ['domestic worker', 'household worker', 'maid', 'cook', 'helper',
+    'nanny', 'caretaker', 'cleaner', 'housekeeping', 'security guard', 'watchman',
+    'chowkidar', 'sweeper', 'sanitation worker', 'garbage collector',
+    'municipal worker', 'safai karmachari'],
+  artist: ['artist', 'singer', 'musician', 'dancer', 'actor', 'performer', 'juggler',
+    'entertainer', 'storyteller', 'kathputli', 'nat', 'bahurupiya', 'traditional artist',
+    'folk artist', 'street performer', 'magician', 'acrobat', 'circus', 'puppeteer',
+    'theatre', 'drama', 'nautanki', 'cultural performer'],
+  retired: ['retired', 'pensioner', 'ex-serviceman', 'ex serviceman', 'veteran',
+    'ex army', 'ex police', 'senior citizen', 'old age', 'elderly', 'superannuated',
+    'former employee'],
+  differently_abled: ['disabled', 'differently abled', 'divyang', 'handicapped',
+    'physically challenged', 'visually impaired', 'hearing impaired', 'speech impaired',
+    'blind', 'deaf', 'dumb', 'loco motor', 'cerebral palsy', 'intellectual disability',
+    'mental illness', 'multiple disability', 'acid attack', 'disability', 'pwd',
+    'divyangjan'],
+  ex_serviceman: ['ex serviceman', 'ex-serviceman', 'veteran', 'veer nari',
+    'war widow', 'defence personnel', 'armed forces', 'paramilitary', 'crpf',
+    'bsf', 'cisf', 'itbp', 'ssb', 'ex-defence'],
+  ews: ['ews', 'economically weaker section', 'general ews', 'upper caste poor',
+    'open category poor', 'forward class poor'],
+};
+
+export const normaliseOccupation = (input) => {
+  if (!input || !String(input).trim()) return ['unemployed'];
+  const lower = String(input).toLowerCase().trim();
+  const matched = [];
+  for (const [group, kws] of Object.entries(OCCUPATION_GROUPS)) {
+    if (kws.some(kw => lower.includes(kw))) matched.push(group);
+  }
+  // homemakers also match unemployed for welfare schemes
+  if (matched.includes('homemaker') && !matched.includes('unemployed')) matched.push('unemployed');
+  return matched.length ? matched : ['other'];
+};
+
+const MINORITY_RELIGIONS = ['muslim', 'islam', 'christian', 'christianity', 'sikh',
+  'sikhism', 'buddhist', 'buddhism', 'jain', 'jainism', 'parsi', 'zoroastrian'];
+
+export const isMinority = (religion = '') =>
+  MINORITY_RELIGIONS.some(m => String(religion).toLowerCase().includes(m));
+
+export const getAge = (dob) => {
+  if (!dob) return null;
+  const d = new Date(dob);
+  if (isNaN(d.getTime())) return null;
+  const now = new Date();
+  let age = now.getFullYear() - d.getFullYear();
+  const m = now.getMonth() - d.getMonth();
+  if (m < 0 || (m === 0 && now.getDate() < d.getDate())) age--;
+  return age >= 0 ? age : null;
+};
+
+const safeNum = (v) => {
+  if (v == null || v === '') return null;
+  const n = parseFloat(String(v).replace(/[,₹\s]/g, ''));
+  return isNaN(n) ? null : n;
+};
+
+export const scoreToGrade = (score) => {
+  if (score >= 85) return 'excellent';
+  if (score >= 70) return 'high';
+  if (score >= 50) return 'medium';
+  if (score >= 35) return 'low';
+  return 'none';
+};
+
+// ── CORE MATCHER ──────────────────────────────────────────────────────────────
+export const matchSchemeToUser = (user, scheme, family = []) => {
+  const rules = scheme.rules || {};
+  const reasons = [];
+  const gaps = [];
+  let score = Number(scheme.match_score_base) || 50;
+  let hardFail = false;
+  let failReason = null;
+
+  // Parsed user values
+  const age = getAge(user.date_of_birth);
+  const income = safeNum(user.annual_income);
+  const land = safeNum(user.land_acres);
+  const occGroups = normaliseOccupation(user.occupation);
+  const category = (user.category || '').toUpperCase().trim();
+  const gender = (user.gender || '').toLowerCase().trim();
+  const state = (user.state || '').trim();
+  const hasAadhaar = !!user.aadhaar_number;
+  const hasVoter = !!user.voter_id;
+  const marital = (user.marital_status || '').toLowerCase().trim();
+
+  // ── NEW: Use all profile fields for matching ──────────────────────────────
+  // BPL: explicit card OR income < 1 lakh
+  const isBPL = String(user.bpl_card || '').toLowerCase() === 'yes'
+    || (income !== null && income < 100000);
+
+  // Disability: explicit field OR occupation group
+  const isDisabled = String(user.disability || '').toLowerCase() === 'yes'
+    || occGroups.includes('differently_abled');
+
+  // Minority: from religion field
+  const isMinorityUser = isMinority(user.religion || '');
+
+  // Rural/Urban: from area_type field (defaults to rural)
+  const isRural = (user.area_type || 'rural').toLowerCase() !== 'urban';
+
+  const isStudent = occGroups.includes('student');
+  const isUnemployed = occGroups.includes('unemployed') || occGroups.includes('homemaker');
+  const isExSvc = occGroups.includes('ex_serviceman');
+
+  const fail = (r) => { hardFail = true; failReason = r; };
+  const ret = (m, s) => {
+    const fs = Math.min(100, Math.max(0, Math.round(s)));
+    return {
+      matched: m, score: m ? fs : 0,
+      grade: m ? scoreToGrade(fs) : 'none',
+      reasons, mismatches: gaps, hard_fail_reason: failReason,
+    };
+  };
+
+  // 1. GENDER
+  if (rules.gender?.length) {
+    const a = rules.gender.map(g => g.toLowerCase());
+    if (a.some(x => ['all', 'any'].includes(x))) { score += 2; }
+    else if (!gender) { score -= 8; gaps.push('Add gender to your profile'); }
+    else if (a.includes(gender)) { score += 10; reasons.push(`Gender (${gender}) qualifies`); }
+    else { fail(`Scheme for ${rules.gender.join('/')} only`); }
+  }
+  if (hardFail) return ret(false, 0);
+
+  // 2. AGE
+  if (rules.min_age || rules.max_age) {
+    if (age === null) { score -= 8; gaps.push('Add date of birth to profile'); }
+    else if (rules.min_age && age < rules.min_age) { fail(`Min age ${rules.min_age} required (you: ${age})`); }
+    else if (rules.max_age && age > rules.max_age) { fail(`Max age ${rules.max_age} allowed (you: ${age})`); }
+    else { score += 7; reasons.push(`Age ${age} within ${rules.min_age || 0}–${rules.max_age || 'any'} yrs`); }
+  }
+  if (hardFail) return ret(false, 0);
+
+  // 3. CASTE/CATEGORY
+  if (rules.category?.length) {
+    const a = rules.category.map(c => c.toUpperCase());
+    if (a.includes('ALL')) { score += 2; }
+    else if (!category) { score -= 12; gaps.push('Add caste category (SC/ST/OBC/General/EWS)'); }
+    else if (a.includes(category)) { score += 15; reasons.push(`Caste category (${category}) qualifies`); }
+    else { fail(`Reserved for ${rules.category.join('/')} — you: ${category || 'not set'}`); }
+  }
+  if (hardFail) return ret(false, 0);
+
+  // 4. INCOME CEILING
+  if (rules.max_income) {
+    if (income === null) { score -= 10; gaps.push('Add annual income to profile'); }
+    else if (income > rules.max_income) { fail(`Income ₹${income.toLocaleString('en-IN')} exceeds ₹${Number(rules.max_income).toLocaleString('en-IN')} ceiling`); }
+    else { score += Math.min(18, Math.round((1 - income / rules.max_income) * 20)); reasons.push(`Income ₹${income.toLocaleString('en-IN')} within limit`); }
+  }
+  if (rules.min_income && income !== null && income < rules.min_income) { fail(`Min income ₹${Number(rules.min_income).toLocaleString('en-IN')} required`); }
+  if (hardFail) return ret(false, 0);
+
+  // 5. BPL — now uses bpl_card field
+  if (rules.bpl_only === true) {
+    if (isBPL) { score += 12; reasons.push('BPL status qualifies'); }
+    else if (income !== null && income >= 100000 && user.bpl_card === 'no') { fail('BPL households only (income < ₹1,00,000 or BPL card holder)'); }
+    else { score -= 5; gaps.push('Confirm BPL card status or annual income in profile'); }
+  }
+  if (hardFail) return ret(false, 0);
+
+  // 6. OCCUPATION
+  if (rules.occupation?.length) {
+    const ro = rules.occupation.map(o => o.toLowerCase());
+    const open = ro.some(o => ['all', 'any', 'everyone'].includes(o));
+    if (open) { score += 3; reasons.push('Open to all occupations'); }
+    else {
+      const hit = ro.some(o => occGroups.includes(o));
+      if (hit) { score += 18; reasons.push(`Occupation matches: ${ro.filter(o => occGroups.includes(o)).join(', ')}`); }
+      else { fail(`For ${rules.occupation.join('/')} — your occupation "${user.occupation || 'not set'}" doesn't qualify`); }
+    }
+  }
+  if (hardFail) return ret(false, 0);
+
+  // 7. EMPLOYMENT STATUS
+  if (rules.employment_status?.length) {
+    const a = rules.employment_status.map(e => e.toLowerCase());
+    const us = isStudent ? 'student' : isUnemployed ? 'unemployed' : 'employed';
+    if (a.includes('all') || a.includes(us)) { score += 5; reasons.push(`Employment (${us}) qualifies`); }
+    else { fail(`For ${rules.employment_status.join('/')} — you are ${us}`); }
+  }
+  if (hardFail) return ret(false, 0);
+
+  // 8. LAND
+  if (rules.max_land != null) {
+    if (land === null) { gaps.push('Add land holding (acres) to profile'); }
+    else if (land > rules.max_land) { fail(`Land ${land} acres > limit ${rules.max_land} acres`); }
+    else { score += 6; reasons.push(`Land ${land} acres within limit`); }
+  }
+  if (rules.min_land && land !== null && land < rules.min_land) { fail(`Min ${rules.min_land} acres required`); }
+  if (hardFail) return ret(false, 0);
+
+  // 9. STATE
+  if (rules.state?.length && !rules.state.includes('ALL')) {
+    if (!state) { score -= 5; gaps.push('Add state to profile'); }
+    else if (rules.state.some(s => s.toLowerCase() === state.toLowerCase())) { score += 10; reasons.push(`State (${state}) covered`); }
+    else { fail(`State scheme only for: ${rules.state.join(', ')}`); }
+  }
+  if (hardFail) return ret(false, 0);
+
+  // 10. RURAL/URBAN — now uses area_type field
+  if (rules.area_type) {
+    const a = rules.area_type.toLowerCase();
+    if (a === 'rural' && !isRural) { fail('Rural residents only'); }
+    else if (a === 'urban' && isRural) { fail('Urban residents only'); }
+    else if (a !== 'both' && a !== 'all') { score += 5; reasons.push(`${isRural ? 'Rural' : 'Urban'} area qualifies`); }
+  }
+  if (hardFail) return ret(false, 0);
+
+  // 11. DISABILITY — now uses disability field
+  if (rules.disability_only === true) {
+    if (isDisabled) { score += 18; reasons.push('Divyang / disability status qualifies'); }
+    else { fail('For Persons with Disabilities (Divyangjan) only'); }
+  }
+  if (hardFail) return ret(false, 0);
+
+  // 12. MINORITY — now uses religion field
+  if (rules.minority_only === true) {
+    if (isMinorityUser) { score += 15; reasons.push(`Religion (${user.religion}) qualifies for minority scheme`); }
+    else { fail('For minority communities (Muslim/Christian/Sikh/Buddhist/Jain/Parsi) only'); }
+  }
+  if (hardFail) return ret(false, 0);
+
+  // 13. STUDENT ONLY
+  if (rules.student_only === true) {
+    if (isStudent) { score += 12; reasons.push('Student status qualifies'); }
+    else { fail('For enrolled students only'); }
+  }
+  if (hardFail) return ret(false, 0);
+
+  // 14. MARITAL STATUS — now uses marital_status field
+  if (rules.marital_status?.length) {
+    const a = rules.marital_status.map(m => m.toLowerCase());
+    if (!marital) { score -= 3; gaps.push('Add marital status to profile'); }
+    else if (a.includes(marital)) { score += 5; reasons.push(`Marital status (${marital}) qualifies`); }
+    else { fail(`For ${rules.marital_status.join('/')} — you: ${marital}`); }
+  }
+  if (hardFail) return ret(false, 0);
+
+  // 15. EX-SERVICEMAN
+  if (rules.ex_serviceman_only === true) {
+    if (isExSvc) { score += 15; reasons.push('Ex-serviceman qualifies'); }
+    else { fail('For ex-servicemen / defence personnel only'); }
+  }
+  if (hardFail) return ret(false, 0);
+
+  // 16. DOCUMENTS
+  if (rules.requires_docs?.length) {
+    const have = { aadhaar: hasAadhaar, voter_id: hasVoter };
+    const miss = rules.requires_docs.filter(d => !have[d]);
+    if (!miss.length) { score += 6; reasons.push('All required documents in profile'); }
+    else { score -= miss.length * 4; gaps.push(`Upload to Document Locker: ${miss.join(', ')}`); }
+  }
+
+  // Weight boost
+  if (rules.weight_boost) score += Number(rules.weight_boost);
+
+  const fs = Math.min(100, Math.max(0, Math.round(score)));
+  const matched = fs >= 35;
+  if (matched && reasons.length === 0) reasons.push('General eligibility criteria met');
+
+  // ── 17. FAMILY RULES ──────────────────────────────────────────────────────
+  const fr = scheme.family_rules || {};
+  if (Object.keys(fr).length > 0 && family.length > 0) {
+    // has_daughter: scheme needs at least one daughter
+    if (fr.has_daughter) {
+      const hasDaughter = family.some(m => ['daughter'].includes((m.relation || '').toLowerCase()));
+      if (hasDaughter) { score += 10; reasons.push('Has daughter — qualifies for family benefit'); }
+    }
+    // has_children_under: scheme needs children under certain age
+    if (fr.has_children_under) {
+      const childRelations = ['son', 'daughter', 'child'];
+      const hasYoungChild = family.some(m => {
+        if (!childRelations.includes((m.relation || '').toLowerCase())) return false;
+        const childAge = getAge(m.date_of_birth);
+        return childAge !== null && childAge < fr.has_children_under;
+      });
+      if (hasYoungChild) { score += 8; reasons.push(`Has child under ${fr.has_children_under} yrs`); }
+    }
+    // disabled_member: scheme for families with disabled member
+    if (fr.disabled_member) {
+      const hasDisabled = family.some(m => m.is_disabled);
+      if (hasDisabled) { score += 12; reasons.push('Family has disabled member — qualifies'); }
+    }
+    // spouse_occupation: scheme targets spouse's occupation
+    if (fr.spouse_occupation?.length) {
+      const spouse = family.find(m => (m.relation || '').toLowerCase() === 'spouse');
+      if (spouse) {
+        const spouseOcc = normaliseOccupation(spouse.occupation || '');
+        const ro = fr.spouse_occupation.map(o => o.toLowerCase());
+        if (ro.some(o => spouseOcc.includes(o))) {
+          score += 8; reasons.push(`Spouse occupation qualifies`);
+        }
+      }
+    }
+    // min_family_size
+    if (fr.min_family_size && family.length + 1 >= fr.min_family_size) {
+      score += 5; reasons.push(`Family size ${family.length + 1} meets minimum ${fr.min_family_size}`);
+    }
+    // has_senior_member: at least one member > 60
+    if (fr.has_senior_member) {
+      const hasSenior = family.some(m => {
+        const a = getAge(m.date_of_birth);
+        return a !== null && a >= 60;
+      });
+      if (hasSenior) { score += 10; reasons.push('Family has senior citizen(s) — qualifies for elderly support benefits'); }
+    }
+    // Specific relation check: has_grandparent
+    if (fr.has_grandparent) {
+      const hasGP = family.some(m => ['grandfather', 'grandmother'].includes((m.relation || '').toLowerCase()));
+      if (hasGP) { score += 8; reasons.push('Grandparents presence in household qualifies for specific multi-generational schemes'); }
+    }
+  }
+
+  const fs2 = Math.min(100, Math.max(0, Math.round(score)));
+  const matched2 = fs2 >= 35;
+  return { matched: matched2, score: fs2, grade: scoreToGrade(fs2), reasons, mismatches: gaps, hard_fail_reason: null };
+};
+
+export const matchAllSchemes = (user, schemes, includeAll = false, family = []) => {
+  const results = schemes.map(s => ({ scheme: s, ...matchSchemeToUser(user, s, family) }));
+  if (includeAll) return results.sort((a, b) => b.score - a.score);
+  return results.filter(r => r.matched).sort((a, b) => b.score - a.score);
+};
