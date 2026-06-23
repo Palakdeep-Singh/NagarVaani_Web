@@ -1,0 +1,201 @@
+citizen_id,name,booth_id,age,occupation,best_scheme,benefit,match_score,eligible_count,documents,whatsapp_ready
+C001,Ravi Patil,41,44,Farmer,PM-KISAN,₹6000/year in 3 instalments,98.0,7,Aadhaar | Land Record | Bank Passbook,True
+C002,Sunita Devi,41,38,Homemaker,Ayushman Bharat (PMJAY),Health cover ₹5 lakh/year,98.0,4,Aadhaar | BPL Card | Ration Card,True
+C003,Manoj Yadav,42,29,Daily Wage,Ayushman Bharat (PMJAY),Health cover ₹5 lakh/year,98.0,6,Aadhaar | BPL Card | Ration Card,True
+C004,Priya Sharma,43,52,Farmer,PM-KISAN,₹6000/year in 3 instalments,98.0,3,Aadhaar | Land Record | Bank Passbook,True
+C005,Arun Nair,44,61,Retired,No Match,—,0.0,0,,False
+C006,Lata Kulkarni,43,67,Homemaker,IGNWPS (Widow Pension),₹300/month pension,99.0,5,Aadhaar | Death Certificate of Husband | BPL Card | Bank Passbook,True
+C007,Deepak More,42,45,Farmer,PM-KISAN,₹6000/year in 3 instalments,98.0,7,Aadhaar | Land Record | Bank Passbook,True
+C008,Rohit Singh,44,27,Student,Ayushman Bharat (PMJAY),Health cover ₹5 lakh/year,98.0,2,Aadhaar | BPL Card | Ration Card,True
+C009,Kavita Jadhav,41,34,Farmer,PM-KISAN,₹6000/year in 3 instalments,98.0,5,Aadhaar | Land Record | Bank Passbook,True
+C010,Suresh Kamble,41,55,Daily Wage,Ayushman Bharat (PMJAY),Health cover ₹5 lakh/year,98.0,5,Aadhaar | BPL Card | Ration Card,True
+C011,Rekha Bansode,42,42,Farmer,PM-KISAN,₹6000/year in 3 instalments,98.0,8,Aadhaar | Land Record | Bank Passbook,True
+C012,Prakash Gaikwad,43,36,Small Business,No Match,—,0.0,0,,False
+C013,Anita Shinde,44,48,Homemaker,Ayushman Bharat (PMJAY),Health cover ₹5 lakh/year,98.0,5,Aadhaar | BPL Card | Ration Card,True
+C014,Vijay Pawar,41,63,Farmer,IGNDPS (Disability Pension),₹300/month pension,99.0,8,Aadhaar | Disability Certificate | BPL Card | Bank Passbook,True
+C015,Meena Thorat,42,71,Homemaker,IGNWPS (Widow Pension),₹300/month pension,99.0,5,Aadhaar | Death Certificate of Husband | BPL Card | Bank Passbook,True
+C016,Santosh Mane,43,31,Daily Wage,Ayushman Bharat (PMJAY),Health cover ₹5 lakh/year,98.0,6,Aadhaar | BPL Card | Ration Card,True
+C017,Savita Waghmare,44,56,Farmer,PM-KISAN,₹6000/year in 3 instalments,98.0,3,Aadhaar | Land Record | Bank Passbook,True
+C018,Ganesh Kale,41,40,Farmer,PM-KISAN,₹6000/year in 3 instalments,98.0,4,Aadhaar | Land Record | Bank Passbook,True
+C019,Pushpa Salve,42,66,Homemaker,IGNWPS (Widow Pension),₹300/month pension,99.0,5,Aadhaar | Death Certificate of Husband | BPL Card | Bank Passbook,True
+C020,Nilesh Deshmukh,43,23,Student,No Match,—,0.0,0,,False
+C021,Archana Bhosale,44,37,Farmer,PM-KISAN,₹6000/year in 3 instalments,98.0,8,Aadhaar | Land Record | Bank Passbook,True
+C022,Ramesh Jagtap,41,58,Daily Wage,IGNDPS (Disability Pension),₹300/month pension,99.0,5,Aadhaar | Disability Certificate | BPL Card | Bank Passbook,True
+C023,Usha Gorde,42,44,Homemaker,Ayushman Bharat (PMJAY),Health cover ₹5 lakh/year,98.0,5,Aadhaar | BPL Card | Ration Card,True
+C024,Kiran Patole,43,32,Farmer,PM-KISAN,₹6000/year in 3 instalments,98.0,9,Aadhaar | Land Record | Bank Passbook,True
+C025,Sujata Nandre,44,49,Farmer,PM-KISAN,₹6000/year in 3 instalments,98.0,3,Aadhaar | Land Record | Bank Passbook,True
+C026,Balaji Rao,41,60,Farmer,PM-KISAN,₹6000/year in 3 instalments,98.0,8,Aadhaar | Land Record | Bank Passbook,True
+C027,Nanda Parab,42,73,Homemaker,IGNWPS (Widow Pension),₹300/month pension,99.0,5,Aadhaar | Death Certificate of Husband | BPL Card | Bank Passbook,True
+C028,Sunil Chavan,43,28,Daily Wage,Ayushman Bharat (PMJAY),Health cover ₹5 lakh/year,98.0,6,Aadhaar | BPL Card | Ration Card,True
+C029,Varsha Tupe,44,35,Farmer,PM-KISAN,₹6000/year in 3 instalments,98.0,9,Aadhaar | Land Record | Bank Passbook,True
+C030,Mahesh Koli,41,47,Farmer,PM-KISAN,₹6000/year in 3 instalments,98.0,3,Aadhaar | Land Record | Bank Passbook,True
+C031,Geeta Bandgar,42,53,Homemaker,Ayushman Bharat (PMJAY),Health cover ₹5 lakh/year,98.0,5,Aadhaar | BPL Card | Ration Card,True
+C032,Ajit Raut,43,39,Small Business,No Match,—,0.0,0,,False
+C033,Sindhu Kadam,44,62,Farmer,IGNWPS (Widow Pension),₹300/month pension,99.0,9,Aadhaar | Death Certificate of Husband | BPL Card | Bank Passbook,True
+C034,Pravin Kharat,41,26,Student,Ayushman Bharat (PMJAY),Health cover ₹5 lakh/year,98.0,2,Aadhaar | BPL Card | Ration Card,True
+C035,Madhuri Sathe,42,41,Farmer,PM-KISAN,₹6000/year in 3 instalments,98.0,3,Aadhaar | Land Record | Bank Passbook,True
+C036,Bhimrao Khandagale,43,64,Farmer,IGNDPS (Disability Pension),₹300/month pension,99.0,8,Aadhaar | Disability Certificate | BPL Card | Bank Passbook,True
+C037,Shubhangi Dhole,44,30,Daily Wage,Ayushman Bharat (PMJAY),Health cover ₹5 lakh/year,98.0,6,Aadhaar | BPL Card | Ration Card,True
+C038,Narayan Wagh,41,57,Farmer,PM-KISAN,₹6000/year in 3 instalments,98.0,3,Aadhaar | Land Record | Bank Passbook,True
+C039,Vandana Pagare,42,45,Homemaker,Ayushman Bharat (PMJAY),Health cover ₹5 lakh/year,98.0,5,Aadhaar | BPL Card | Ration Card,True
+C040,Sanjay Bhor,43,33,Daily Wage,Ayushman Bharat (PMJAY),Health cover ₹5 lakh/year,98.0,6,Aadhaar | BPL Card | Ration Card,True
+C041,Kasturi Dhatrak,44,68,Homemaker,IGNWPS (Widow Pension),₹300/month pension,99.0,5,Aadhaar | Death Certificate of Husband | BPL Card | Bank Passbook,True
+C042,Dattatray Gavhane,41,50,Farmer,PM-KISAN,₹6000/year in 3 instalments,98.0,3,Aadhaar | Land Record | Bank Passbook,True
+C043,Alka Nimbalkar,42,36,Farmer,PM-KISAN,₹6000/year in 3 instalments,98.0,8,Aadhaar | Land Record | Bank Passbook,True
+C044,Vikas Nagare,43,24,Student,Ayushman Bharat (PMJAY),Health cover ₹5 lakh/year,98.0,2,Aadhaar | BPL Card | Ration Card,True
+C045,Mangal Bhalerao,44,54,Farmer,PM-KISAN,₹6000/year in 3 instalments,98.0,3,Aadhaar | Land Record | Bank Passbook,True
+C046,Shankar Lokhande,41,69,Farmer,IGNDPS (Disability Pension),₹300/month pension,99.0,7,Aadhaar | Disability Certificate | BPL Card | Bank Passbook,True
+C047,Rukmini Kardile,42,72,Homemaker,IGNWPS (Widow Pension),₹300/month pension,99.0,5,Aadhaar | Death Certificate of Husband | BPL Card | Bank Passbook,True
+C048,Dnyaneshwar Avhad,43,31,Daily Wage,Ayushman Bharat (PMJAY),Health cover ₹5 lakh/year,98.0,6,Aadhaar | BPL Card | Ration Card,True
+C049,Sarla Bankar,44,43,Farmer,PM-KISAN,₹6000/year in 3 instalments,98.0,8,Aadhaar | Land Record | Bank Passbook,True
+C050,Tukaram Gawande,41,59,Farmer,PM-KISAN,₹6000/year in 3 instalments,98.0,7,Aadhaar | Land Record | Bank Passbook,True
+C051,Parvati Joshi,42,66,Homemaker,IGNWPS (Widow Pension),₹300/month pension,99.0,5,Aadhaar | Death Certificate of Husband | BPL Card | Bank Passbook,True
+C052,Amol Kalokhe,43,25,Daily Wage,Ayushman Bharat (PMJAY),Health cover ₹5 lakh/year,98.0,6,Aadhaar | BPL Card | Ration Card,True
+C053,Nirmala Deshpande,44,46,Farmer,PM-KISAN,₹6000/year in 3 instalments,98.0,3,Aadhaar | Land Record | Bank Passbook,True
+C054,Chandrakant Sonawane,41,61,Farmer,PM-KISAN,₹6000/year in 3 instalments,98.0,8,Aadhaar | Land Record | Bank Passbook,True
+C055,Sunanda Kasar,42,35,Homemaker,Ayushman Bharat (PMJAY),Health cover ₹5 lakh/year,98.0,5,Aadhaar | BPL Card | Ration Card,True
+C056,Pandurang Dalvi,43,48,Farmer,PM-KISAN,₹6000/year in 3 instalments,98.0,3,Aadhaar | Land Record | Bank Passbook,True
+C057,Shanti Rote,44,74,Homemaker,IGNWPS (Widow Pension),₹300/month pension,99.0,5,Aadhaar | Death Certificate of Husband | BPL Card | Bank Passbook,True
+C058,Gangadhar Bhise,41,37,Daily Wage,Ayushman Bharat (PMJAY),Health cover ₹5 lakh/year,98.0,5,Aadhaar | BPL Card | Ration Card,True
+C059,Yamuna Nikalje,42,51,Farmer,PM-KISAN,₹6000/year in 3 instalments,98.0,3,Aadhaar | Land Record | Bank Passbook,True
+C060,Baburao Mhaske,43,63,Farmer,IGNDPS (Disability Pension),₹300/month pension,99.0,8,Aadhaar | Disability Certificate | BPL Card | Bank Passbook,True
+C061,Kamla Gaikwad,44,38,Farmer,PM-KISAN,₹6000/year in 3 instalments,98.0,8,Aadhaar | Land Record | Bank Passbook,True
+C062,Sachin Pingale,41,22,Student,No Match,—,0.0,0,,False
+C063,Lakshmi Thorat,42,56,Homemaker,Ayushman Bharat (PMJAY),Health cover ₹5 lakh/year,98.0,5,Aadhaar | BPL Card | Ration Card,True
+C064,Maruti Waghchaure,43,44,Farmer,PM-KISAN,₹6000/year in 3 instalments,98.0,3,Aadhaar | Land Record | Bank Passbook,True
+C065,Anusaya Hatkar,44,69,Homemaker,IGNWPS (Widow Pension),₹300/month pension,99.0,5,Aadhaar | Death Certificate of Husband | BPL Card | Bank Passbook,True
+C066,Yeshwant Pawar,41,55,Farmer,PM-KISAN,₹6000/year in 3 instalments,98.0,3,Aadhaar | Land Record | Bank Passbook,True
+C067,Sindhu Kharat,42,33,Daily Wage,Ayushman Bharat (PMJAY),Health cover ₹5 lakh/year,98.0,6,Aadhaar | BPL Card | Ration Card,True
+C068,Bhalchandra Pol,43,47,Farmer,PM-KISAN,₹6000/year in 3 instalments,98.0,3,Aadhaar | Land Record | Bank Passbook,True
+C069,Mangaltai Kute,44,64,Homemaker,IGNWPS (Widow Pension),₹300/month pension,99.0,6,Aadhaar | Death Certificate of Husband | BPL Card | Bank Passbook,True
+C070,Rajendra Aher,41,28,Daily Wage,Ayushman Bharat (PMJAY),Health cover ₹5 lakh/year,98.0,6,Aadhaar | BPL Card | Ration Card,True
+C071,Draupadi Shelke,42,58,Farmer,PM-KISAN,₹6000/year in 3 instalments,98.0,3,Aadhaar | Land Record | Bank Passbook,True
+C072,Vishnu Mohite,43,41,Farmer,PM-KISAN,₹6000/year in 3 instalments,98.0,7,Aadhaar | Land Record | Bank Passbook,True
+C073,Kausalya Bhagat,44,70,Homemaker,IGNWPS (Widow Pension),₹300/month pension,99.0,5,Aadhaar | Death Certificate of Husband | BPL Card | Bank Passbook,True
+C074,Hemant Nakti,41,34,Small Business,PMEGP (Self Employment),Loan upto ₹25 lakh for business,98.0,1,Aadhaar | Project Report | Education Cert | Bank Passbook,True
+C075,Tarabai Mule,42,67,Farmer,IGNWPS (Widow Pension),₹300/month pension,99.0,8,Aadhaar | Death Certificate of Husband | BPL Card | Bank Passbook,True
+C076,Ramrao Ghuge,43,52,Farmer,PM-KISAN,₹6000/year in 3 instalments,98.0,3,Aadhaar | Land Record | Bank Passbook,True
+C077,Shevanta Kendre,44,36,Homemaker,Ayushman Bharat (PMJAY),Health cover ₹5 lakh/year,98.0,4,Aadhaar | BPL Card | Ration Card,True
+C078,Kishor Nalawade,41,60,Farmer,IGNDPS (Disability Pension),₹300/month pension,99.0,8,Aadhaar | Disability Certificate | BPL Card | Bank Passbook,True
+C079,Indubai Waghmare,42,43,Farmer,PM-KISAN,₹6000/year in 3 instalments,98.0,8,Aadhaar | Land Record | Bank Passbook,True
+C080,Namdeo Ingale,43,26,Daily Wage,Ayushman Bharat (PMJAY),Health cover ₹5 lakh/year,98.0,6,Aadhaar | BPL Card | Ration Card,True
+C081,Shila Bhujbal,44,49,Farmer,PM-KISAN,₹6000/year in 3 instalments,98.0,3,Aadhaar | Land Record | Bank Passbook,True
+C082,Sopan Gite,41,62,Farmer,PM-KISAN,₹6000/year in 3 instalments,98.0,8,Aadhaar | Land Record | Bank Passbook,True
+C083,Radha Londhe,42,39,Homemaker,Ayushman Bharat (PMJAY),Health cover ₹5 lakh/year,98.0,4,Aadhaar | BPL Card | Ration Card,True
+C084,Vitthal Mohite,43,54,Farmer,PM-KISAN,₹6000/year in 3 instalments,98.0,3,Aadhaar | Land Record | Bank Passbook,True
+C085,Janabai Gavit,44,73,Homemaker,IGNWPS (Widow Pension),₹300/month pension,99.0,5,Aadhaar | Death Certificate of Husband | BPL Card | Bank Passbook,True
+C086,Digambar Surve,41,32,Daily Wage,Ayushman Bharat (PMJAY),Health cover ₹5 lakh/year,98.0,6,Aadhaar | BPL Card | Ration Card,True
+C087,Kalavati Sapkal,42,45,Farmer,PM-KISAN,₹6000/year in 3 instalments,98.0,3,Aadhaar | Land Record | Bank Passbook,True
+C088,Harishchandra Katke,43,58,Farmer,PM-KISAN,₹6000/year in 3 instalments,98.0,7,Aadhaar | Land Record | Bank Passbook,True
+C089,Parubai Dhanwate,44,61,Homemaker,IGNWPS (Widow Pension),₹300/month pension,99.0,6,Aadhaar | Death Certificate of Husband | BPL Card | Bank Passbook,True
+C090,Santosh Bhalekar,41,30,Daily Wage,Ayushman Bharat (PMJAY),Health cover ₹5 lakh/year,98.0,6,Aadhaar | BPL Card | Ration Card,True
+C091,Nagnath Chandgude,42,65,Farmer,IGNDPS (Disability Pension),₹300/month pension,99.0,8,Aadhaar | Disability Certificate | BPL Card | Bank Passbook,True
+C092,Leelabai Gosavi,43,69,Homemaker,IGNWPS (Widow Pension),₹300/month pension,99.0,5,Aadhaar | Death Certificate of Husband | BPL Card | Bank Passbook,True
+C093,Avinash Patil,44,35,Farmer,PM-KISAN,₹6000/year in 3 instalments,98.0,5,Aadhaar | Land Record | Bank Passbook,True
+C094,Champabai Karale,41,57,Farmer,PM-KISAN,₹6000/year in 3 instalments,98.0,3,Aadhaar | Land Record | Bank Passbook,True
+C095,Krishnarao Chavan,42,70,Farmer,PM-KISAN,₹6000/year in 3 instalments,98.0,7,Aadhaar | Land Record | Bank Passbook,True
+C096,Sumitra Jadhav,43,40,Homemaker,Ayushman Bharat (PMJAY),Health cover ₹5 lakh/year,98.0,5,Aadhaar | BPL Card | Ration Card,True
+C097,Pandit Nagare,44,23,Student,Ayushman Bharat (PMJAY),Health cover ₹5 lakh/year,98.0,2,Aadhaar | BPL Card | Ration Card,True
+C098,Rukhmabai Thakur,41,66,Homemaker,IGNWPS (Widow Pension),₹300/month pension,99.0,5,Aadhaar | Death Certificate of Husband | BPL Card | Bank Passbook,True
+C099,Dattatray Birje,42,46,Farmer,PM-KISAN,₹6000/year in 3 instalments,98.0,3,Aadhaar | Land Record | Bank Passbook,True
+C100,Vasudha Tamboli,43,53,Farmer,PM-KISAN,₹6000/year in 3 instalments,98.0,3,Aadhaar | Land Record | Bank Passbook,True
+C101,Eknath Dadas,44,67,Farmer,PM-KISAN,₹6000/year in 3 instalments,98.0,7,Aadhaar | Land Record | Bank Passbook,True
+C102,Sunanda Pote,41,31,Daily Wage,Ayushman Bharat (PMJAY),Health cover ₹5 lakh/year,98.0,6,Aadhaar | BPL Card | Ration Card,True
+C103,Govind Borate,42,55,Farmer,PM-KISAN,₹6000/year in 3 instalments,98.0,3,Aadhaar | Land Record | Bank Passbook,True
+C104,Mainabai Kshirsagar,43,72,Homemaker,IGNWPS (Widow Pension),₹300/month pension,99.0,5,Aadhaar | Death Certificate of Husband | BPL Card | Bank Passbook,True
+C105,Sudhakar Jagtap,44,38,Daily Wage,Ayushman Bharat (PMJAY),Health cover ₹5 lakh/year,98.0,5,Aadhaar | BPL Card | Ration Card,True
+C106,Pramila Zende,41,48,Farmer,PM-KISAN,₹6000/year in 3 instalments,98.0,8,Aadhaar | Land Record | Bank Passbook,True
+C107,Balasaheb Bhosle,42,63,Farmer,IGNDPS (Disability Pension),₹300/month pension,99.0,8,Aadhaar | Disability Certificate | BPL Card | Bank Passbook,True
+C108,Savitri Shinde,43,36,Homemaker,Ayushman Bharat (PMJAY),Health cover ₹5 lakh/year,98.0,4,Aadhaar | BPL Card | Ration Card,True
+C109,Atmaram Wagh,44,50,Farmer,PM-KISAN,₹6000/year in 3 instalments,98.0,3,Aadhaar | Land Record | Bank Passbook,True
+C110,Hirabai Kadam,41,76,Homemaker,IGNWPS (Widow Pension),₹300/month pension,99.0,5,Aadhaar | Death Certificate of Husband | BPL Card | Bank Passbook,True
+C111,Uttam Galande,42,29,Daily Wage,Ayushman Bharat (PMJAY),Health cover ₹5 lakh/year,98.0,6,Aadhaar | BPL Card | Ration Card,True
+C112,Nirmala Pawar,43,44,Farmer,PM-KISAN,₹6000/year in 3 instalments,98.0,3,Aadhaar | Land Record | Bank Passbook,True
+C113,Shyamrao Bhagwat,44,59,Farmer,PM-KISAN,₹6000/year in 3 instalments,98.0,7,Aadhaar | Land Record | Bank Passbook,True
+C114,Yamunabai Rode,41,62,Homemaker,IGNWPS (Widow Pension),₹300/month pension,99.0,6,Aadhaar | Death Certificate of Husband | BPL Card | Bank Passbook,True
+C115,Chandrakant Kale,42,34,Small Business,PMEGP (Self Employment),Loan upto ₹25 lakh for business,98.0,1,Aadhaar | Project Report | Education Cert | Bank Passbook,True
+C116,Sulabha Nagre,43,47,Farmer,PM-KISAN,₹6000/year in 3 instalments,98.0,3,Aadhaar | Land Record | Bank Passbook,True
+C117,Kishor Landge,44,56,Farmer,PM-KISAN,₹6000/year in 3 instalments,98.0,3,Aadhaar | Land Record | Bank Passbook,True
+C118,Malanbai Tole,41,68,Homemaker,IGNWPS (Widow Pension),₹300/month pension,99.0,5,Aadhaar | Death Certificate of Husband | BPL Card | Bank Passbook,True
+C119,Vinayak Shinde,42,25,Daily Wage,Ayushman Bharat (PMJAY),Health cover ₹5 lakh/year,98.0,6,Aadhaar | BPL Card | Ration Card,True
+C120,Rukmabai Gavhane,43,51,Farmer,PM-KISAN,₹6000/year in 3 instalments,98.0,3,Aadhaar | Land Record | Bank Passbook,True
+C121,Raghunath Dhage,44,64,Farmer,IGNDPS (Disability Pension),₹300/month pension,99.0,8,Aadhaar | Disability Certificate | BPL Card | Bank Passbook,True
+C122,Godavari Kapade,41,37,Homemaker,Ayushman Bharat (PMJAY),Health cover ₹5 lakh/year,98.0,4,Aadhaar | BPL Card | Ration Card,True
+C123,Mahadev Bhavsar,42,42,Farmer,PM-KISAN,₹6000/year in 3 instalments,98.0,3,Aadhaar | Land Record | Bank Passbook,True
+C124,Sushila Nandurkar,43,54,Farmer,PM-KISAN,₹6000/year in 3 instalments,98.0,3,Aadhaar | Land Record | Bank Passbook,True
+C125,Dagadu Kasar,44,71,Farmer,PM-KISAN,₹6000/year in 3 instalments,98.0,6,Aadhaar | Land Record | Bank Passbook,True
+C126,Kamlabai Khedkar,41,43,Homemaker,Ayushman Bharat (PMJAY),Health cover ₹5 lakh/year,98.0,5,Aadhaar | BPL Card | Ration Card,True
+C127,Ramkrishna Avhad,42,33,Daily Wage,Ayushman Bharat (PMJAY),Health cover ₹5 lakh/year,98.0,6,Aadhaar | BPL Card | Ration Card,True
+C128,Tarabai Hinge,43,75,Homemaker,IGNWPS (Widow Pension),₹300/month pension,99.0,5,Aadhaar | Death Certificate of Husband | BPL Card | Bank Passbook,True
+C129,Shankar Ghule,44,48,Farmer,PM-KISAN,₹6000/year in 3 instalments,98.0,3,Aadhaar | Land Record | Bank Passbook,True
+C130,Vrinda Salunkhe,41,39,Farmer,PM-KISAN,₹6000/year in 3 instalments,98.0,8,Aadhaar | Land Record | Bank Passbook,True
+C131,Govinda Jadhav,42,60,Farmer,PM-KISAN,₹6000/year in 3 instalments,98.0,8,Aadhaar | Land Record | Bank Passbook,True
+C132,Lakshmiabai Patil,43,65,Homemaker,IGNWPS (Widow Pension),₹300/month pension,99.0,6,Aadhaar | Death Certificate of Husband | BPL Card | Bank Passbook,True
+C133,Sudhir Dhende,44,27,Student,Ayushman Bharat (PMJAY),Health cover ₹5 lakh/year,98.0,2,Aadhaar | BPL Card | Ration Card,True
+C134,Manjusha Bhalerao,41,41,Farmer,PM-KISAN,₹6000/year in 3 instalments,98.0,3,Aadhaar | Land Record | Bank Passbook,True
+C135,Pandurang Shirke,42,57,Farmer,PM-KISAN,₹6000/year in 3 instalments,98.0,3,Aadhaar | Land Record | Bank Passbook,True
+C136,Lilavati Mhalunge,43,70,Homemaker,IGNWPS (Widow Pension),₹300/month pension,99.0,5,Aadhaar | Death Certificate of Husband | BPL Card | Bank Passbook,True
+C137,Suresh Waghchaure,44,36,Daily Wage,Ayushman Bharat (PMJAY),Health cover ₹5 lakh/year,98.0,5,Aadhaar | BPL Card | Ration Card,True
+C138,Nalini Bansode,41,46,Farmer,PM-KISAN,₹6000/year in 3 instalments,98.0,3,Aadhaar | Land Record | Bank Passbook,True
+C139,Vishwanath Tambe,42,62,Farmer,PM-KISAN,₹6000/year in 3 instalments,98.0,8,Aadhaar | Land Record | Bank Passbook,True
+C140,Pushpabai Deshpande,43,58,Homemaker,Ayushman Bharat (PMJAY),Health cover ₹5 lakh/year,98.0,5,Aadhaar | BPL Card | Ration Card,True
+C141,Anil Parab,44,31,Daily Wage,Ayushman Bharat (PMJAY),Health cover ₹5 lakh/year,98.0,6,Aadhaar | BPL Card | Ration Card,True
+C142,Sangita Shigvan,41,44,Farmer,PM-KISAN,₹6000/year in 3 instalments,98.0,3,Aadhaar | Land Record | Bank Passbook,True
+C143,Ramchandra Khaire,42,67,Farmer,PM-KISAN,₹6000/year in 3 instalments,98.0,7,Aadhaar | Land Record | Bank Passbook,True
+C144,Mandabai Gavande,43,35,Homemaker,Ayushman Bharat (PMJAY),Health cover ₹5 lakh/year,98.0,5,Aadhaar | BPL Card | Ration Card,True
+C145,Shankar Borse,44,52,Farmer,PM-KISAN,₹6000/year in 3 instalments,98.0,3,Aadhaar | Land Record | Bank Passbook,True
+C146,Vimalbai Bondre,41,73,Homemaker,IGNWPS (Widow Pension),₹300/month pension,99.0,5,Aadhaar | Death Certificate of Husband | BPL Card | Bank Passbook,True
+C147,Narendra Gaikwad,42,28,Daily Wage,Ayushman Bharat (PMJAY),Health cover ₹5 lakh/year,98.0,6,Aadhaar | BPL Card | Ration Card,True
+C148,Renuka Bhosale,43,49,Farmer,PM-KISAN,₹6000/year in 3 instalments,98.0,3,Aadhaar | Land Record | Bank Passbook,True
+C149,Sakharam Koli,44,55,Farmer,PM-KISAN,₹6000/year in 3 instalments,98.0,3,Aadhaar | Land Record | Bank Passbook,True
+C150,Laxmibai Pawar,41,64,Farmer,IGNWPS (Widow Pension),₹300/month pension,99.0,9,Aadhaar | Death Certificate of Husband | BPL Card | Bank Passbook,True
+C151,Vinod Mhatre,42,37,Daily Wage,Ayushman Bharat (PMJAY),Health cover ₹5 lakh/year,98.0,5,Aadhaar | BPL Card | Ration Card,True
+C152,Shaila Thombare,43,43,Farmer,PM-KISAN,₹6000/year in 3 instalments,98.0,8,Aadhaar | Land Record | Bank Passbook,True
+C153,Keshav Kanhere,44,61,Farmer,IGNDPS (Disability Pension),₹300/month pension,99.0,8,Aadhaar | Disability Certificate | BPL Card | Bank Passbook,True
+C154,Vatsala Kamthe,41,48,Homemaker,Ayushman Bharat (PMJAY),Health cover ₹5 lakh/year,98.0,5,Aadhaar | BPL Card | Ration Card,True
+C155,Dilip Ranbhise,42,32,Farmer,PM-KISAN,₹6000/year in 3 instalments,98.0,5,Aadhaar | Land Record | Bank Passbook,True
+C156,Subhadra Zagade,43,66,Homemaker,IGNWPS (Widow Pension),₹300/month pension,99.0,5,Aadhaar | Death Certificate of Husband | BPL Card | Bank Passbook,True
+C157,Haribhau Mote,44,50,Farmer,PM-KISAN,₹6000/year in 3 instalments,98.0,3,Aadhaar | Land Record | Bank Passbook,True
+C158,Nanda Wadekar,41,39,Farmer,PM-KISAN,₹6000/year in 3 instalments,98.0,8,Aadhaar | Land Record | Bank Passbook,True
+C159,Gopal Patil,42,24,Student,No Match,—,0.0,0,,False
+C160,Champa Gite,43,57,Farmer,PM-KISAN,₹6000/year in 3 instalments,98.0,3,Aadhaar | Land Record | Bank Passbook,True
+C161,Maruti Jadhav,44,70,Farmer,PM-KISAN,₹6000/year in 3 instalments,98.0,7,Aadhaar | Land Record | Bank Passbook,True
+C162,Sunita Bhosale,41,33,Daily Wage,Ayushman Bharat (PMJAY),Health cover ₹5 lakh/year,98.0,6,Aadhaar | BPL Card | Ration Card,True
+C163,Rameshwar Shinde,42,45,Farmer,PM-KISAN,₹6000/year in 3 instalments,98.0,3,Aadhaar | Land Record | Bank Passbook,True
+C164,Kaushalya Sonawane,43,60,Homemaker,IGNWPS (Widow Pension),₹300/month pension,99.0,6,Aadhaar | Death Certificate of Husband | BPL Card | Bank Passbook,True
+C165,Chandrakant Pawar,44,26,Daily Wage,Ayushman Bharat (PMJAY),Health cover ₹5 lakh/year,98.0,6,Aadhaar | BPL Card | Ration Card,True
+C166,Lalita Bhagat,41,52,Farmer,PM-KISAN,₹6000/year in 3 instalments,98.0,3,Aadhaar | Land Record | Bank Passbook,True
+C167,Atmaram Salve,42,68,Farmer,PM-KISAN,₹6000/year in 3 instalments,98.0,7,Aadhaar | Land Record | Bank Passbook,True
+C168,Prabha Dhole,43,36,Homemaker,Ayushman Bharat (PMJAY),Health cover ₹5 lakh/year,98.0,4,Aadhaar | BPL Card | Ration Card,True
+C169,Vishnu Kharat,44,48,Farmer,PM-KISAN,₹6000/year in 3 instalments,98.0,3,Aadhaar | Land Record | Bank Passbook,True
+C170,Bhagwanbai Kale,41,74,Homemaker,IGNWPS (Widow Pension),₹300/month pension,99.0,5,Aadhaar | Death Certificate of Husband | BPL Card | Bank Passbook,True
+C171,Somnath Shinde,42,29,Daily Wage,Ayushman Bharat (PMJAY),Health cover ₹5 lakh/year,98.0,6,Aadhaar | BPL Card | Ration Card,True
+C172,Shalini Gavhane,43,41,Farmer,PM-KISAN,₹6000/year in 3 instalments,98.0,3,Aadhaar | Land Record | Bank Passbook,True
+C173,Balkrishna Waghmare,44,58,Farmer,PM-KISAN,₹6000/year in 3 instalments,98.0,7,Aadhaar | Land Record | Bank Passbook,True
+C174,Godavari Khurd,41,63,Homemaker,IGNWPS (Widow Pension),₹300/month pension,99.0,6,Aadhaar | Death Certificate of Husband | BPL Card | Bank Passbook,True
+C175,Pradeep Jagtap,42,34,Small Business,PMEGP (Self Employment),Loan upto ₹25 lakh for business,98.0,1,Aadhaar | Project Report | Education Cert | Bank Passbook,True
+C176,Sindhu Gaikwad,43,46,Farmer,PM-KISAN,₹6000/year in 3 instalments,98.0,3,Aadhaar | Land Record | Bank Passbook,True
+C177,Ramrao Bhosale,44,71,Farmer,PM-KISAN,₹6000/year in 3 instalments,98.0,6,Aadhaar | Land Record | Bank Passbook,True
+C178,Kamalabai Shirsat,41,55,Farmer,PM-KISAN,₹6000/year in 3 instalments,98.0,3,Aadhaar | Land Record | Bank Passbook,True
+C179,Mahadev Patade,42,38,Daily Wage,Ayushman Bharat (PMJAY),Health cover ₹5 lakh/year,98.0,5,Aadhaar | BPL Card | Ration Card,True
+C180,Tara Chavan,43,50,Homemaker,Ayushman Bharat (PMJAY),Health cover ₹5 lakh/year,98.0,5,Aadhaar | BPL Card | Ration Card,True
+C181,Sambhaji Katkar,44,65,Farmer,IGNDPS (Disability Pension),₹300/month pension,99.0,8,Aadhaar | Disability Certificate | BPL Card | Bank Passbook,True
+C182,Yamuna Bhadane,41,69,Homemaker,IGNWPS (Widow Pension),₹300/month pension,99.0,5,Aadhaar | Death Certificate of Husband | BPL Card | Bank Passbook,True
+C183,Arun Shinde,42,27,Daily Wage,Ayushman Bharat (PMJAY),Health cover ₹5 lakh/year,98.0,6,Aadhaar | BPL Card | Ration Card,True
+C184,Revati Londhe,43,43,Farmer,PM-KISAN,₹6000/year in 3 instalments,98.0,8,Aadhaar | Land Record | Bank Passbook,True
+C185,Govind Kadu,44,56,Farmer,PM-KISAN,₹6000/year in 3 instalments,98.0,3,Aadhaar | Land Record | Bank Passbook,True
+C186,Vimal Jadhav,41,31,Daily Wage,Ayushman Bharat (PMJAY),Health cover ₹5 lakh/year,98.0,6,Aadhaar | BPL Card | Ration Card,True
+C187,Pushpa Nimbalkar,42,59,Farmer,PM-KISAN,₹6000/year in 3 instalments,98.0,3,Aadhaar | Land Record | Bank Passbook,True
+C188,Pandurang Ahire,43,42,Farmer,PM-KISAN,₹6000/year in 3 instalments,98.0,3,Aadhaar | Land Record | Bank Passbook,True
+C189,Ramabai Salve,44,76,Homemaker,IGNWPS (Widow Pension),₹300/month pension,99.0,5,Aadhaar | Death Certificate of Husband | BPL Card | Bank Passbook,True
+C190,Santosh Kumbhar,41,35,Daily Wage,Ayushman Bharat (PMJAY),Health cover ₹5 lakh/year,98.0,6,Aadhaar | BPL Card | Ration Card,True
+C191,Laxman Bhoge,42,53,Farmer,PM-KISAN,₹6000/year in 3 instalments,98.0,3,Aadhaar | Land Record | Bank Passbook,True
+C192,Mandakini Dhere,43,46,Homemaker,Ayushman Bharat (PMJAY),Health cover ₹5 lakh/year,98.0,5,Aadhaar | BPL Card | Ration Card,True
+C193,Gajanan Jadhav,44,60,Farmer,PM-KISAN,₹6000/year in 3 instalments,98.0,8,Aadhaar | Land Record | Bank Passbook,True
+C194,Saraswati Patil,41,67,Farmer,IGNWPS (Widow Pension),₹300/month pension,99.0,8,Aadhaar | Death Certificate of Husband | BPL Card | Bank Passbook,True
+C195,Dilip Kakade,42,28,Daily Wage,Ayushman Bharat (PMJAY),Health cover ₹5 lakh/year,98.0,6,Aadhaar | BPL Card | Ration Card,True
+C196,Nanda Mhase,43,44,Farmer,PM-KISAN,₹6000/year in 3 instalments,98.0,3,Aadhaar | Land Record | Bank Passbook,True
+C197,Maruti Shinde,44,62,Farmer,PM-KISAN,₹6000/year in 3 instalments,98.0,8,Aadhaar | Land Record | Bank Passbook,True
+C198,Kusum Pawar,41,37,Homemaker,Ayushman Bharat (PMJAY),Health cover ₹5 lakh/year,98.0,4,Aadhaar | BPL Card | Ration Card,True
+C199,Tukaram Bhosale,42,49,Farmer,PM-KISAN,₹6000/year in 3 instalments,98.0,3,Aadhaar | Land Record | Bank Passbook,True
+C200,Nirmala Gaikwad,43,55,Farmer,PM-KISAN,₹6000/year in 3 instalments,98.0,3,Aadhaar | Land Record | Bank Passbook,True
